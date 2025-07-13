@@ -22,7 +22,7 @@ export const useToast = () => {
           isVisible={t.visible}
         />
       ),
-      { 
+      {
         duration,
         position: 'top-right',
         style: {
@@ -33,9 +33,13 @@ export const useToast = () => {
   };
 
   return {
-    success: (options?: ToastOptions) => showToast('success', { duration: 4000, ...options }),
-    error: (options?: ToastOptions) => showToast('error', { duration: 6000, ...options }),
-    warning: (options?: ToastOptions) => showToast('warning', { duration: 5000, ...options }),
-    info: (options?: ToastOptions) => showToast('information', { duration: 4000, ...options }),
+    success: (options?: ToastOptions) =>
+      showToast('success', { duration: 4000, ...options }),
+    error: (options?: ToastOptions) =>
+      showToast('error', { duration: 6000, ...options }),
+    warning: (options?: ToastOptions) =>
+      showToast('warning', { duration: 5000, ...options }),
+    info: (options?: ToastOptions) =>
+      showToast('information', { duration: 4000, ...options }),
   };
 };

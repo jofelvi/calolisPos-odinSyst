@@ -123,9 +123,7 @@ export default function ProductsPage() {
               </p>
             </div>
             <Link href={PRIVATE_ROUTES.PRODUCTS_NEW}>
-              <Button
-                size="md"
-              >
+              <Button size="md">
                 <FiPlus className="w-4 h-4 mr-2" />
                 Nuevo Producto
               </Button>
@@ -292,7 +290,11 @@ export default function ProductsPage() {
                   ? 'Ver todos los productos'
                   : 'Crear Primer Producto'
               }
-              actionHref={selectedCategory ? PRIVATE_ROUTES.PRODUCTS : PRIVATE_ROUTES.PRODUCTS_NEW}
+              actionHref={
+                selectedCategory
+                  ? PRIVATE_ROUTES.PRODUCTS
+                  : PRIVATE_ROUTES.PRODUCTS_NEW
+              }
               actionIcon={<FiPlus className="w-4 h-4" />}
               icon={<FiPackage className="w-12 h-12 text-gray-400" />}
             />

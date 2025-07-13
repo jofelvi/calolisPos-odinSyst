@@ -22,19 +22,47 @@ import {
 } from 'react-icons/fi';
 
 const menuItems = [
-  { label: 'Panel', path: PRIVATE_ROUTES.DASHBOARD, icon: <FiLayout size={20} /> },
-  { label: 'Categorías', path: PRIVATE_ROUTES.CATEGORIES, icon: <FiFolder size={20} /> },
-  { label: 'Productos', path: PRIVATE_ROUTES.PRODUCTS, icon: <FiPackage size={20} /> },
-  { label: 'Ventas', path: PRIVATE_ROUTES.ORDERS, icon: <FiShoppingCart size={20} /> },
-  { label: 'Proveedores', path: PRIVATE_ROUTES.SUPPLIERS, icon: <FiTruck size={20} /> },
+  {
+    label: 'Panel',
+    path: PRIVATE_ROUTES.DASHBOARD,
+    icon: <FiLayout size={20} />,
+  },
+  {
+    label: 'Categorías',
+    path: PRIVATE_ROUTES.CATEGORIES,
+    icon: <FiFolder size={20} />,
+  },
+  {
+    label: 'Productos',
+    path: PRIVATE_ROUTES.PRODUCTS,
+    icon: <FiPackage size={20} />,
+  },
+  {
+    label: 'Ventas',
+    path: PRIVATE_ROUTES.ORDERS,
+    icon: <FiShoppingCart size={20} />,
+  },
+  {
+    label: 'Proveedores',
+    path: PRIVATE_ROUTES.SUPPLIERS,
+    icon: <FiTruck size={20} />,
+  },
   { label: 'Mesas', path: PRIVATE_ROUTES.TABLES, icon: <FiGrid size={20} /> },
   {
     label: 'Órdenes de Compra',
     path: PRIVATE_ROUTES.PURCHASE_ORDERS,
     icon: <FiClipboard size={20} />,
   },
-  { label: 'Clientes', path: PRIVATE_ROUTES.CUSTOMERS, icon: <FiUsers size={20} /> },
-  { label: 'Punto de Venta', path: PRIVATE_ROUTES.POS, icon: <FiCreditCard size={20} /> },
+  {
+    label: 'Clientes',
+    path: PRIVATE_ROUTES.CUSTOMERS,
+    icon: <FiUsers size={20} />,
+  },
+  {
+    label: 'Punto de Venta',
+    path: PRIVATE_ROUTES.POS,
+    icon: <FiCreditCard size={20} />,
+  },
 ];
 
 export function Sidebar() {
@@ -48,7 +76,7 @@ export function Sidebar() {
         setMobileOpen(false);
       }
     };
-    
+
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [setMobileOpen]);
@@ -63,12 +91,12 @@ export function Sidebar() {
     <>
       {/* Mobile Overlay */}
       {isMobileOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
-      
+
       {/* Sidebar */}
       <aside
         className={cn(
@@ -78,99 +106,103 @@ export function Sidebar() {
           isCollapsed ? 'md:w-20' : 'md:w-72',
           // Mobile behavior
           'md:relative fixed top-0 left-0 z-50',
-          isMobileOpen ? 'flex w-72' : 'hidden md:flex'
+          isMobileOpen ? 'flex w-72' : 'hidden md:flex',
         )}
       >
-      {/* Header */}
-      <div className={cn(
-        "flex items-center p-6 border-b border-slate-700/50",
-        isCollapsed ? "justify-center" : "justify-between"
-      )}>
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-teal-500 shadow-lg shadow-cyan-500/25">
-              <Image
-                src={logo}
-                alt="Logo"
-                width={24}
-                height={24}
-                className="min-w-[24px]"
-              />
+        {/* Header */}
+        <div
+          className={cn(
+            'flex items-center p-6 border-b border-slate-700/50',
+            isCollapsed ? 'justify-center' : 'justify-between',
+          )}
+        >
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-teal-500 shadow-lg shadow-cyan-500/25">
+                <Image
+                  src={logo}
+                  alt="Logo"
+                  width={24}
+                  height={24}
+                  className="min-w-[24px]"
+                />
+              </div>
+              <div className="absolute -inset-0.5 bg-gradient-to-br from-cyan-400 to-teal-500 rounded-xl blur opacity-30"></div>
             </div>
-            <div className="absolute -inset-0.5 bg-gradient-to-br from-cyan-400 to-teal-500 rounded-xl blur opacity-30"></div>
+            {!isCollapsed && (
+              <div className="flex flex-col">
+                <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
+                  OdinSys
+                </span>
+                <span className="text-xs text-slate-400 font-medium">
+                  Admin Panel
+                </span>
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex flex-col gap-2 mt-6 px-4 flex-grow">
+          {menuItems.map(({ label, path, icon }) => {
+            const isActive = pathname === path;
+            return (
+              <Link
+                key={path}
+                href={path}
+                className={cn(
+                  'group flex items-center rounded-xl text-sm font-medium transition-all duration-200 relative overflow-hidden',
+                  isCollapsed ? 'justify-center p-3 mx-1' : 'gap-3 px-4 py-3',
+                  isActive
+                    ? 'bg-gradient-to-r from-cyan-500/10 to-teal-500/10 text-cyan-400 shadow-lg shadow-cyan-500/10 border border-cyan-500/20'
+                    : 'text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50',
+                )}
+                title={isCollapsed ? label : undefined}
+              >
+                {isActive && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-teal-500/5 rounded-xl"></div>
+                )}
+                <div
+                  className={cn(
+                    'flex items-center justify-center relative z-10',
+                    isCollapsed ? 'w-full' : 'min-w-[24px]',
+                    isActive
+                      ? 'text-cyan-400'
+                      : 'text-slate-400 group-hover:text-cyan-400',
+                  )}
+                >
+                  {icon}
+                </div>
+                {!isCollapsed && (
+                  <span className="relative z-10 transition-colors duration-200">
+                    {label}
+                  </span>
+                )}
+                {isActive && (
+                  <div className="absolute right-0 w-1 h-8 bg-gradient-to-b from-cyan-400 to-teal-500 rounded-l-full"></div>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Footer */}
+        <div className="mt-auto p-4 border-t border-slate-700/50">
           {!isCollapsed && (
-            <div className="flex flex-col">
-              <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
-                OdinSys
-              </span>
-              <span className="text-xs text-slate-400 font-medium">Admin Panel</span>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+              <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-500 rounded-full animate-pulse"></div>
+              <div className="text-xs text-slate-400 font-medium">
+                OdinSys v1.2.0
+              </div>
+            </div>
+          )}
+          {isCollapsed && (
+            <div className="flex justify-center">
+              <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-500 rounded-full animate-pulse"></div>
             </div>
           )}
         </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex flex-col gap-2 mt-6 px-4 flex-grow">
-        {menuItems.map(({ label, path, icon }) => {
-          const isActive = pathname === path;
-          return (
-            <Link
-              key={path}
-              href={path}
-              className={cn(
-                'group flex items-center rounded-xl text-sm font-medium transition-all duration-200 relative overflow-hidden',
-                isCollapsed ? 'justify-center p-3 mx-1' : 'gap-3 px-4 py-3',
-                isActive
-                  ? 'bg-gradient-to-r from-cyan-500/10 to-teal-500/10 text-cyan-400 shadow-lg shadow-cyan-500/10 border border-cyan-500/20'
-                  : 'text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50',
-              )}
-              title={isCollapsed ? label : undefined}
-            >
-              {isActive && (
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-teal-500/5 rounded-xl"></div>
-              )}
-              <div
-                className={cn(
-                  'flex items-center justify-center relative z-10',
-                  isCollapsed ? 'w-full' : 'min-w-[24px]',
-                  isActive
-                    ? 'text-cyan-400'
-                    : 'text-slate-400 group-hover:text-cyan-400',
-                )}
-              >
-                {icon}
-              </div>
-              {!isCollapsed && (
-                <span className="relative z-10 transition-colors duration-200">
-                  {label}
-                </span>
-              )}
-              {isActive && (
-                <div className="absolute right-0 w-1 h-8 bg-gradient-to-b from-cyan-400 to-teal-500 rounded-l-full"></div>
-              )}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Footer */}
-      <div className="mt-auto p-4 border-t border-slate-700/50">
-        {!isCollapsed && (
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-            <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-500 rounded-full animate-pulse"></div>
-            <div className="text-xs text-slate-400 font-medium">
-              OdinSys v1.2.0
-            </div>
-          </div>
-        )}
-        {isCollapsed && (
-          <div className="flex justify-center">
-            <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-500 rounded-full animate-pulse"></div>
-          </div>
-        )}
-      </div>
-    </aside>
+      </aside>
     </>
   );
 }

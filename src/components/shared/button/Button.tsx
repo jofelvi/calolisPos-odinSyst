@@ -15,10 +15,14 @@ const baseClasses =
 
 // Estilo actualizado con paleta cyan/blue-green
 const variantClasses: Record<NonNullable<ButtonProps['variant']>, string> = {
-  default: 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white hover:from-cyan-700 hover:to-teal-700 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/40 focus-visible:ring-cyan-500',
-  outline: 'border-2 border-cyan-600 text-cyan-600 hover:bg-cyan-50 hover:border-cyan-700 focus-visible:ring-cyan-500',
-  ghost: 'text-cyan-700 hover:bg-cyan-50 hover:text-cyan-800 focus-visible:ring-cyan-500',
-  destructive: 'bg-gradient-to-r from-red-500 to-pink-600 text-white hover:from-red-600 hover:to-pink-700 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 focus-visible:ring-red-500',
+  default:
+    'bg-gradient-to-r from-cyan-600 to-teal-600 text-white hover:from-cyan-700 hover:to-teal-700 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/40 focus-visible:ring-cyan-500',
+  outline:
+    'border-2 border-cyan-600 text-cyan-600 hover:bg-cyan-50 hover:border-cyan-700 focus-visible:ring-cyan-500',
+  ghost:
+    'text-cyan-700 hover:bg-cyan-50 hover:text-cyan-800 focus-visible:ring-cyan-500',
+  destructive:
+    'bg-gradient-to-r from-red-500 to-pink-600 text-white hover:from-red-600 hover:to-pink-700 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 focus-visible:ring-red-500',
 };
 
 // Ajustes de tamaño modernos

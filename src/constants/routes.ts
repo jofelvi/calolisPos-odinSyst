@@ -59,7 +59,7 @@ export const PRIVATE_ROUTES = {
   TABLES_NEW: '/private/tables/new',
   TABLES_DETAILS: (id: string) => `/private/tables/${id}/details`,
   TABLES_EDIT: (id: string) => `/private/tables/${id}`,
-  
+
   // Configuración
   SETTINGS: '/private/settings',
 } as const;

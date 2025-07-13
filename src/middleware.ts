@@ -3,8 +3,7 @@ import { NextResponse } from 'next/server';
 import { AUTH_ROUTES, PROTECTED_ROUTE_PATTERNS } from '@/constants/routes';
 
 export default withAuth(
-  function middleware(req) {
-    // Just pass through - let pages handle their own logic
+  function middleware() {
     return NextResponse.next();
   },
   {

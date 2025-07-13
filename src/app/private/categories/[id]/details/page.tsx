@@ -33,17 +33,25 @@ export default async function CategoryDetailPage({ params }: PageProps) {
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-blue-50">
       <div className="container mx-auto p-6">
         <div className="mb-6">
-          <BackIcon href={PRIVATE_ROUTES.CATEGORIES} tooltip="Volver a Categorías" />
+          <BackIcon
+            href={PRIVATE_ROUTES.CATEGORIES}
+            tooltip="Volver a Categorías"
+          />
           <div className="flex justify-between items-center mt-4">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-700 to-teal-600 bg-clip-text text-transparent">
                 Detalle de Categoría
               </h1>
-              <p className="text-cyan-600/80 mt-1">Información completa de la categoría</p>
+              <p className="text-cyan-600/80 mt-1">
+                Información completa de la categoría
+              </p>
             </div>
             <div className="flex space-x-3">
               <Link href={PRIVATE_ROUTES.CATEGORIES_EDIT(category.id)}>
-                <Button variant="outline" className="bg-white/80 border-cyan-200 text-cyan-700 hover:bg-cyan-50">
+                <Button
+                  variant="outline"
+                  className="bg-white/80 border-cyan-200 text-cyan-700 hover:bg-cyan-50"
+                >
                   ✏️ Editar
                 </Button>
               </Link>
@@ -54,12 +62,15 @@ export default async function CategoryDetailPage({ params }: PageProps) {
         <Card className="bg-white/90 backdrop-blur-sm shadow-xl border border-cyan-100/50">
           <CardHeader className="bg-gradient-to-r from-cyan-500/10 to-teal-500/10 border-b border-cyan-100">
             <CardTitle className="flex justify-between items-center">
-              <span className="text-xl font-semibold text-gray-800">{category.name}</span>
-              <Badge 
+              <span className="text-xl font-semibold text-gray-800">
+                {category.name}
+              </span>
+              <Badge
                 variant={category.isActive ? 'default' : 'secondary'}
-                className={category.isActive 
-                  ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-sm' 
-                  : 'bg-gradient-to-r from-gray-400 to-slate-400 text-white shadow-sm'
+                className={
+                  category.isActive
+                    ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-sm'
+                    : 'bg-gradient-to-r from-gray-400 to-slate-400 text-white shadow-sm'
                 }
               >
                 {category.isActive ? '✓ Activa' : '⚪ Inactiva'}
@@ -86,7 +97,9 @@ export default async function CategoryDetailPage({ params }: PageProps) {
                   </h3>
                   <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-4 rounded-xl border border-gray-200">
                     <p className="text-gray-800">
-                      {category.isActive ? 'Categoría activa y visible en el sistema' : 'Categoría inactiva, no visible en el sistema'}
+                      {category.isActive
+                        ? 'Categoría activa y visible en el sistema'
+                        : 'Categoría inactiva, no visible en el sistema'}
                     </p>
                   </div>
                 </div>
@@ -99,12 +112,14 @@ export default async function CategoryDetailPage({ params }: PageProps) {
                     <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-4 rounded-xl border border-gray-200 space-y-2">
                       {category.createdAt && (
                         <p className="text-sm text-gray-600">
-                          <span className="font-medium">Creada:</span> {category.createdAt.toLocaleDateString('es-ES')}
+                          <span className="font-medium">Creada:</span>{' '}
+                          {category.createdAt.toLocaleDateString('es-ES')}
                         </p>
                       )}
                       {category.updatedAt && (
                         <p className="text-sm text-gray-600">
-                          <span className="font-medium">Actualizada:</span> {category.updatedAt.toLocaleDateString('es-ES')}
+                          <span className="font-medium">Actualizada:</span>{' '}
+                          {category.updatedAt.toLocaleDateString('es-ES')}
                         </p>
                       )}
                     </div>

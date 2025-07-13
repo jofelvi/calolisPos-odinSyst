@@ -50,7 +50,10 @@ export default async function CustomersPage({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {customers.map((customer) => (
-          <Link key={customer.id} href={`${PRIVATE_ROUTES.CUSTOMERS}/${customer.id}`}>
+          <Link
+            key={customer.id}
+            href={`${PRIVATE_ROUTES.CUSTOMERS}/${customer.id}`}
+          >
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="flex justify-between items-center">

@@ -29,13 +29,15 @@ export function CustomerHeader() {
           >
             {isMobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
-          
+
           <div className="hidden sm:block w-px h-8 bg-gradient-to-b from-cyan-400 to-teal-500"></div>
           <div>
             <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-teal-700 to-cyan-600 bg-clip-text text-transparent">
               ¡Hola, {user?.name}!
             </h1>
-            <p className="text-xs sm:text-sm text-teal-600 font-medium">¿Qué te gustaría ordenar hoy?</p>
+            <p className="text-xs sm:text-sm text-teal-600 font-medium">
+              ¿Qué te gustaría ordenar hoy?
+            </p>
           </div>
         </div>
 

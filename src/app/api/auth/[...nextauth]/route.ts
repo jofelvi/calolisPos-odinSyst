@@ -14,7 +14,7 @@ export const authOptions: NextAuthOptions = {
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' }
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         // Simple test credentials for development
@@ -29,12 +29,14 @@ export const authOptions: NextAuthOptions = {
       },
     }),
     // Keep Google provider but make it optional
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [
-      GoogleProvider({
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      })
-    ] : []),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
   ],
   pages: {
     signIn: AUTH_ROUTES.SIGNIN,
@@ -56,7 +58,7 @@ export const authOptions: NextAuthOptions = {
       // Create or get user role
       if (user?.email && !token.role) {
         let dbUser = await getUserByEmail(user.email);
-        
+
         // If user doesn't exist, create with default CUSTOMER role
         if (!dbUser) {
           try {
@@ -75,7 +77,7 @@ export const authOptions: NextAuthOptions = {
             return token;
           }
         }
-        
+
         token.role = dbUser.role;
       }
 
