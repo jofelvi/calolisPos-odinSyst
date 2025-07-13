@@ -1,6 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import NextAuth from 'next-auth';
-import { JWT } from 'next-auth/jwt';
+import { UserRoleEnum } from '@/types/enumShared';
 
 declare module 'next-auth' {
   interface Session {
@@ -9,7 +8,7 @@ declare module 'next-auth' {
       name: string;
       email: string;
       image: string;
-      role: string;
+      role: UserRoleEnum;
     };
   }
 }
