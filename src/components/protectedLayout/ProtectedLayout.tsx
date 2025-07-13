@@ -24,7 +24,7 @@ export default function ProtectedLayout({
   return (
     <>
       <SyncSessionToZustand />
-      <div className="flex h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="flex h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-blue-50">
         <Sidebar />
         <div className="flex flex-col flex-1 min-w-0">
           <Header />
