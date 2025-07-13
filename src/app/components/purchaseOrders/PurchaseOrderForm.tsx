@@ -21,6 +21,10 @@ import {
   purchaseOrderService,
   supplierService,
 } from '@/services/firebase/genericServices';
+import { PRIVATE_ROUTES } from '@/constants/routes';
+import { Button } from '@/components/shared/button/Button';
+import { useToast } from '@/components/hooks/useToast';
+import { Toaster } from 'react-hot-toast';
 
 interface PurchaseOrderFormProps {
   initialData?: PurchaseOrder | null;
@@ -44,9 +48,10 @@ export default function PurchaseOrderForm({
     reset,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isValid, isDirty },
   } = useForm<PurchaseOrderFormValues>({
     resolver: yupResolver(purchaseOrderSchema),
+    mode: 'onChange', // Validar en tiempo real
     defaultValues: {
       supplierId: '',
       items: [],
@@ -123,16 +128,33 @@ export default function PurchaseOrderForm({
   }, [watch, setValue]);
 
   const handleAddItem = () => {
+    if (!selectedSupplier) {
+      toast.warning({
+        title: 'Selecciona un Proveedor',
+        description: 'Primero debes seleccionar un proveedor antes de agregar productos.',
+      });
+      return;
+    }
+    
     append({
       productId: '',
       quantity: 1,
       unitCost: 0,
       subtotal: 0,
     } as PurchaseOrderItemFormValues);
+    
+    toast.success({
+      title: 'Producto Agregado',
+      description: 'Se ha agregado un nuevo producto a la orden.',
+    });
   };
 
   const handleRemoveItem = (index: number) => {
     remove(index);
+    toast.info({
+      title: 'Producto Eliminado',
+      description: 'El producto ha sido eliminado de la orden.',
+    });
   };
 
   const handleItemChange = (
@@ -161,12 +183,49 @@ export default function PurchaseOrderForm({
     setValue('items', newItems);
   };
 
+  const toast = useToast();
+  
+  // Función para determinar si el formulario puede ser enviado
+  const canSubmit = () => {
+    const hasErrors = Object.keys(errors).length > 0;
+    const hasItems = watch('items')?.length > 0;
+    const hasSupplier = watch('supplierId');
+    
+    return !hasErrors && hasItems && hasSupplier && !isSubmitting;
+  };
+
   const onSubmit = async (data: PurchaseOrderFormValues) => {
     setIsSubmitting(true);
+    
+    // Validaciones adicionales antes de enviar
+    if (!data.items || data.items.length === 0) {
+      toast.error({
+        title: 'Error de Validación',
+        description: 'Debe agregar al menos un producto a la orden.',
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Verificar que todos los productos tengan datos válidos
+    const invalidItems = data.items.filter(item => 
+      !item.productId || item.quantity <= 0 || item.unitCost <= 0
+    );
+    
+    if (invalidItems.length > 0) {
+      toast.error({
+        title: 'Error de Validación',
+        description: 'Todos los productos deben tener cantidad y costo válidos.',
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    
     try {
       const filteredSuppliers = suppliers.find(
         (item) => item.id === data.supplierId,
       );
+      
       if (isNew) {
         const orderData: Omit<PurchaseOrder, 'id'> = {
           ...data,
@@ -174,7 +233,15 @@ export default function PurchaseOrderForm({
           createdAt: new Date(),
           supplierName: filteredSuppliers?.name || '',
         };
-        await purchaseOrderService.create(orderData);
+        const newOrder = await purchaseOrderService.create(orderData);
+        
+        toast.success({
+          title: '¡Órden Creada!',
+          description: `La orden de compra ha sido creada exitosamente.`,
+        });
+        
+        // Redirigir a la página de detalles de la nueva orden
+        router.push(PRIVATE_ROUTES.PURCHASE_ORDERS_DETAILS(newOrder.id));
       } else if (initialData?.id) {
         const orderData: PurchaseOrder = {
           ...data,
@@ -184,25 +251,64 @@ export default function PurchaseOrderForm({
           supplierName: filteredSuppliers?.name || '',
         };
         await purchaseOrderService.update(initialData.id, orderData);
+        
+        toast.success({
+          title: '¡Órden Actualizada!',
+          description: `Los cambios han sido guardados exitosamente.`,
+        });
+        
+        // Redirigir a la página de detalles de la orden editada
+        router.push(PRIVATE_ROUTES.PURCHASE_ORDERS_DETAILS(initialData.id));
       }
-
-      router.push('/purchase-orders');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving purchase order:', error);
+      
+      // Mostrar mensaje de error específico
+      const errorMessage = error?.message || 'Error desconocido';
+      toast.error({
+        title: isNew ? 'Error al Crear Órden' : 'Error al Actualizar Órden',
+        description: `No se pudo ${isNew ? 'crear' : 'actualizar'} la orden: ${errorMessage}`,
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <>
+      <Toaster 
+        position="top-right" 
+        toastOptions={{
+          duration: 5000,
+          style: {
+            zIndex: 9999,
+            marginTop: '60px',
+          },
+        }}
+      />
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {Object.keys(errors).length > 0 && (
-        <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
-          <ul className="list-disc pl-5">
-            {Object.entries(errors).map(([key, err]) => (
-              <li key={key}>{(err as { message: string }).message}</li>
-            ))}
-          </ul>
+        <div className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-300 text-red-800 px-4 py-3 rounded-xl shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <div>
+              <h4 className="font-semibold text-red-800 mb-2">Se encontraron los siguientes errores:</h4>
+              <ul className="list-disc pl-5 space-y-1">
+                {Object.entries(errors).map(([key, err]) => {
+                  let message = (err as { message: string }).message;
+                  // Mejorar mensajes de error específicos
+                  if (key === 'items' && message.includes('al menos un item')) {
+                    message = 'Debe agregar al menos un producto a la orden';
+                  }
+                  return <li key={key} className="text-sm">{message}</li>;
+                })}
+              </ul>
+            </div>
+          </div>
         </div>
       )}
 
@@ -348,161 +454,198 @@ export default function PurchaseOrderForm({
           <button
             type="button"
             onClick={handleAddItem}
-            className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+            className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-xl text-sm font-medium hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 shadow-sm"
           >
             + Agregar Item
           </button>
         </div>
 
         {fields.length === 0 && (
-          <p className="text-sm text-gray-500">No hay items agregados</p>
+          <div className="text-center py-8 bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl border border-gray-200">
+            <div className="w-16 h-16 bg-gradient-to-br from-gray-300 to-slate-300 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <h4 className="text-lg font-semibold text-gray-700 mb-2">No hay productos agregados</h4>
+            <p className="text-sm text-gray-500 mb-4">Comienza agregando productos a tu orden de compra</p>
+            {!selectedSupplier && (
+              <p className="text-xs text-amber-600 bg-amber-50 px-3 py-1 rounded-full inline-block">
+                ⚠️ Primero selecciona un proveedor
+              </p>
+            )}
+          </div>
         )}
 
-        {fields.map((item, index) => (
-          <div
-            key={item.id}
-            className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 p-4 border rounded-lg"
-          >
-            {/* Producto */}
-            <div className="md:col-span-5">
-              <label className="block text-sm font-medium text-gray-700">
-                Producto *
-              </label>
-              <select
-                value={item.productId}
-                onChange={(e) =>
-                  handleItemChange(index, 'productId', e.target.value)
-                }
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">Seleccione un producto</option>
-                {products
-                  .filter(
-                    (p) =>
-                      !selectedSupplier ||
-                      p.supplierIds?.includes(selectedSupplier),
-                  )
-                  .map((product) => (
-                    <option key={product.id} value={product.id}>
-                      {product.name} - {product.sku || 'Sin SKU'}
-                    </option>
-                  ))}
-              </select>
-            </div>
+        {fields.map((item, index) => {
+          // Obtener errores específicos para este item
+          const itemErrors = errors.items?.[index];
+          const hasProductError = !item.productId;
+          const hasQuantityError = !item.quantity || item.quantity <= 0;
+          const hasUnitCostError = !item.unitCost || item.unitCost <= 0;
 
-            {/* Cantidad */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Cantidad *
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={item.quantity}
-                onChange={(e) =>
-                  handleItemChange(
-                    index,
-                    'quantity',
-                    parseInt(e.target.value) || 0,
-                  )
-                }
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+          return (
+            <div
+              key={item.id}
+              className={`grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 p-4 border rounded-xl transition-all duration-200 ${
+                itemErrors || hasProductError || hasQuantityError || hasUnitCostError
+                  ? 'border-red-300 bg-gradient-to-r from-red-50 to-pink-50' 
+                  : 'border-gray-200 bg-gradient-to-r from-slate-50 to-gray-50'
+              }`}
+            >
+              {/* Producto */}
+              <div className="md:col-span-5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Producto *
+                </label>
+                <select
+                  value={item.productId}
+                  onChange={(e) =>
+                    handleItemChange(index, 'productId', e.target.value)
+                  }
+                  className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none transition-colors duration-200 ${
+                    hasProductError || itemErrors?.productId
+                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500 bg-red-50' 
+                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                  }`}
+                >
+                  <option value="">Seleccione un producto</option>
+                  {products
+                    .filter(
+                      (p) =>
+                        !selectedSupplier ||
+                        p.supplierIds?.includes(selectedSupplier),
+                    )
+                    .map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.name} - {product.sku || 'Sin SKU'}
+                      </option>
+                    ))}
+                </select>
+                {(hasProductError || itemErrors?.productId) && (
+                  <p className="mt-1 text-xs text-red-600 font-medium">
+                    {itemErrors?.productId?.message || 'Producto es requerido'}
+                  </p>
+                )}
+              </div>
 
-            {/* Costo Unitario */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Costo Unitario *
-              </label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={item.unitCost}
-                onChange={(e) =>
-                  handleItemChange(
-                    index,
-                    'unitCost',
-                    parseFloat(e.target.value) || 0,
-                  )
-                }
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+              {/* Cantidad */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Cantidad *
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={item.quantity}
+                  onChange={(e) =>
+                    handleItemChange(
+                      index,
+                      'quantity',
+                      parseInt(e.target.value) || 0,
+                    )
+                  }
+                  className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none transition-colors duration-200 ${
+                    hasQuantityError || itemErrors?.quantity
+                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500 bg-red-50' 
+                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                  }`}
+                />
+                {(hasQuantityError || itemErrors?.quantity) && (
+                  <p className="mt-1 text-xs text-red-600 font-medium">
+                    {itemErrors?.quantity?.message || 'Cantidad debe ser mayor a 0'}
+                  </p>
+                )}
+              </div>
 
-            {/* Subtotal */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Subtotal
-              </label>
-              <input
-                type="number"
-                value={item.subtotal}
-                disabled
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-100 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+              {/* Costo Unitario */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Costo Unitario *
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={item.unitCost}
+                  onChange={(e) =>
+                    handleItemChange(
+                      index,
+                      'unitCost',
+                      parseFloat(e.target.value) || 0,
+                    )
+                  }
+                  className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none transition-colors duration-200 ${
+                    hasUnitCostError || itemErrors?.unitCost
+                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500 bg-red-50' 
+                      : 'border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+                  }`}
+                />
+                {(hasUnitCostError || itemErrors?.unitCost) && (
+                  <p className="mt-1 text-xs text-red-600 font-medium">
+                    {itemErrors?.unitCost?.message || 'Costo debe ser mayor a 0'}
+                  </p>
+                )}
+              </div>
 
-            {/* Eliminar */}
-            <div className="md:col-span-1 flex items-end">
-              <button
-                type="button"
-                onClick={() => handleRemoveItem(index)}
-                className="text-red-600 hover:text-red-800 text-sm font-medium"
-              >
-                Eliminar
-              </button>
+              {/* Subtotal */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Subtotal
+                </label>
+                <input
+                  type="number"
+                  value={item.subtotal}
+                  disabled
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-100 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              {/* Eliminar */}
+              <div className="md:col-span-1 flex items-end">
+                <button
+                  type="button"
+                  onClick={() => handleRemoveItem(index)}
+                  className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-2 rounded-lg text-xs font-medium hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-sm"
+                >
+                  ✕ Eliminar
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      <div className="flex justify-end space-x-3">
-        <button
+      <div className="flex justify-end space-x-4 pt-6 border-t border-cyan-100">
+        <Button
           type="button"
-          onClick={() => router.push('/purchase-orders')}
-          className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          variant="ghost"
+          onClick={() => {
+            if (initialData?.id) {
+              // Si estamos editando, volver a los detalles
+              router.push(PRIVATE_ROUTES.PURCHASE_ORDERS_DETAILS(initialData.id));
+            } else {
+              // Si estamos creando, volver a la lista
+              router.push(PRIVATE_ROUTES.PURCHASE_ORDERS);
+            }
+          }}
           disabled={isSubmitting}
         >
           Cancelar
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
-          className="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          disabled={isSubmitting}
+          disabled={!canSubmit()}
+          isLoading={isSubmitting}
         >
           {isSubmitting ? (
-            <span className="flex items-center">
-              <svg
-                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              {isNew ? 'Creando...' : 'Actualizando...'}
-            </span>
-          ) : isNew ? (
-            'Crear Orden'
+            isNew ? 'Creando...' : 'Actualizando...'
           ) : (
-            'Actualizar'
+            isNew ? 'Crear Orden' : 'Actualizar Orden'
           )}
-        </button>
+        </Button>
       </div>
-    </form>
+      </form>
+    </>
   );
 }

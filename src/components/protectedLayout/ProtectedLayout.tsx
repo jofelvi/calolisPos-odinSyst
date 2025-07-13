@@ -24,11 +24,11 @@ export default function ProtectedLayout({
   return (
     <SessionProvider>
       <SyncSessionToZustand />
-      <div className="flex h-screen">
+      <div className="flex h-screen bg-gradient-to-br from-slate-50 to-slate-100">
         <Sidebar />
-        <div className="flex flex-col flex-1">
+        <div className="flex flex-col flex-1 min-w-0">
           <Header />
-          <main className="flex-1 overflow-y-auto">{children}</main>
+          <main className="flex-1 overflow-y-auto p-6">{children}</main>
         </div>
       </div>
     </SessionProvider>

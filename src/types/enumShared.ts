@@ -4,6 +4,7 @@ export enum UserRoleEnum {
   CASHIER = 'cashier',
   WAITER = 'waiter',
   KITCHEN = 'kitchen',
+  CUSTOMER = 'customer',
 }
 
 export enum CurrencyEnum {

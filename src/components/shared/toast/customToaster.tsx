@@ -15,32 +15,52 @@ const CustomToaster = ({
 }: CustomToasterProps): JSX.Element => {
   const VARIANTS = {
     success: {
-      icon: 'icon-check bg-success-400 text-success-200',
+      icon: 'bg-gradient-to-r from-emerald-500 to-green-500',
+      iconSymbol: '✓',
+      bgGradient: 'from-emerald-50 to-green-50',
+      borderColor: 'border-emerald-200',
+      textColor: 'text-emerald-800',
     },
     error: {
-      icon: 'icon-x-circle bg-warning-300 text-warning-100',
+      icon: 'bg-gradient-to-r from-red-500 to-pink-500',
+      iconSymbol: '✕',
+      bgGradient: 'from-red-50 to-pink-50',
+      borderColor: 'border-red-200',
+      textColor: 'text-red-800',
     },
     warning: {
-      icon: 'bg-caution-200  text-caution-100 icon-warning',
+      icon: 'bg-gradient-to-r from-amber-500 to-orange-500',
+      iconSymbol: '⚠',
+      bgGradient: 'from-amber-50 to-orange-50',
+      borderColor: 'border-amber-200',
+      textColor: 'text-amber-800',
     },
     information: {
-      icon: 'bg-info-200 text-info-100 icon-info',
+      icon: 'bg-gradient-to-r from-cyan-500 to-blue-500',
+      iconSymbol: 'ℹ',
+      bgGradient: 'from-cyan-50 to-blue-50',
+      borderColor: 'border-cyan-200',
+      textColor: 'text-cyan-800',
     },
   };
 
+  const variantConfig = VARIANTS[variant];
+
   return (
     <div
-      className={`bg-white px-2.5 py-4 shadow-md rounded-[1.25rem] min-w-[18.75rem] md:min-w-[29.1875rem] ${
-        isVisible ? 'animate-enter' : 'animate-leave'
+      className={`bg-gradient-to-r ${variantConfig.bgGradient} backdrop-blur-md border ${variantConfig.borderColor} px-4 py-4 shadow-xl rounded-2xl min-w-[20rem] max-w-[24rem] ${
+        isVisible ? 'animate-in slide-in-from-top-5 fade-in-0 duration-300' : 'animate-out slide-out-to-top-5 fade-out-0 duration-200'
       }`}
     >
-      <div className="flex items-center gap-3">
-        <span
-          className={`w-10 h-10 md:h-16 md:w-16 text-lg md:text-2xl flex items-center  justify-center rounded-[1.25rem] ${VARIANTS[variant].icon}`}
-        />
-        <div className="flex flex-col gap-1.5">
-          <h2 className="text-sm font-medium">{title}</h2>
-          <p className="text-xs font-normal text-base-200 max-w-80">
+      <div className="flex items-start gap-4">
+        <div
+          className={`${variantConfig.icon} w-8 h-8 text-white text-sm font-bold flex items-center justify-center rounded-full shadow-lg flex-shrink-0`}
+        >
+          {variantConfig.iconSymbol}
+        </div>
+        <div className="flex flex-col gap-1 min-w-0 flex-1">
+          <h3 className={`text-sm font-semibold ${variantConfig.textColor}`}>{title}</h3>
+          <p className={`text-xs font-medium ${variantConfig.textColor} opacity-80 leading-relaxed`}>
             {description}
           </p>
         </div>

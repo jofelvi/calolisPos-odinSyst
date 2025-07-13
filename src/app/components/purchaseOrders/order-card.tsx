@@ -11,6 +11,7 @@ import { formatDateForDisplay } from '@/utils/serializeTimestamp';
 import { PurchaseOrderStatusEnum } from '@/types/enumShared';
 import { getStatusInSpanish } from '@/utils/getStatusOrderInSpanish';
 import { getStatusBadgeClasses } from '@/utils/getStatusBadgeClasses';
+import { PRIVATE_ROUTES } from '@/constants/routes';
 
 interface OrderCardProps {
   order: PurchaseOrder;
@@ -18,7 +19,7 @@ interface OrderCardProps {
 
 export function OrderCard({ order }: OrderCardProps) {
   return (
-    <Link href={`/purchase-orders/${order.id}`}>
+    <Link href={PRIVATE_ROUTES.PURCHASE_ORDERS_DETAILS(order.id)}>
       <Card className="h-full transition-all hover:shadow-xl hover:-translate-y-1 flex flex-col">
         <CardHeader>
           <CardTitle className="flex justify-between items-start gap-2">

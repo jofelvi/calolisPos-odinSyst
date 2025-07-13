@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useSidebarStore } from '@/store/useSidebarStore';
 import Image from 'next/image';
 import logo from '../../../public/odinsys.webp';
+import { PRIVATE_ROUTES } from '@/constants/routes';
+import { useEffect } from 'react';
 
 import {
   FiClipboard,
@@ -21,57 +22,96 @@ import {
 } from 'react-icons/fi';
 
 const menuItems = [
-  { label: 'Panel', path: '/dashboard', icon: <FiLayout size={20} /> },
-  { label: 'Categorías', path: '/categories', icon: <FiFolder size={20} /> },
-  { label: 'Productos', path: '/products', icon: <FiPackage size={20} /> },
-  { label: 'Ventas', path: '/orders', icon: <FiShoppingCart size={20} /> },
-  { label: 'Proveedores', path: '/suppliers', icon: <FiTruck size={20} /> },
-  { label: 'Mesas', path: '/tables', icon: <FiGrid size={20} /> },
+  { label: 'Panel', path: PRIVATE_ROUTES.DASHBOARD, icon: <FiLayout size={20} /> },
+  { label: 'Categorías', path: PRIVATE_ROUTES.CATEGORIES, icon: <FiFolder size={20} /> },
+  { label: 'Productos', path: PRIVATE_ROUTES.PRODUCTS, icon: <FiPackage size={20} /> },
+  { label: 'Ventas', path: PRIVATE_ROUTES.ORDERS, icon: <FiShoppingCart size={20} /> },
+  { label: 'Proveedores', path: PRIVATE_ROUTES.SUPPLIERS, icon: <FiTruck size={20} /> },
+  { label: 'Mesas', path: PRIVATE_ROUTES.TABLES, icon: <FiGrid size={20} /> },
   {
     label: 'Órdenes de Compra',
-    path: '/purchase-orders',
+    path: PRIVATE_ROUTES.PURCHASE_ORDERS,
     icon: <FiClipboard size={20} />,
   },
-  { label: 'Clientes', path: '/customers', icon: <FiUsers size={20} /> },
-  { label: 'Punto de Venta', path: '/pos', icon: <FiCreditCard size={20} /> },
+  { label: 'Clientes', path: PRIVATE_ROUTES.CUSTOMERS, icon: <FiUsers size={20} /> },
+  { label: 'Punto de Venta', path: PRIVATE_ROUTES.POS, icon: <FiCreditCard size={20} /> },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const { isCollapsed, isMobileOpen, setMobileOpen } = useSidebarStore();
+
+  // Close mobile sidebar when clicking outside or changing route
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setMobileOpen(false);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [setMobileOpen]);
+
+  useEffect(() => {
+    if (isMobileOpen) {
+      setMobileOpen(false);
+    }
+  }, [pathname]);
 
   return (
-    <aside
-      className={cn(
-        'h-screen border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all duration-300 flex flex-col',
-        collapsed ? 'w-16' : 'w-64',
+    <>
+      {/* Mobile Overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
       )}
-    >
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+      
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          'h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 backdrop-blur-xl transition-all duration-300 flex flex-col shadow-2xl',
+          // Desktop behavior
+          'hidden md:flex',
+          isCollapsed ? 'md:w-20' : 'md:w-72',
+          // Mobile behavior
+          'md:relative fixed top-0 left-0 z-50',
+          isMobileOpen ? 'flex w-72' : 'hidden md:flex'
+        )}
+      >
+      {/* Header */}
+      <div className={cn(
+        "flex items-center p-6 border-b border-slate-700/50",
+        isCollapsed ? "justify-center" : "justify-between"
+      )}>
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-md bg-blue-600 text-white">
-            <Image
-              src={logo}
-              alt="Logo"
-              width={24}
-              height={24}
-              className="min-w-[24px]"
-            />
+          <div className="relative">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-teal-500 shadow-lg shadow-cyan-500/25">
+              <Image
+                src={logo}
+                alt="Logo"
+                width={24}
+                height={24}
+                className="min-w-[24px]"
+              />
+            </div>
+            <div className="absolute -inset-0.5 bg-gradient-to-br from-cyan-400 to-teal-500 rounded-xl blur opacity-30"></div>
           </div>
-          {!collapsed && (
-            <span className="text-lg font-semibold text-gray-900 dark:text-white">
-              OdinSys
-            </span>
+          {!isCollapsed && (
+            <div className="flex flex-col">
+              <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
+                OdinSys
+              </span>
+              <span className="text-xs text-slate-400 font-medium">Admin Panel</span>
+            </div>
           )}
         </div>
-        <button
-          className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
-          onClick={() => setCollapsed(!collapsed)}
-        >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
       </div>
-      <nav className="flex flex-col gap-1 mt-4 px-3 flex-grow">
+
+      {/* Navigation */}
+      <nav className="flex flex-col gap-2 mt-6 px-4 flex-grow">
         {menuItems.map(({ label, path, icon }) => {
           const isActive = pathname === path;
           return (
@@ -79,34 +119,58 @@ export function Sidebar() {
               key={path}
               href={path}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                'group flex items-center rounded-xl text-sm font-medium transition-all duration-200 relative overflow-hidden',
+                isCollapsed ? 'justify-center p-3 mx-1' : 'gap-3 px-4 py-3',
                 isActive
-                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                  : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800/60',
+                  ? 'bg-gradient-to-r from-cyan-500/10 to-teal-500/10 text-cyan-400 shadow-lg shadow-cyan-500/10 border border-cyan-500/20'
+                  : 'text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50',
               )}
+              title={isCollapsed ? label : undefined}
             >
+              {isActive && (
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-teal-500/5 rounded-xl"></div>
+              )}
               <div
                 className={cn(
-                  'flex items-center justify-center min-w-[24px]',
+                  'flex items-center justify-center relative z-10',
+                  isCollapsed ? 'w-full' : 'min-w-[24px]',
                   isActive
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-gray-500 dark:text-gray-400',
+                    ? 'text-cyan-400'
+                    : 'text-slate-400 group-hover:text-cyan-400',
                 )}
               >
                 {icon}
               </div>
-              {!collapsed && <span>{label}</span>}
+              {!isCollapsed && (
+                <span className="relative z-10 transition-colors duration-200">
+                  {label}
+                </span>
+              )}
+              {isActive && (
+                <div className="absolute right-0 w-1 h-8 bg-gradient-to-b from-cyan-400 to-teal-500 rounded-l-full"></div>
+              )}
             </Link>
           );
         })}
       </nav>
-      <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-800">
-        {!collapsed && (
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            OdinSys v1.2.0
+
+      {/* Footer */}
+      <div className="mt-auto p-4 border-t border-slate-700/50">
+        {!isCollapsed && (
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+            <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-500 rounded-full animate-pulse"></div>
+            <div className="text-xs text-slate-400 font-medium">
+              OdinSys v1.2.0
+            </div>
+          </div>
+        )}
+        {isCollapsed && (
+          <div className="flex justify-center">
+            <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-500 rounded-full animate-pulse"></div>
           </div>
         )}
       </div>
     </aside>
+    </>
   );
 }

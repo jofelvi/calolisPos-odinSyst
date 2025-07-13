@@ -13,7 +13,7 @@ import { Badge } from '@/components/shared/badge/badge';
 
 interface EntityGridProps<T> {
   items: T[];
-  basePath: string;
+  getDetailPath: (id: string) => string;
   imageKey?: keyof T;
   nameKey: keyof T;
   descriptionKey?: keyof T;
@@ -26,7 +26,7 @@ interface EntityGridProps<T> {
 
 export const EntityGrid = <T extends { id: string }>({
   items,
-  basePath,
+  getDetailPath,
   imageKey,
   nameKey,
   descriptionKey,
@@ -44,7 +44,7 @@ export const EntityGrid = <T extends { id: string }>({
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {items.map((item) => (
         <div key={item.id} className="group relative">
-          <Link href={`${basePath}/${item.id}`} className="group">
+          <Link href={getDetailPath(item.id)} className="group">
             <Card className="h-full cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 border-0 shadow-sm">
               {/* Image Section */}
               {imageKey && (

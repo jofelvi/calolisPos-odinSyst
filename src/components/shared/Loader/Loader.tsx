@@ -28,14 +28,14 @@ const Loader: React.FC<LoaderProps> = ({
     full: 'h-24 w-24',
   };
 
-  // Mapeo de colores
+  // Mapeo de colores con paleta cyan/teal
   const colorClasses = {
-    primary: 'text-blue-600',
-    secondary: 'text-purple-600',
-    success: 'text-green-600',
-    warning: 'text-yellow-600',
+    primary: 'text-cyan-600',
+    secondary: 'text-teal-600',
+    success: 'text-emerald-600',
+    warning: 'text-amber-600',
     error: 'text-red-600',
-    default: 'text-gray-600',
+    default: 'text-cyan-500',
   };
 
   // Tamaños de texto correspondientes
@@ -73,7 +73,7 @@ const Loader: React.FC<LoaderProps> = ({
       {spinner}
       {text && (
         <span
-          className={cn('text-gray-700 font-medium', textSizeClasses[size])}
+          className={cn('text-cyan-700 font-semibold', textSizeClasses[size])}
         >
           {text}
         </span>
@@ -83,8 +83,10 @@ const Loader: React.FC<LoaderProps> = ({
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 bg-white bg-opacity-80 flex items-center justify-center z-50">
-        {content}
+      <div className="fixed inset-0 bg-gradient-to-br from-cyan-50/90 to-teal-50/90 backdrop-blur-md flex items-center justify-center z-50">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl shadow-cyan-500/20 border border-cyan-100/50">
+          {content}
+        </div>
       </div>
     );
   }

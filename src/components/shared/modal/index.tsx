@@ -36,17 +36,19 @@ const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Estilos del backdrop mejorados
+  // Estilos del backdrop con efectos modernos
   const backdropVariants = {
-    light: 'bg-black/40 backdrop-blur-sm',
-    dark: 'bg-black/60 backdrop-blur-sm',
+    light: 'bg-black/30 backdrop-blur-md',
+    dark: 'bg-black/50 backdrop-blur-lg',
   };
 
   const mergeClassName = cn(
-    // Base styles con Material UI look
-    'bg-white rounded-xl relative max-w-md w-full mx-4',
-    // Sombra más pronunciada tipo Material UI
-    'shadow-2xl shadow-black/25',
+    // Base styles con glassmorphism
+    'bg-white/95 backdrop-blur-xl rounded-2xl relative max-w-md w-full mx-4',
+    // Sombra con acentos cyan
+    'shadow-2xl shadow-cyan-500/10',
+    // Borde con gradiente sutil
+    'border border-cyan-100/50',
     // Animación y transición
     'transform transition-all duration-300 ease-out',
     'animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4',
@@ -54,8 +56,6 @@ const Modal: React.FC<ModalProps> = ({
     'flex flex-col',
     // Altura mínima más moderada
     'min-h-[200px] max-h-[90vh]',
-    // Borde sutil
-    'border border-gray-100',
     className,
   );
 

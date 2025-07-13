@@ -11,21 +11,21 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const baseClasses =
-  'inline-flex items-center justify-center rounded-md font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none';
+  'inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none transform hover:scale-[1.02] active:scale-[0.98]';
 
-// Estilo actualizado para parecerse a Material UI
+// Estilo actualizado con paleta cyan/blue-green
 const variantClasses: Record<NonNullable<ButtonProps['variant']>, string> = {
-  default: 'bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg',
-  outline: 'border border-blue-600 text-blue-600 hover:bg-blue-50',
-  ghost: 'text-gray-700 hover:bg-gray-100',
-  destructive: 'bg-red-600 text-white hover:bg-red-700 shadow-md',
+  default: 'bg-gradient-to-r from-cyan-600 to-teal-600 text-white hover:from-cyan-700 hover:to-teal-700 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/40 focus-visible:ring-cyan-500',
+  outline: 'border-2 border-cyan-600 text-cyan-600 hover:bg-cyan-50 hover:border-cyan-700 focus-visible:ring-cyan-500',
+  ghost: 'text-cyan-700 hover:bg-cyan-50 hover:text-cyan-800 focus-visible:ring-cyan-500',
+  destructive: 'bg-gradient-to-r from-red-500 to-pink-600 text-white hover:from-red-600 hover:to-pink-700 shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 focus-visible:ring-red-500',
 };
 
-// Ajustes de tamaño para Material UI
+// Ajustes de tamaño modernos
 const sizeClasses: Record<NonNullable<ButtonProps['size']>, string> = {
-  sm: 'h-8 px-3 text-sm rounded',
-  md: 'h-10 px-5 py-2 text-base rounded-md',
-  lg: 'h-12 px-7 py-3 text-lg rounded-lg',
+  sm: 'h-9 px-4 text-sm',
+  md: 'h-11 px-6 py-2.5 text-base',
+  lg: 'h-13 px-8 py-3 text-lg',
 };
 
 // Clases para iconos según tamaño
@@ -61,7 +61,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           baseClasses,
           variantClasses[variant],
           sizeClasses[size],
-          'transition-transform active:scale-[0.98]', // Efecto de pulsación
+          // Efectos ya incluidos en baseClasses
           className,
         )}
         disabled={isLoading || disabled}

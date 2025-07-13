@@ -39,11 +39,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
 
     const baseClasses = cn(
-      // Base styling mejorado
-      'flex h-11 w-full rounded-lg border bg-white py-2 text-sm',
+      // Base styling moderno con glassmorphism
+      'flex h-11 w-full rounded-xl border bg-white/90 backdrop-blur-sm py-2 text-sm shadow-sm',
       'transition-all duration-200 ease-in-out',
-      'placeholder:text-gray-400',
-      'focus:outline-none focus:ring-2 focus:ring-offset-1',
+      'placeholder:text-cyan-400/60',
+      'focus:outline-none focus:ring-2 focus:ring-offset-0',
       // File input styling
       'file:border-0 file:bg-transparent file:text-sm file:font-medium',
       // Disabled state
@@ -55,31 +55,31 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
     const variantClasses = {
       default: cn(
-        'border-gray-300',
-        'focus:border-blue-500 focus:ring-blue-500/20',
-        hasError && 'border-red-500 focus:border-red-500 focus:ring-red-500/20',
+        'border-cyan-200',
+        'focus:border-cyan-500 focus:ring-cyan-500/30 focus:bg-white',
+        hasError && 'border-red-300 focus:border-red-500 focus:ring-red-500/30',
       ),
       search: cn(
-        'border-gray-300 bg-gray-50',
-        'focus:border-blue-500 focus:ring-blue-500/20 focus:bg-white',
-        hasError && 'border-red-500 focus:border-red-500 focus:ring-red-500/20',
+        'border-cyan-200 bg-cyan-50/50',
+        'focus:border-cyan-500 focus:ring-cyan-500/30 focus:bg-white',
+        hasError && 'border-red-300 focus:border-red-500 focus:ring-red-500/30',
       ),
       numeric: cn(
-        'text-right border-gray-300',
-        'focus:border-blue-500 focus:ring-blue-500/20',
-        hasError && 'border-red-500 focus:border-red-500 focus:ring-red-500/20',
+        'text-right border-cyan-200',
+        'focus:border-cyan-500 focus:ring-cyan-500/30 focus:bg-white',
+        hasError && 'border-red-300 focus:border-red-500 focus:ring-red-500/30',
       ),
     };
 
     const labelClasses = cn(
-      'block text-sm font-medium mb-2',
-      hasError ? 'text-red-700' : 'text-gray-700',
+      'block text-sm font-semibold mb-2',
+      hasError ? 'text-red-700' : 'text-cyan-700',
       disabled && 'text-gray-400',
     );
 
     const iconClasses = cn(
       'w-4 h-4 transition-colors duration-200',
-      hasError ? 'text-red-400' : 'text-gray-400',
+      hasError ? 'text-red-400' : 'text-cyan-500',
       disabled && 'text-gray-300',
     );
 

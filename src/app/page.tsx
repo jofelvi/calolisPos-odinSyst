@@ -2,19 +2,36 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUserStore } from '@/store/useUserStore';
+import { useSession } from 'next-auth/react';
+import { UserRoleEnum } from '@/types/enumShared';
+import { getDefaultRouteByRole, AUTH_ROUTES } from '@/constants/routes';
 
 export default function HomePage() {
-  const { user } = useUserStore();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
-      router.push('/dashboard');
+    if (status === 'loading') return; // Still loading
+
+    if (status === 'authenticated' && session?.user) {
+      // Redirect based on user role using centralized routes
+      const userRole = (session.user as any).role;
+      const defaultRoute = getDefaultRouteByRole(userRole);
+      router.push(defaultRoute);
     } else {
-      router.push('/login');
+      // Not authenticated, redirect to login
+      router.push(AUTH_ROUTES.SIGNIN);
     }
-  }, [user]);
+  }, [session, status, router]);
+
+  // Show loading while determining auth status
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Cargando...</div>
+      </div>
+    );
+  }
 
   return null;
 }

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ArchiveX, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/shared/button/Button';
+import { PRIVATE_ROUTES } from '@/constants/routes';
 
 export function EmptyState() {
   return (
@@ -13,7 +14,7 @@ export function EmptyState() {
         Parece que aún no has creado ninguna orden. ¡Empieza ahora!
       </p>
       <div className="mt-6">
-        <Link href="/purchase-orders/new">
+        <Link href={PRIVATE_ROUTES.PURCHASE_ORDERS_NEW}>
           <Button>
             <PlusCircle className="mr-2 h-4 w-4" />
             Crear Primera Orden
