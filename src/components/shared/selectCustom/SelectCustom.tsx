@@ -87,7 +87,9 @@ const CustomSelectInner = <T extends FieldValues>(
       ? ['border-red-300 focus:border-red-500 focus:ring-red-500/30']
       : disabled
         ? ['border-gray-200 bg-gray-50 text-gray-400']
-        : ['border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500/30 focus:bg-white'],
+        : [
+            'border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500/30 focus:bg-white',
+          ],
   );
 
   const labelClasses = cn(

@@ -78,7 +78,8 @@ export default function ProductPricing({
               size={14}
             />
             <p className="text-sm text-cyan-700 font-medium">
-              Se calcula automáticamente basado en los ingredientes + 10% de merma
+              Se calcula automáticamente basado en los ingredientes + 10% de
+              merma
             </p>
           </div>
         )}

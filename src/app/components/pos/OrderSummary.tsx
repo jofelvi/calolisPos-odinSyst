@@ -76,9 +76,13 @@ export default function OrderSummary({
             ORDEN
           </h2>
           <div className="text-right">
-            <div className="text-2xl font-bold text-cyan-800">#{orderNumber}</div>
+            <div className="text-2xl font-bold text-cyan-800">
+              #{orderNumber}
+            </div>
             <div className="flex items-center gap-2 text-sm text-cyan-600">
-              <span>👥 {totalGuests} {totalGuests === 1 ? 'producto' : 'productos'}</span>
+              <span>
+                👥 {totalGuests} {totalGuests === 1 ? 'producto' : 'productos'}
+              </span>
               {tableId ? (
                 <span>🏠 MESA: {tableId.slice(-4)}</span>
               ) : (
@@ -94,10 +98,10 @@ export default function OrderSummary({
         <div className="space-y-3">
           {items.map((item, index) => {
             // Buscar el producto correspondiente para obtener la imagen
-            const product = products.find(p => p.id === item.productId);
-            
+            const product = products.find((p) => p.id === item.productId);
+
             const isExpanded = expandedItems.has(index);
-            
+
             return (
               <div
                 key={`${item.productId}-${index}`}
@@ -125,13 +129,18 @@ export default function OrderSummary({
                     </div>
 
                     <div className="flex-1">
-                      <h3 className="font-semibold text-cyan-900">{item.name}</h3>
+                      <h3 className="font-semibold text-cyan-900">
+                        {item.name}
+                      </h3>
                       <p className="text-lg font-bold text-cyan-700">
                         ${item.unitPrice.toFixed(2)}
                       </p>
                       {item.notes && !isExpanded && (
                         <p className="text-xs text-gray-600 mt-1 italic">
-                          📝 {item.notes.length > 30 ? `${item.notes.substring(0, 30)}...` : item.notes}
+                          📝{' '}
+                          {item.notes.length > 30
+                            ? `${item.notes.substring(0, 30)}...`
+                            : item.notes}
                         </p>
                       )}
                     </div>
@@ -140,7 +149,9 @@ export default function OrderSummary({
                   <div className="flex items-center gap-2">
                     {/* Quantity controls */}
                     <div className="text-right">
-                      <div className="text-xs text-cyan-600 font-medium uppercase">Cantidad</div>
+                      <div className="text-xs text-cyan-600 font-medium uppercase">
+                        Cantidad
+                      </div>
                       <div className="flex items-center gap-2 mt-1">
                         <Button
                           variant="outline"
@@ -174,7 +185,9 @@ export default function OrderSummary({
                       variant="ghost"
                       size="sm"
                       className={`w-8 h-8 p-0 transition-colors ${
-                        isExpanded ? 'bg-cyan-100 text-cyan-700' : 'text-cyan-600 hover:bg-cyan-100'
+                        isExpanded
+                          ? 'bg-cyan-100 text-cyan-700'
+                          : 'text-cyan-600 hover:bg-cyan-100'
                       } ${item.notes ? 'bg-amber-100 text-amber-700' : ''}`}
                       onClick={() => toggleItemExpansion(index)}
                       title="Agregar notas"
@@ -205,7 +218,9 @@ export default function OrderSummary({
                         type="text"
                         placeholder="Ej: Sin cebolla, extra salsa, punto de carne..."
                         value={item.notes || ''}
-                        onChange={(e) => handleNotesChange(index, e.target.value)}
+                        onChange={(e) =>
+                          handleNotesChange(index, e.target.value)
+                        }
                         className="w-full border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500"
                       />
                       <p className="text-xs text-gray-500 mt-1">
@@ -224,8 +239,12 @@ export default function OrderSummary({
             <div className="w-16 h-16 bg-gradient-to-r from-cyan-100 to-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <div className="w-8 h-8 bg-gradient-to-r from-cyan-400 to-teal-400 rounded-lg"></div>
             </div>
-            <p className="text-cyan-600 font-medium">No hay productos agregados</p>
-            <p className="text-sm text-cyan-500 mt-1">Selecciona productos para comenzar</p>
+            <p className="text-cyan-600 font-medium">
+              No hay productos agregados
+            </p>
+            <p className="text-sm text-cyan-500 mt-1">
+              Selecciona productos para comenzar
+            </p>
           </div>
         )}
       </div>

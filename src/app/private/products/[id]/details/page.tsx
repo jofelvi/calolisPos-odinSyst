@@ -116,16 +116,28 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       </h3>
                       <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-4 rounded-xl border border-gray-200 space-y-3">
                         <div>
-                          <span className="text-sm font-medium text-gray-600">Categoría:</span>
-                          <p className="text-gray-800 font-medium">{product.category || 'Sin categoría'}</p>
+                          <span className="text-sm font-medium text-gray-600">
+                            Categoría:
+                          </span>
+                          <p className="text-gray-800 font-medium">
+                            {product.category || 'Sin categoría'}
+                          </p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-600">SKU:</span>
-                          <p className="text-gray-800 font-mono">{product.sku || 'Sin SKU'}</p>
+                          <span className="text-sm font-medium text-gray-600">
+                            SKU:
+                          </span>
+                          <p className="text-gray-800 font-mono">
+                            {product.sku || 'Sin SKU'}
+                          </p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-600">Código de Barras:</span>
-                          <p className="text-gray-800 font-mono">{product.barcode || 'Sin código'}</p>
+                          <span className="text-sm font-medium text-gray-600">
+                            Código de Barras:
+                          </span>
+                          <p className="text-gray-800 font-mono">
+                            {product.barcode || 'Sin código'}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -152,14 +164,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       </h3>
                       <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-4 rounded-xl border border-emerald-200 space-y-3">
                         <div>
-                          <span className="text-sm font-medium text-emerald-700">Precio de Venta:</span>
+                          <span className="text-sm font-medium text-emerald-700">
+                            Precio de Venta:
+                          </span>
                           <p className="text-2xl font-bold text-emerald-800">
                             ${product.price.toFixed(2)}
                           </p>
                         </div>
                         {product.cost && (
                           <div>
-                            <span className="text-sm font-medium text-emerald-700">Costo:</span>
+                            <span className="text-sm font-medium text-emerald-700">
+                              Costo:
+                            </span>
                             <p className="text-lg font-semibold text-emerald-800">
                               ${product.cost.toFixed(2)}
                             </p>
@@ -167,9 +183,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         )}
                         {product.cost && (
                           <div>
-                            <span className="text-sm font-medium text-emerald-700">Margen:</span>
+                            <span className="text-sm font-medium text-emerald-700">
+                              Margen:
+                            </span>
                             <p className="text-lg font-semibold text-emerald-800">
-                              {(((product.price - product.cost) / product.price) * 100).toFixed(1)}%
+                              {(
+                                ((product.price - product.cost) /
+                                  product.price) *
+                                100
+                              ).toFixed(1)}
+                              %
                             </p>
                           </div>
                         )}
@@ -182,30 +205,38 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       </h3>
                       <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-xl border border-blue-200 space-y-3">
                         <div>
-                          <span className="text-sm font-medium text-blue-700">Stock Actual:</span>
-                          <p className={`text-xl font-bold ${
-                            product.minStock && product.stock <= product.minStock 
-                              ? 'text-red-600' 
-                              : 'text-blue-800'
-                          }`}>
+                          <span className="text-sm font-medium text-blue-700">
+                            Stock Actual:
+                          </span>
+                          <p
+                            className={`text-xl font-bold ${
+                              product.minStock &&
+                              product.stock <= product.minStock
+                                ? 'text-red-600'
+                                : 'text-blue-800'
+                            }`}
+                          >
                             {product.stock} unidades
                           </p>
                         </div>
                         {product.minStock && (
                           <div>
-                            <span className="text-sm font-medium text-blue-700">Stock Mínimo:</span>
+                            <span className="text-sm font-medium text-blue-700">
+                              Stock Mínimo:
+                            </span>
                             <p className="text-lg font-semibold text-blue-800">
                               {product.minStock} unidades
                             </p>
                           </div>
                         )}
-                        {product.minStock && product.stock <= product.minStock && (
-                          <div className="bg-red-100 border border-red-200 rounded-lg p-2">
-                            <p className="text-red-700 text-sm font-medium">
-                              ⚠️ Stock bajo - Considera reabastecer
-                            </p>
-                          </div>
-                        )}
+                        {product.minStock &&
+                          product.stock <= product.minStock && (
+                            <div className="bg-red-100 border border-red-200 rounded-lg p-2">
+                              <p className="text-red-700 text-sm font-medium">
+                                ⚠️ Stock bajo - Considera reabastecer
+                              </p>
+                            </div>
+                          )}
                       </div>
                     </div>
                   </div>

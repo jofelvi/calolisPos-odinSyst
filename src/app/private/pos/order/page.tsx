@@ -139,7 +139,10 @@ export default function OrderPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-blue-50">
-      <form onSubmit={handleSubmit(onSubmit)} className="w-full h-screen flex flex-col">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="w-full h-screen flex flex-col"
+      >
         <div className="flex-1 flex flex-col xl:flex-row gap-6 p-6 overflow-hidden">
           <div className="flex-1 space-y-6 overflow-auto">
             <ProductSelector
@@ -172,8 +175,8 @@ export default function OrderPage() {
                   Cancelar
                 </Button>
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={isSubmitting || items.length === 0}
                   className="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white shadow-lg disabled:opacity-50"
                 >

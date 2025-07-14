@@ -54,7 +54,8 @@ export default function ProductSelector({
   // Función para verificar si necesita scroll
   const checkScrollButtons = () => {
     if (categoriesScrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = categoriesScrollRef.current;
+      const { scrollLeft, scrollWidth, clientWidth } =
+        categoriesScrollRef.current;
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft < scrollWidth - clientWidth);
     }
@@ -99,7 +100,8 @@ export default function ProductSelector({
           Seleccionar Productos
         </h1>
         <div className="text-sm text-cyan-600">
-          {filteredProducts.length} {filteredProducts.length === 1 ? 'producto' : 'productos'}
+          {filteredProducts.length}{' '}
+          {filteredProducts.length === 1 ? 'producto' : 'productos'}
         </div>
       </div>
 
@@ -181,7 +183,9 @@ export default function ProductSelector({
                     </div>
                   )}
                 </div>
-                <span className={`px-2 truncate ${selectedCategoryId === category.id ? 'text-cyan-700' : 'text-gray-700'}`}>
+                <span
+                  className={`px-2 truncate ${selectedCategoryId === category.id ? 'text-cyan-700' : 'text-gray-700'}`}
+                >
                   {category.name}
                 </span>
               </button>
@@ -203,10 +207,9 @@ export default function ProductSelector({
       {/* Productos */}
       <div className="flex-1 overflow-auto">
         <h3 className="text-lg font-semibold text-cyan-800 mb-4">
-          {selectedCategoryId 
-            ? `Productos - ${categories.find(c => c.id === selectedCategoryId)?.name}`
-            : 'Todos los Productos'
-          }
+          {selectedCategoryId
+            ? `Productos - ${categories.find((c) => c.id === selectedCategoryId)?.name}`
+            : 'Todos los Productos'}
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 pb-6">
           {filteredProducts.map((product) => (
@@ -234,7 +237,9 @@ export default function ProductSelector({
                 )}
               </div>
               <div className="text-center w-full">
-                <p className="font-semibold text-cyan-900 text-sm mb-1 truncate">{product.name}</p>
+                <p className="font-semibold text-cyan-900 text-sm mb-1 truncate">
+                  {product.name}
+                </p>
                 <p className="text-lg font-bold text-cyan-700">
                   ${product.price.toFixed(2)}
                 </p>
@@ -253,9 +258,13 @@ export default function ProductSelector({
             <div className="w-20 h-20 bg-gradient-to-r from-cyan-100 to-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Package className="w-10 h-10 text-cyan-400" />
             </div>
-            <h3 className="text-lg font-medium text-cyan-800 mb-2">No se encontraron productos</h3>
+            <h3 className="text-lg font-medium text-cyan-800 mb-2">
+              No se encontraron productos
+            </h3>
             <p className="text-cyan-600">
-              {searchTerm ? 'Intenta con otros términos de búsqueda' : 'No hay productos en esta categoría'}
+              {searchTerm
+                ? 'Intenta con otros términos de búsqueda'
+                : 'No hay productos en esta categoría'}
             </p>
           </div>
         )}

@@ -194,19 +194,25 @@ export const purchaseOrderService = new FirestoreService<PurchaseOrder>(
 export const orderService = new FirestoreService<Order>('orders');
 export const customerService = new FirestoreService<Customer>('customers');
 export const paymentService = new FirestoreService<Payment>('payments');
-export const accountReceivableService = new FirestoreService<AccountReceivable>('accountReceivables');
+export const accountReceivableService = new FirestoreService<AccountReceivable>(
+  'accountReceivables',
+);
 export const pagoMovilService = new FirestoreService<PagoMovil>('pagoMoviles');
 
 // Helper function to get customer receivables
-export const getCustomerReceivables = async (customerId: string): Promise<AccountReceivable[]> => {
+export const getCustomerReceivables = async (
+  customerId: string,
+): Promise<AccountReceivable[]> => {
   try {
     const q = query(
       collection(db, 'accountReceivables'),
       where('customerId', '==', customerId),
-      where('status', 'in', ['pending', 'partially_paid'])
+      where('status', 'in', ['pending', 'partially_paid']),
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as AccountReceivable);
+    return snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() }) as AccountReceivable,
+    );
   } catch (error) {
     console.error('Error getting customer receivables:', error);
     throw error;
@@ -214,11 +220,13 @@ export const getCustomerReceivables = async (customerId: string): Promise<Accoun
 };
 
 // Helper function to get pago movil by reference number
-export const getPagoMovilByReference = async (referenceNumber: string): Promise<PagoMovil | null> => {
+export const getPagoMovilByReference = async (
+  referenceNumber: string,
+): Promise<PagoMovil | null> => {
   try {
     const q = query(
       collection(db, 'pagoMoviles'),
-      where('referenceNumber', '==', referenceNumber)
+      where('referenceNumber', '==', referenceNumber),
     );
     const snapshot = await getDocs(q);
     if (snapshot.empty) {
@@ -233,12 +241,14 @@ export const getPagoMovilByReference = async (referenceNumber: string): Promise<
 };
 
 // Helper function to get active order for a specific table
-export const getActiveOrderByTable = async (tableId: string): Promise<Order | null> => {
+export const getActiveOrderByTable = async (
+  tableId: string,
+): Promise<Order | null> => {
   try {
     const q = query(
       collection(db, 'orders'),
       where('tableId', '==', tableId),
-      where('status', 'in', ['pending', 'in_progress', 'ready'])
+      where('status', 'in', ['pending', 'in_progress', 'ready']),
     );
     const snapshot = await getDocs(q);
     if (snapshot.empty) {
@@ -258,7 +268,7 @@ export const getActiveTakeawayOrders = async (): Promise<Order[]> => {
     const q = query(
       collection(db, 'orders'),
       where('tableId', '==', null),
-      where('status', 'in', ['pending', 'in_progress', 'ready'])
+      where('status', 'in', ['pending', 'in_progress', 'ready']),
     );
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Order);
@@ -269,15 +279,19 @@ export const getActiveTakeawayOrders = async (): Promise<Order[]> => {
 };
 
 // Helper function to get all active orders with table info
-export const getActiveOrdersWithTables = async (): Promise<(Order & { tableNumber?: number })[]> => {
+export const getActiveOrdersWithTables = async (): Promise<
+  (Order & { tableNumber?: number })[]
+> => {
   try {
     const q = query(
       collection(db, 'orders'),
-      where('status', 'in', ['pending', 'in_progress', 'ready'])
+      where('status', 'in', ['pending', 'in_progress', 'ready']),
     );
     const snapshot = await getDocs(q);
-    const orders = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Order);
-    
+    const orders = snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() }) as Order,
+    );
+
     // Get table info for orders that have tableId
     const ordersWithTables = await Promise.all(
       orders.map(async (order) => {
@@ -291,9 +305,9 @@ export const getActiveOrdersWithTables = async (): Promise<(Order & { tableNumbe
           }
         }
         return order;
-      })
+      }),
     );
-    
+
     return ordersWithTables;
   } catch (error) {
     console.error('Error getting active orders with tables:', error);

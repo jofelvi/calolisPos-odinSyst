@@ -6,17 +6,17 @@ import { useRouter } from 'next/navigation';
 import { Table } from '@/types/table';
 import { Order } from '@/types/order';
 import { getAvailableTables } from '@/services/firebase/tableServices';
-import { 
-  getActiveOrderByTable, 
-  getActiveTakeawayOrders, 
-  getActiveOrdersWithTables 
+import {
+  getActiveOrderByTable,
+  getActiveTakeawayOrders,
+  getActiveOrdersWithTables,
 } from '@/services/firebase/genericServices';
 import { Button } from '@/components/shared/button/Button';
 import { Card } from '@/components/shared/card/card';
 import { PRIVATE_ROUTES } from '@/constants/routes';
-import { 
-  Users, 
-  ShoppingBag, 
+import {
+  Users,
+  ShoppingBag,
   Clock,
   MapPin,
   Plus,
@@ -25,14 +25,16 @@ import {
   Utensils,
   Eye,
   AlertCircle,
-  Package
+  Package,
 } from 'lucide-react';
 import Loader from '@/components/shared/Loader/Loader';
 
 export default function POSPage() {
   const [tables, setTables] = useState<Table[]>([]);
   const [takeawayOrders, setTakeawayOrders] = useState<Order[]>([]);
-  const [activeOrders, setActiveOrders] = useState<Map<string, Order>>(new Map());
+  const [activeOrders, setActiveOrders] = useState<Map<string, Order>>(
+    new Map(),
+  );
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -40,18 +42,19 @@ export default function POSPage() {
     const loadData = async () => {
       try {
         // Load tables and active orders in parallel
-        const [availableTables, takeawayOrdersData, allActiveOrders] = await Promise.all([
-          getAvailableTables(),
-          getActiveTakeawayOrders(),
-          getActiveOrdersWithTables()
-        ]);
+        const [availableTables, takeawayOrdersData, allActiveOrders] =
+          await Promise.all([
+            getAvailableTables(),
+            getActiveTakeawayOrders(),
+            getActiveOrdersWithTables(),
+          ]);
 
         setTables(availableTables);
         setTakeawayOrders(takeawayOrdersData);
 
         // Create a map of tableId -> Order for easy lookup
         const ordersMap = new Map<string, Order>();
-        allActiveOrders.forEach(order => {
+        allActiveOrders.forEach((order) => {
           if (order.tableId) {
             ordersMap.set(order.tableId, order);
           }
@@ -168,10 +171,10 @@ export default function POSPage() {
                 Selecciona una mesa o crea una orden para llevar
               </p>
             </div>
-            
+
             {/* Takeaway Order Button */}
             <div className="flex-shrink-0">
-              <Button 
+              <Button
                 onClick={() => handleCreateNewOrder()}
                 size="lg"
                 className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
@@ -190,8 +193,12 @@ export default function POSPage() {
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-cyan-600">Total de Mesas</p>
-                  <p className="text-3xl font-bold text-gray-900">{tables.length}</p>
+                  <p className="text-sm font-medium text-cyan-600">
+                    Total de Mesas
+                  </p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {tables.length}
+                  </p>
                 </div>
                 <div className="h-12 w-12 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-xl flex items-center justify-center">
                   <Utensils className="h-6 w-6 text-white" />
@@ -204,9 +211,15 @@ export default function POSPage() {
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-emerald-600">Mesas Disponibles</p>
+                  <p className="text-sm font-medium text-emerald-600">
+                    Mesas Disponibles
+                  </p>
                   <p className="text-3xl font-bold text-gray-900">
-                    {tables.filter(t => t.status?.toLowerCase() !== 'ocupada').length}
+                    {
+                      tables.filter(
+                        (t) => t.status?.toLowerCase() !== 'ocupada',
+                      ).length
+                    }
                   </p>
                 </div>
                 <div className="h-12 w-12 bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl flex items-center justify-center">
@@ -220,7 +233,9 @@ export default function POSPage() {
             <div className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-amber-600">Capacidad Total</p>
+                  <p className="text-sm font-medium text-amber-600">
+                    Capacidad Total
+                  </p>
                   <p className="text-3xl font-bold text-gray-900">
                     {tables.reduce((sum, table) => sum + table.capacity, 0)}
                   </p>
@@ -239,21 +254,21 @@ export default function POSPage() {
             <MapPin className="w-6 h-6 mr-2 text-cyan-600" />
             Mesas Disponibles
           </h2>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
             {tables.map((table) => {
               const TableIcon = getTableIcon(table.capacity);
               const existingOrder = activeOrders.get(table.id);
               const hasOrder = !!existingOrder;
-              
+
               // Override status color if there's an active order
-              const statusColor = hasOrder 
-                ? 'from-orange-50 to-amber-50 border-orange-200' 
+              const statusColor = hasOrder
+                ? 'from-orange-50 to-amber-50 border-orange-200'
                 : getTableStatusColor(table.status);
-              const statusBadge = hasOrder 
+              const statusBadge = hasOrder
                 ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white'
                 : getTableStatusBadge(table.status);
-              
+
               return (
                 <Card
                   key={table.id}
@@ -262,11 +277,13 @@ export default function POSPage() {
                 >
                   {/* Background decoration */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
+
                   <div className="relative p-6">
                     {/* Status badge */}
                     <div className="absolute top-3 right-3">
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${statusBadge} shadow-sm`}>
+                      <span
+                        className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${statusBadge} shadow-sm`}
+                      >
                         {hasOrder ? 'Con Orden' : table.status || 'Disponible'}
                       </span>
                     </div>
@@ -285,7 +302,7 @@ export default function POSPage() {
                       <div className="w-16 h-16 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                         <TableIcon className="w-8 h-8 text-white" />
                       </div>
-                      
+
                       <div>
                         <h3 className="text-xl font-bold text-gray-900 group-hover:text-cyan-700 transition-colors duration-200">
                           Mesa {table.number}
@@ -293,18 +310,22 @@ export default function POSPage() {
                         <div className="flex items-center justify-center mt-2 text-gray-600">
                           <Users className="w-4 h-4 mr-1" />
                           <span className="text-sm font-medium">
-                            {table.capacity} {table.capacity === 1 ? 'persona' : 'personas'}
+                            {table.capacity}{' '}
+                            {table.capacity === 1 ? 'persona' : 'personas'}
                           </span>
                         </div>
-                        
+
                         {/* Order info */}
                         {hasOrder && existingOrder && (
                           <div className="mt-2">
-                            <div className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getOrderStatusColor(existingOrder.status)}`}>
+                            <div
+                              className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getOrderStatusColor(existingOrder.status)}`}
+                            >
                               {getOrderStatusText(existingOrder.status)}
                             </div>
                             <div className="text-xs text-gray-500 mt-1">
-                              ${existingOrder.total.toFixed(2)} • {existingOrder.items.length} items
+                              ${existingOrder.total.toFixed(2)} •{' '}
+                              {existingOrder.items.length} items
                             </div>
                           </div>
                         )}
@@ -314,7 +335,9 @@ export default function POSPage() {
                     {/* Action hint */}
                     <div className="mt-4 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <p className="text-xs text-cyan-600 font-medium">
-                        {hasOrder ? 'Click para ver orden' : 'Click para crear orden'}
+                        {hasOrder
+                          ? 'Click para ver orden'
+                          : 'Click para crear orden'}
                       </p>
                     </div>
                   </div>
@@ -334,7 +357,7 @@ export default function POSPage() {
                 {takeawayOrders.length}
               </span>
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {takeawayOrders.map((order) => (
                 <Card
@@ -344,11 +367,13 @@ export default function POSPage() {
                 >
                   {/* Background decoration */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
+
                   <div className="relative p-6">
                     {/* Status badge */}
                     <div className="absolute top-3 right-3">
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${getOrderStatusColor(order.status)}`}>
+                      <span
+                        className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${getOrderStatusColor(order.status)}`}
+                      >
                         {getOrderStatusText(order.status)}
                       </span>
                     </div>
@@ -358,7 +383,7 @@ export default function POSPage() {
                       <div className="w-16 h-16 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                         <ShoppingBag className="w-8 h-8 text-white" />
                       </div>
-                      
+
                       <div>
                         <h3 className="text-xl font-bold text-gray-900 group-hover:text-cyan-700 transition-colors duration-200">
                           Orden #{order.id.slice(-8).toUpperCase()}
@@ -368,13 +393,17 @@ export default function POSPage() {
                             ${order.total.toFixed(2)}
                           </div>
                           <div className="text-sm text-gray-600">
-                            {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
+                            {order.items.length}{' '}
+                            {order.items.length === 1 ? 'item' : 'items'}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {new Date(order.createdAt).toLocaleTimeString('es-VE', {
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                            {new Date(order.createdAt).toLocaleTimeString(
+                              'es-VE',
+                              {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              },
+                            )}
                           </div>
                         </div>
                       </div>
@@ -399,11 +428,14 @@ export default function POSPage() {
             <div className="w-24 h-24 bg-gradient-to-r from-gray-100 to-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Utensils className="w-12 h-12 text-gray-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No hay mesas disponibles</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              No hay mesas disponibles
+            </h3>
             <p className="text-gray-500 max-w-md mx-auto">
-              No se encontraron mesas en el sistema. Puedes crear una orden para llevar mientras tanto.
+              No se encontraron mesas en el sistema. Puedes crear una orden para
+              llevar mientras tanto.
             </p>
-            <Button 
+            <Button
               onClick={() => handleCreateNewOrder()}
               className="mt-6 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white"
             >
