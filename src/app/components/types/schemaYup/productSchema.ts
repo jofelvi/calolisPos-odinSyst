@@ -41,6 +41,7 @@ export const productSchema = yup.object({
   categoryId: yup.string().required('La categoría es requerida').defined(),
   supplierIds: yup.array().of(yup.string()).nullable().defined(),
   isActive: yup.boolean().default(true).defined(),
+  isForSale: yup.boolean().default(true).defined(),
   cost: yup
     .number()
     .min(0, 'El costo no puede ser negativo') // Asegura que no sea negativo, permitiendo el cero

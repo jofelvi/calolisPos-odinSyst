@@ -27,11 +27,20 @@ export default function ProductSelector({
   const [canScrollRight, setCanScrollRight] = useState(false);
 
   useEffect(() => {
-    categoryService.getAll().then(setCategories);
+    const loadCategories = async () => {
+      const allCategories = await categoryService.getAll();
+      // Filter only categories that are for sale
+      const categoriesForSale = allCategories.filter(category => category.isForSale === true);
+      setCategories(categoriesForSale);
+    };
+    void loadCategories();
   }, []);
 
   useEffect(() => {
     let result = [...products];
+
+    // Filter only products that are for sale
+    result = result.filter((product) => product.isForSale === true);
 
     if (selectedCategoryId) {
       result = result.filter(
@@ -42,14 +51,18 @@ export default function ProductSelector({
     if (searchTerm.trim()) {
       const lower = searchTerm.toLowerCase();
       result = result.filter(
-        (product) =>
-          product.name.toLowerCase().includes(lower) ||
-          product.category?.toLowerCase().includes(lower),
+        (product) => {
+          const productNameMatch = product.name.toLowerCase().includes(lower);
+          const categoryMatch = categories.find(cat => cat.id === product.categoryId)?.name.toLowerCase().includes(lower) || false;
+          const descriptionMatch = product.description?.toLowerCase().includes(lower) || false;
+          
+          return productNameMatch || categoryMatch || descriptionMatch;
+        }
       );
     }
 
     setFilteredProducts(result);
-  }, [products, selectedCategoryId, searchTerm]);
+  }, [products, selectedCategoryId, searchTerm, categories]);
 
   // Función para verificar si necesita scroll
   const checkScrollButtons = () => {

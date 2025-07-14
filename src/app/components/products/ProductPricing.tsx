@@ -19,6 +19,7 @@ export default function ProductPricing({
   watch,
 }: ProductPricingProps) {
   const type = watch('type');
+  const isForSale = watch('isForSale');
 
   return (
     <>
@@ -32,9 +33,9 @@ export default function ProductPricing({
         error={errors.currency?.message}
       />
 
-      {/* Precio de Venta */}
+      {/* Precio */}
       <Input
-        label="Precio de Venta *"
+        label={isForSale ? "Precio de Venta *" : "Precio de Compra *"}
         id="price"
         type="number"
         min={0.01}
@@ -44,7 +45,7 @@ export default function ProductPricing({
         {...register('price')}
         error={errors.price?.message}
         placeholder="0.00"
-        textHelper="Precio al que se vende al cliente"
+        textHelper={isForSale ? "Precio al que se vende al cliente" : "Precio al que se compra el producto"}
       />
 
       {/* Costo de Elaboración */}

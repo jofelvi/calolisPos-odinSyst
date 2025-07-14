@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
@@ -17,11 +17,31 @@ import {
   TrendingUp,
   Package,
   AlertCircle,
+  TableProperties,
+  Truck,
 } from 'lucide-react';
+import { PRIVATE_ROUTES } from '@/constants/routes';
+import { 
+  productService, 
+  customerService, 
+  orderService, 
+  supplierService 
+} from '@/services/firebase/genericServices';
+import { Product } from '@/types/product';
+import { Customer } from '@/types/customer';
+import { Order } from '@/types/order';
+import { Supplier } from '@/types/supplier';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [dashboardData, setDashboardData] = useState({
+    products: [] as Product[],
+    customers: [] as Customer[],
+    orders: [] as Order[],
+    suppliers: [] as Supplier[],
+    isLoading: true,
+  });
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -29,7 +49,46 @@ export default function DashboardPage() {
     }
   }, [status, router]);
 
-  if (status === 'loading') return <Loader text="Cargando dashboard..." />;
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      if (status === 'authenticated') {
+        try {
+          const [products, customers, orders, suppliers] = await Promise.all([
+            productService.getAll(),
+            customerService.getAll(),
+            orderService.getAll(),
+            supplierService.getAll(),
+          ]);
+
+          setDashboardData({
+            products,
+            customers,
+            orders,
+            suppliers,
+            isLoading: false,
+          });
+        } catch (error) {
+          console.error('Error loading dashboard data:', error);
+          setDashboardData(prev => ({ ...prev, isLoading: false }));
+        }
+      }
+    };
+
+    void loadDashboardData();
+  }, [status]);
+
+  // Calculate statistics
+  const totalProducts = dashboardData.products.length;
+  const productsForSale = dashboardData.products.filter(p => p.isForSale).length;
+  const lowStockProducts = dashboardData.products.filter(p => p.stock <= (p.minStock || 5)).length;
+  const totalCustomers = dashboardData.customers.length;
+  const totalOrders = dashboardData.orders.length;
+  const pendingOrders = dashboardData.orders.filter(o => o.status === 'PENDING').length;
+  
+  // Calculate today's revenue (simplified - you may want to add date filtering)
+  const todayRevenue = dashboardData.orders.reduce((sum, order) => sum + (order.total || 0), 0);
+
+  if (status === 'loading' || dashboardData.isLoading) return <Loader text="Cargando dashboard..." />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-blue-50 p-6">
@@ -46,25 +105,31 @@ export default function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Revenue Card */}
-        <Card className="hover:scale-105 transition-transform duration-300">
+        <Card 
+          className="hover:scale-105 transition-transform duration-300 cursor-pointer"
+          onClick={() => router.push(PRIVATE_ROUTES.ORDERS)}
+        >
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-cyan-600">
-                Ventas Hoy
+                Ventas Totales
               </CardTitle>
               <TrendingUp className="h-5 w-5 text-emerald-500" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-cyan-900">$2,345</div>
+            <div className="text-2xl font-bold text-cyan-900">${todayRevenue.toFixed(2)}</div>
             <Badge variant="success" className="mt-2">
-              +12.3%
+              {totalOrders} órdenes
             </Badge>
           </CardContent>
         </Card>
 
         {/* Orders Card */}
-        <Card className="hover:scale-105 transition-transform duration-300">
+        <Card 
+          className="hover:scale-105 transition-transform duration-300 cursor-pointer"
+          onClick={() => router.push(PRIVATE_ROUTES.ORDERS)}
+        >
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-cyan-600">
@@ -74,15 +139,18 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-cyan-900">127</div>
+            <div className="text-2xl font-bold text-cyan-900">{totalOrders}</div>
             <Badge variant="info" className="mt-2">
-              Activas: 8
+              Pendientes: {pendingOrders}
             </Badge>
           </CardContent>
         </Card>
 
         {/* Customers Card */}
-        <Card className="hover:scale-105 transition-transform duration-300">
+        <Card 
+          className="hover:scale-105 transition-transform duration-300 cursor-pointer"
+          onClick={() => router.push(PRIVATE_ROUTES.CUSTOMERS)}
+        >
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-cyan-600">
@@ -92,15 +160,18 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-cyan-900">1,847</div>
+            <div className="text-2xl font-bold text-cyan-900">{totalCustomers}</div>
             <Badge variant="default" className="mt-2">
-              +23 nuevos
+              Registrados
             </Badge>
           </CardContent>
         </Card>
 
         {/* Products Card */}
-        <Card className="hover:scale-105 transition-transform duration-300">
+        <Card 
+          className="hover:scale-105 transition-transform duration-300 cursor-pointer"
+          onClick={() => router.push(PRIVATE_ROUTES.PRODUCTS)}
+        >
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium text-cyan-600">
@@ -110,9 +181,9 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-cyan-900">89</div>
-            <Badge variant="warning" className="mt-2">
-              5 agotados
+            <div className="text-2xl font-bold text-cyan-900">{totalProducts}</div>
+            <Badge variant={lowStockProducts > 0 ? "warning" : "success"} className="mt-2">
+              {lowStockProducts > 0 ? `${lowStockProducts} stock bajo` : 'Stock OK'}
             </Badge>
           </CardContent>
         </Card>
@@ -195,32 +266,49 @@ export default function DashboardPage() {
         <h2 className="text-xl font-semibold text-cyan-900 mb-4">
           Acciones Rápidas
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {[
             {
               label: 'Nueva Venta',
               icon: ShoppingCart,
               color: 'from-cyan-500 to-teal-500',
+              route: PRIVATE_ROUTES.POS,
             },
             {
               label: 'Agregar Producto',
               icon: Package,
               color: 'from-teal-500 to-cyan-500',
+              route: PRIVATE_ROUTES.PRODUCTS_NEW,
             },
             {
-              label: 'Ver Reportes',
+              label: 'Ver Órdenes',
               icon: BarChart3,
               color: 'from-blue-500 to-cyan-500',
+              route: PRIVATE_ROUTES.ORDERS,
             },
             {
               label: 'Gestionar Mesas',
-              icon: AlertCircle,
+              icon: TableProperties,
               color: 'from-cyan-500 to-blue-500',
+              route: PRIVATE_ROUTES.TABLES,
+            },
+            {
+              label: 'Clientes',
+              icon: Users,
+              color: 'from-purple-500 to-cyan-500',
+              route: PRIVATE_ROUTES.CUSTOMERS,
+            },
+            {
+              label: 'Proveedores',
+              icon: Truck,
+              color: 'from-orange-500 to-cyan-500',
+              route: PRIVATE_ROUTES.SUPPLIERS,
             },
           ].map((action, index) => (
             <Card
               key={index}
               className="cursor-pointer hover:scale-105 transition-all duration-300 group"
+              onClick={() => router.push(action.route)}
             >
               <CardContent className="p-6 text-center">
                 <div

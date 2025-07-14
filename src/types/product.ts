@@ -11,6 +11,7 @@ export interface Product {
   supplierIds?: (string | undefined)[] | null;
   createdAt?: Date | null;
   isActive: boolean;
+  isForSale: boolean;
   cost?: number; // Removemos null para compatibilidad
   category?: string;
   sku?: string | null;

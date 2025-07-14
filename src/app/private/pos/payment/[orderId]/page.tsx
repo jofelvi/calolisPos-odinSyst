@@ -9,6 +9,7 @@ import {
   OrderStatusEnum,
   PaymentMethodEnum,
   PaymentStatusEnum,
+  TableStatusEnum,
 } from '@/types/enumShared';
 import {
   accountReceivableService,
@@ -17,6 +18,7 @@ import {
   orderService,
   pagoMovilService,
   paymentService,
+  tableService,
 } from '@/services/firebase/genericServices';
 import { Payment } from '@/types/payment';
 import { Customer } from '@/types/customer';
@@ -587,6 +589,38 @@ export default function PaymentPage({ params }: PageProps) {
     router.back();
   };
 
+  // Función para cobrar directamente (marcar como pagado y volver al POS)
+  const handleDirectCharge = async () => {
+    if (!order) return;
+
+    setIsProcessing(true);
+    try {
+      // Marcar orden como pagada directamente
+      await orderService.update(order.id, {
+        paymentStatus: PaymentStatusEnum.PAID,
+        status: OrderStatusEnum.PAID,
+        updatedAt: new Date(),
+      });
+
+      // Si la orden tiene una mesa asociada, limpiar la asociación y restaurar status
+      if (order.tableId) {
+        await tableService.update(order.tableId, {
+          orderId: null,
+          status: TableStatusEnum.ISAVAILABLE,
+          isAvailable: true,
+        });
+      }
+
+      toast.success('Orden cobrada exitosamente', 'Volviendo al POS...');
+      router.push('/private/pos');
+    } catch (error) {
+      console.error('Error charging order:', error);
+      toast.error('Error al cobrar la orden', 'Error del sistema');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handlePayment = async () => {
     if (!order) return;
 
@@ -636,6 +670,15 @@ export default function PaymentPage({ params }: PageProps) {
         customerId: selectedCustomer?.id || order.customerId,
         updatedAt: new Date(),
       });
+
+      // Si la orden se pagó completamente y tiene una mesa asociada, limpiar la asociación y restaurar status
+      if (newStatus === PaymentStatusEnum.PAID && order.tableId) {
+        await tableService.update(order.tableId, {
+          orderId: null,
+          status: TableStatusEnum.ISAVAILABLE,
+          isAvailable: true,
+        });
+      }
 
       toast.success(
         '¡Pago procesado exitosamente!',
@@ -908,6 +951,15 @@ export default function PaymentPage({ params }: PageProps) {
                     </Button>
                   )}
                 </div>
+
+                {/* Botón COBRAR directo */}
+                <Button
+                  onClick={handleDirectCharge}
+                  disabled={isProcessing}
+                  className="w-full h-14 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold text-base"
+                >
+                  {isProcessing ? 'COBRANDO...' : 'COBRAR'}
+                </Button>
 
                 <Button
                   onClick={handlePayment}

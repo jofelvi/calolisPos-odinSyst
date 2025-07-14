@@ -22,7 +22,7 @@ export default async function ProductEditPage({ params }: PageProps) {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-1">Editar Producto</h1>
-      <BackIcon href="/products" />
+      <BackIcon href="/private/products" />
       <div className="bg-white shadow rounded-lg p-6">
         <ProductForm initialData={product} />
       </div>

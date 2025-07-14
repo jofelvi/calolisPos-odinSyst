@@ -75,6 +75,7 @@ export default function ProductForm({
     resolver: yupResolver(productSchema),
     defaultValues: {
       isActive: true,
+      isForSale: true,
       stock: 0,
       supplierIds: [],
       currency: CurrencyEnum.USD,
@@ -177,9 +178,6 @@ export default function ProductForm({
         color="primary"
       />
     );
-  }
-  {
-    console.log(JSON.stringify(errors));
   }
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

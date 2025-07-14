@@ -85,6 +85,22 @@ export default function ProductBasicInfo({
           register={register}
         />
       </div>
+      
+      {/* Estado para venta */}
+      <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl border border-gray-200">
+        <input
+          type="checkbox"
+          id="isForSale"
+          {...register('isForSale')}
+          className="h-5 w-5 text-cyan-600 focus:ring-cyan-500 border-cyan-300 rounded bg-white/90 backdrop-blur-sm transition-all duration-200"
+        />
+        <label
+          htmlFor="isForSale"
+          className="text-sm font-semibold text-cyan-700 cursor-pointer"
+        >
+          Producto disponible para venta
+        </label>
+      </div>
     </>
   );
 }

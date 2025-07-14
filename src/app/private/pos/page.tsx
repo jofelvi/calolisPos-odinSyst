@@ -3,63 +3,69 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Table } from '@/types/table';
 import { Order } from '@/types/order';
-import { getAvailableTables } from '@/services/firebase/tableServices';
 import {
-  getActiveOrderByTable,
-  getActiveTakeawayOrders,
   getActiveOrdersWithTables,
+  getActiveTakeawayOrders,
+  tableService,
 } from '@/services/firebase/genericServices';
 import { Button } from '@/components/shared/button/Button';
 import { Card } from '@/components/shared/card/card';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 import {
-  Users,
-  ShoppingBag,
-  Clock,
-  MapPin,
-  Plus,
-  Coffee,
-  ChefHat,
-  Utensils,
-  Eye,
   AlertCircle,
+  ChefHat,
+  Clock,
+  Coffee,
+  Eye,
+  MapPin,
   Package,
+  Plus,
+  ShoppingBag,
+  Users,
+  Utensils,
 } from 'lucide-react';
 import Loader from '@/components/shared/Loader/Loader';
+import { Table } from '@/types/table';
+
+interface TableWithOrder extends Table {
+  currentOrder?: Order | null;
+}
 
 export default function POSPage() {
-  const [tables, setTables] = useState<Table[]>([]);
+  const [tables, setTables] = useState<TableWithOrder[]>([]);
   const [takeawayOrders, setTakeawayOrders] = useState<Order[]>([]);
-  const [activeOrders, setActiveOrders] = useState<Map<string, Order>>(
-    new Map(),
-  );
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load tables and active orders in parallel
-        const [availableTables, takeawayOrdersData, allActiveOrders] =
+        // Obtener TODAS las mesas, no solo las disponibles
+        const [allTables, takeawayOrdersData, allActiveOrders] =
           await Promise.all([
-            getAvailableTables(),
+            tableService.getAll(),
             getActiveTakeawayOrders(),
             getActiveOrdersWithTables(),
           ]);
 
-        setTables(availableTables);
-        setTakeawayOrders(takeawayOrdersData);
-
-        // Create a map of tableId -> Order for easy lookup
+        // Crear mapa de órdenes activas por mesa
         const ordersMap = new Map<string, Order>();
         allActiveOrders.forEach((order) => {
-          if (order.tableId) {
+          if (order.tableId && order.paymentStatus !== 'paid') {
             ordersMap.set(order.tableId, order);
           }
         });
-        setActiveOrders(ordersMap);
+
+        // Enriquecer las mesas con información de órdenes
+        const enrichedTables: TableWithOrder[] = allTables.map((table) => ({
+          ...table,
+          currentOrder: ordersMap.get(table.id) || null,
+        }));
+
+        setTables(enrichedTables);
+        setTakeawayOrders(takeawayOrdersData);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -70,23 +76,74 @@ export default function POSPage() {
     void loadData();
   }, []);
 
+  const handleTableClick = async (table: TableWithOrder) => {
+    const { currentOrder } = table;
+    console.log('currentOrder', currentOrder);
+    console.log('table', table);
+    if (currentOrder) {
+      // Mesa ocupada: mostrar resumen de la orden existente
+      setSelectedOrder(currentOrder);
+    } else {
+      // Mesa libre: crear nueva orden
+      router.push(`${PRIVATE_ROUTES.POS_ORDER}?tableId=${table.id}`);
+    }
+  };
+
   const handleCreateNewOrder = async (tableId?: string) => {
     if (tableId) {
-      // Check if table already has an active order
-      const existingOrder = activeOrders.get(tableId);
-      if (existingOrder) {
-        // Navigate to existing order instead of creating new one
-        router.push(`${PRIVATE_ROUTES.POS_ORDER}/${existingOrder.id}`);
-        return;
-      }
       router.push(`${PRIVATE_ROUTES.POS_ORDER}?tableId=${tableId}`);
     } else {
       router.push(PRIVATE_ROUTES.POS_ORDER);
     }
   };
 
+  const handleEditOrder = () => {
+    if (selectedOrder) {
+      router.push(
+        `${PRIVATE_ROUTES.POS_ORDER}?tableId=${selectedOrder.tableId}&orderId=${selectedOrder.id}`,
+      );
+    }
+  };
+
+  const handlePayOrder = () => {
+    if (selectedOrder) {
+      router.push(`/private/pos/payment/${selectedOrder.id}`);
+    }
+  };
+
   const handleViewOrder = (orderId: string) => {
     router.push(`${PRIVATE_ROUTES.POS_ORDER}/${orderId}`);
+  };
+
+  // Funciones helper para el estado de las mesas
+  const getTableStatus = (table: TableWithOrder): 'free' | 'occupied' => {
+    // Verificar currentOrder primero
+    if (table.currentOrder) return 'occupied';
+
+    // Si no hay currentOrder, verificar otros campos
+    if (table.status === 'occupied') return 'occupied';
+    if (!table.isAvailable) return 'occupied';
+    if (table.orderId) return 'occupied';
+
+    return 'free';
+  };
+
+  const getTableStatusColors = (status: 'free' | 'occupied') => {
+    return status === 'occupied'
+      ? {
+          gradient: 'from-red-50 to-rose-50 border-red-200',
+          badge: 'bg-gradient-to-r from-red-500 to-rose-500 text-white',
+          text: 'Ocupada',
+        }
+      : {
+          gradient: 'from-emerald-50 to-green-50 border-emerald-200',
+          badge: 'bg-gradient-to-r from-emerald-500 to-green-500 text-white',
+          text: 'Disponible',
+        };
+  };
+
+  const getAvailableTablesCount = (): number => {
+    return tables.filter((table) => !table.orderId).length;
   };
 
   const getOrderStatusColor = (status: string) => {
@@ -122,38 +179,9 @@ export default function POSPage() {
     return ChefHat;
   };
 
-  const getTableStatusColor = (status?: string) => {
-    switch (status?.toLowerCase()) {
-      case 'ocupada':
-        return 'from-red-50 to-rose-50 border-red-200';
-      case 'reservada':
-        return 'from-amber-50 to-orange-50 border-amber-200';
-      case 'disponible':
-      default:
-        return 'from-emerald-50 to-green-50 border-emerald-200';
-    }
-  };
-
-  const getTableStatusBadge = (status?: string) => {
-    switch (status?.toLowerCase()) {
-      case 'ocupada':
-        return 'bg-gradient-to-r from-red-500 to-rose-500 text-white';
-      case 'reservada':
-        return 'bg-gradient-to-r from-amber-500 to-orange-500 text-white';
-      case 'disponible':
-      default:
-        return 'bg-gradient-to-r from-emerald-500 to-green-500 text-white';
-    }
-  };
-
   if (loading) {
     return (
-      <Loader
-        fullScreen
-        text="Cargando mesas disponibles..."
-        size="lg"
-        color="primary"
-      />
+      <Loader fullScreen text="Cargando mesas..." size="lg" color="primary" />
     );
   }
 
@@ -187,7 +215,7 @@ export default function POSPage() {
           </div>
         </div>
 
-        {/* Stats Section */}
+        {/* Stats Section - Actualizada */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="bg-white/90 backdrop-blur-sm shadow-xl border border-cyan-100/50">
             <div className="p-6">
@@ -215,11 +243,7 @@ export default function POSPage() {
                     Mesas Disponibles
                   </p>
                   <p className="text-3xl font-bold text-gray-900">
-                    {
-                      tables.filter(
-                        (t) => t.status?.toLowerCase() !== 'ocupada',
-                      ).length
-                    }
+                    {getAvailableTablesCount()}
                   </p>
                 </div>
                 <div className="h-12 w-12 bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl flex items-center justify-center">
@@ -248,32 +272,122 @@ export default function POSPage() {
           </Card>
         </div>
 
-        {/* Tables Grid */}
+        {/* Order Summary Section */}
+        {selectedOrder && (
+          <div className="mb-8">
+            <Card className="bg-white/90 backdrop-blur-sm shadow-xl border border-cyan-100/50">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-cyan-800">
+                      Orden #{selectedOrder.id.slice(-8).toUpperCase()}
+                    </h2>
+                    <p className="text-cyan-600">
+                      Mesa{' '}
+                      {
+                        tables.find((t) => t.id === selectedOrder.tableId)
+                          ?.number
+                      }{' '}
+                      • {selectedOrder.items.length} items
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleEditOrder}
+                      variant="outline"
+                      className="border-cyan-300 text-cyan-700 hover:bg-cyan-50"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Editar
+                    </Button>
+                    <Button
+                      onClick={handlePayOrder}
+                      className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
+                    >
+                      💰 Cobrar ${selectedOrder.total.toFixed(2)}
+                    </Button>
+                    <Button
+                      onClick={() => setSelectedOrder(null)}
+                      variant="outline"
+                      className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {selectedOrder.items.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 p-3 bg-cyan-50 rounded-lg border border-cyan-200"
+                    >
+                      <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg flex items-center justify-center">
+                        <Package className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900">
+                          {item.name}
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          {item.quantity}x ${item.unitPrice.toFixed(2)} = $
+                          {item.total.toFixed(2)}
+                        </p>
+                        {item.notes && (
+                          <p className="text-xs text-gray-500 italic">
+                            {item.notes}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-cyan-200">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-semibold text-gray-700">
+                      Total:
+                    </span>
+                    <span className="text-2xl font-bold text-cyan-700">
+                      ${selectedOrder.total.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm text-gray-600">
+                    <span>Estado:</span>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getOrderStatusColor(selectedOrder.status)}`}
+                    >
+                      {getOrderStatusText(selectedOrder.status)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Tables Grid - Mejorada */}
         <div>
           <h2 className="text-2xl font-bold text-cyan-800 mb-6 flex items-center">
             <MapPin className="w-6 h-6 mr-2 text-cyan-600" />
-            Mesas Disponibles
+            Todas las Mesas
+            <span className="ml-3 text-sm font-normal text-gray-600">
+              ({getAvailableTablesCount()}/{tables.length} disponibles)
+            </span>
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
             {tables.map((table) => {
               const TableIcon = getTableIcon(table.capacity);
-              const existingOrder = activeOrders.get(table.id);
-              const hasOrder = !!existingOrder;
-
-              // Override status color if there's an active order
-              const statusColor = hasOrder
-                ? 'from-orange-50 to-amber-50 border-orange-200'
-                : getTableStatusColor(table.status);
-              const statusBadge = hasOrder
-                ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-white'
-                : getTableStatusBadge(table.status);
+              const tableStatus = getTableStatus(table);
+              const statusConfig = getTableStatusColors(tableStatus);
+              const isOccupied = tableStatus === 'occupied';
 
               return (
                 <Card
                   key={table.id}
-                  className={`cursor-pointer hover:shadow-2xl transform hover:scale-105 transition-all duration-300 bg-gradient-to-br ${statusColor} border-2 hover:border-cyan-300 group relative overflow-hidden`}
-                  onClick={() => handleCreateNewOrder(table.id)}
+                  className={`cursor-pointer hover:shadow-2xl transform hover:scale-105 transition-all duration-300 bg-gradient-to-br ${statusConfig.gradient} border-2 hover:border-cyan-300 group relative overflow-hidden`}
+                  onClick={() => handleTableClick(table)}
                 >
                   {/* Background decoration */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -282,16 +396,16 @@ export default function POSPage() {
                     {/* Status badge */}
                     <div className="absolute top-3 right-3">
                       <span
-                        className={`inline-flex px-2 py-1 rounded-full text-xs font-semibold ${statusBadge} shadow-sm`}
+                        className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${statusConfig.badge} shadow-sm`}
                       >
-                        {hasOrder ? 'Con Orden' : table.status || 'Disponible'}
+                        {statusConfig.text}
                       </span>
                     </div>
 
                     {/* Active order indicator */}
-                    {hasOrder && (
+                    {isOccupied && (
                       <div className="absolute top-3 left-3">
-                        <div className="flex items-center justify-center w-6 h-6 bg-red-500 rounded-full">
+                        <div className="flex items-center justify-center w-6 h-6 bg-red-500 rounded-full animate-pulse">
                           <AlertCircle className="w-4 h-4 text-white" />
                         </div>
                       </div>
@@ -316,16 +430,16 @@ export default function POSPage() {
                         </div>
 
                         {/* Order info */}
-                        {hasOrder && existingOrder && (
+                        {isOccupied && table.currentOrder && (
                           <div className="mt-2">
                             <div
-                              className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getOrderStatusColor(existingOrder.status)}`}
+                              className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getOrderStatusColor(table.currentOrder.status)}`}
                             >
-                              {getOrderStatusText(existingOrder.status)}
+                              {getOrderStatusText(table.currentOrder.status)}
                             </div>
                             <div className="text-xs text-gray-500 mt-1">
-                              ${existingOrder.total.toFixed(2)} •{' '}
-                              {existingOrder.items.length} items
+                              ${table.currentOrder.total.toFixed(2)} •{' '}
+                              {table.currentOrder.items.length} items
                             </div>
                           </div>
                         )}
@@ -335,7 +449,7 @@ export default function POSPage() {
                     {/* Action hint */}
                     <div className="mt-4 text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <p className="text-xs text-cyan-600 font-medium">
-                        {hasOrder
+                        {isOccupied
                           ? 'Click para ver orden'
                           : 'Click para crear orden'}
                       </p>
@@ -429,7 +543,7 @@ export default function POSPage() {
               <Utensils className="w-12 h-12 text-gray-400" />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No hay mesas disponibles
+              No hay mesas configuradas
             </h3>
             <p className="text-gray-500 max-w-md mx-auto">
               No se encontraron mesas en el sistema. Puedes crear una orden para

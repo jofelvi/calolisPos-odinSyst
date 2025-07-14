@@ -8,27 +8,36 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Product } from '@/types/product';
 import { Customer } from '@/types/customer';
 import { OrderFormValues, orderSchema } from '@/schemas/orderSchema';
-import { OrderStatusEnum, PaymentStatusEnum } from '@/types/enumShared';
 import {
+  OrderStatusEnum,
+  PaymentStatusEnum,
+  TableStatusEnum,
+} from '@/types/enumShared';
+import {
+  getActiveOrderByTable,
   orderService,
   productService,
+  tableService,
 } from '@/services/firebase/genericServices';
 import { Order } from '@/types/order';
 import { Card } from '@/components/shared/card/card';
 import { Button } from '@/components/shared/button/Button';
-import CustomerSearch from '@/app/components/pos/CustomerSearch';
 import ProductSelector from '@/app/components/pos/ProductSelector';
 import OrderSummary from '@/app/components/pos/OrderSummary';
+import Loader from '@/components/shared/Loader/Loader';
 
 export default function OrderPage() {
   const searchParams = useSearchParams();
   const tableId = searchParams.get('tableId');
+  const orderId = searchParams.get('orderId');
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [existingOrder, setExistingOrder] = useState<Order | null>(null);
+  const [isLoadingOrder, setIsLoadingOrder] = useState(false);
 
   const { handleSubmit, setValue, watch } = useForm<OrderFormValues>({
     resolver: yupResolver(orderSchema),
@@ -58,6 +67,53 @@ export default function OrderPage() {
     };
     void loadProducts();
   }, []);
+
+  // Load existing order if orderId or tableId with active order
+  useEffect(() => {
+    const loadExistingOrder = async () => {
+      if (!orderId && !tableId) return;
+
+      setIsLoadingOrder(true);
+      try {
+        let order: Order | null = null;
+
+        if (orderId) {
+          // Load specific order by ID
+          order = await orderService.getById(orderId);
+        } else if (tableId) {
+          // Check if table has active order
+          order = await getActiveOrderByTable(tableId);
+        }
+
+        if (order) {
+          setExistingOrder(order);
+
+          // Populate form with existing order data
+          setValue('tableId', order.tableId || '');
+          setValue('customerId', order.customerId || '');
+          setValue('status', order.status || '');
+          setValue('items', order.items);
+          setValue('subtotal', order.subtotal);
+          setValue('tax', order.tax);
+          setValue('total', order.total);
+          setValue('paymentMethod', order.paymentMethod);
+          setValue('paymentStatus', order.paymentStatus);
+          setValue('notes', order.notes || '');
+
+          // Set customer if exists
+          if (order.customerId) {
+            // TODO: Load customer data if needed
+          }
+        }
+      } catch (error) {
+        console.error('Error loading existing order:', error);
+      } finally {
+        setIsLoadingOrder(false);
+      }
+    };
+
+    void loadExistingOrder();
+  }, [orderId, tableId, setValue]);
 
   useEffect(() => {
     const newSubtotal = items.reduce((sum, item) => sum + item.total, 0);
@@ -119,23 +175,61 @@ export default function OrderPage() {
   const onSubmit = async (data: OrderFormValues) => {
     setIsSubmitting(true);
     try {
-      const orderData: Omit<Order, 'id'> = {
-        ...data,
-        customerId: selectedCustomer?.id || null,
-        userId: 'current-user-id', // TODO: Reemplazar
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        notes: data.notes || null,
-      };
+      if (existingOrder) {
+        // Update existing order
+        const updateData = {
+          ...data,
+          customerId: selectedCustomer?.id || data.customerId,
+          updatedAt: new Date(),
+          notes: data.notes || null,
+        };
 
-      const createdOrder = await orderService.create(orderData);
-      router.push(`/private/pos/payment/${createdOrder.id}`);
+        await orderService.update(existingOrder.id, updateData);
+        router.push(`/private/pos/payment/${existingOrder.id}`);
+      } else {
+        // Create new order
+        const orderData: Omit<Order, 'id'> = {
+          ...data,
+          customerId: selectedCustomer?.id || null,
+          userId: 'current-user-id', // TODO: Reemplazar
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          notes: data.notes || null,
+        };
+
+        const createdOrder = await orderService.create(orderData);
+
+        // Si la orden tiene una mesa asociada, asignar el orderId y cambiar status
+        if (createdOrder.tableId) {
+          console.log(
+            'entro a aquiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii',
+          );
+          await tableService.update(createdOrder.tableId, {
+            orderId: createdOrder.id,
+            status: TableStatusEnum.OCCUPIED,
+            isAvailable: false,
+          });
+        }
+
+        router.push(`/private/pos/payment/${createdOrder.id}`);
+      }
     } catch (error) {
-      console.error('Error creating order:', error);
+      console.error('Error saving order:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (isLoadingOrder) {
+    return (
+      <Loader
+        fullScreen
+        text="Cargando orden existente..."
+        size="lg"
+        color="primary"
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-blue-50">
@@ -177,10 +271,16 @@ export default function OrderPage() {
 
                 <Button
                   type="submit"
-                  disabled={isSubmitting || items.length === 0}
+                  disabled={
+                    isSubmitting || items.length === 0 || isLoadingOrder
+                  }
                   className="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white shadow-lg disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Procesando...' : 'Continuar a Pago'}
+                  {isSubmitting
+                    ? 'Procesando...'
+                    : existingOrder
+                      ? 'Actualizar Orden'
+                      : 'Continuar a Pago'}
                 </Button>
               </div>
             </Card>
