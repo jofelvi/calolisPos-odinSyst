@@ -110,6 +110,12 @@ export default function OrderPage() {
     setValue('items', updatedItems);
   };
 
+  const handleItemNotesChange = (index: number, notes: string) => {
+    const updatedItems = [...items];
+    updatedItems[index].notes = notes;
+    setValue('items', updatedItems);
+  };
+
   const onSubmit = async (data: OrderFormValues) => {
     setIsSubmitting(true);
     try {
@@ -123,7 +129,7 @@ export default function OrderPage() {
       };
 
       const createdOrder = await orderService.create(orderData);
-      router.push(`/pos/payment/${createdOrder.id}`);
+      router.push(`/private/pos/payment/${createdOrder.id}`);
     } catch (error) {
       console.error('Error creating order:', error);
     } finally {
@@ -132,49 +138,52 @@ export default function OrderPage() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="w-full h-full">
-      <div className="flex flex-col xl:flex-row gap-6 p-6">
-        <div className="flex-1 space-y-6">
-          <ProductSelector
-            products={products}
-            onAddProduct={handleAddProduct}
-          />
-        </div>
-        {/* Resumen + Cliente */}
-        <div className="w-full xl:w-[400px] space-y-6">
-          <OrderSummary
-            items={items}
-            subtotal={subtotal}
-            tax={tax}
-            total={total}
-            onRemoveItem={handleRemoveItem}
-            onQuantityChange={handleQuantityChange}
-          />
-          <Card className="p-4">
-            <h2 className="text-lg font-semibold mb-2">Cliente</h2>
-            <CustomerSearch
-              onSelectCustomer={setSelectedCustomer}
-              selectedCustomer={selectedCustomer}
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-blue-50">
+      <form onSubmit={handleSubmit(onSubmit)} className="w-full h-screen flex flex-col">
+        <div className="flex-1 flex flex-col xl:flex-row gap-6 p-6 overflow-hidden">
+          <div className="flex-1 space-y-6 overflow-auto">
+            <ProductSelector
+              products={products}
+              onAddProduct={handleAddProduct}
             />
-          </Card>
-        </div>
-      </div>
-      <div className="flex justify-end gap-4 px-6 pb-6">
-        <Card className="p-4 w-1/3 flex items-center">
-          <Button
-            type="button"
-            variant="outline"
-            className="mr-2"
-            onClick={() => router.push('/pos')}
-          >
-            Cancelar
-          </Button>
+          </div>
+          {/* Resumen + Botones */}
+          <div className="w-full xl:w-[400px] space-y-6 flex flex-col">
+            <OrderSummary
+              items={items}
+              products={products}
+              subtotal={subtotal}
+              tax={tax}
+              total={total}
+              tableId={tableId}
+              onRemoveItem={handleRemoveItem}
+              onQuantityChange={handleQuantityChange}
+              onItemNotesChange={handleItemNotesChange}
+            />
+            {/* Botones */}
+            <Card className="bg-white/90 backdrop-blur-sm shadow-xl border border-cyan-100/50 p-6">
+              <div className="flex flex-col gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-cyan-300 text-cyan-700 hover:bg-cyan-50"
+                  onClick={() => router.push('/private/pos')}
+                >
+                  Cancelar
+                </Button>
 
-          <Button type="submit" disabled={isSubmitting || items.length === 0}>
-            {isSubmitting ? 'Procesando...' : 'Continuar a Pago'}
-          </Button>
-        </Card>
-      </div>
-    </form>
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting || items.length === 0}
+                  className="w-full bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white shadow-lg disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Procesando...' : 'Continuar a Pago'}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </form>
+    </div>
   );
 }

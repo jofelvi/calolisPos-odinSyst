@@ -1,24 +1,49 @@
 // app/pos/payment/[orderId]/page.tsx
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Order } from '@/types/order';
 import {
+  InvoiceStatusEnum,
   OrderStatusEnum,
   PaymentMethodEnum,
   PaymentStatusEnum,
 } from '@/types/enumShared';
 import {
+  accountReceivableService,
+  getCustomerReceivables,
+  getPagoMovilByReference,
   orderService,
+  pagoMovilService,
   paymentService,
 } from '@/services/firebase/genericServices';
 import { Payment } from '@/types/payment';
-import { MdAccountBalance, MdCreditCard } from 'react-icons/md';
+import { Customer } from '@/types/customer';
+import { AccountReceivable } from '@/types/accountReceivable';
+import { PagoMovil } from '@/types/pagoMovil';
+// BCV rate will be fetched from API route
+import { Input } from '@/components/shared/input/input';
+import { Card } from '@/components/shared/card/card';
+import { Button } from '@/components/shared/button/Button';
+import {
+  AlertCircle,
+  Banknote,
+  Calculator,
+  Clock,
+  CreditCard,
+  DollarSign,
+  Smartphone,
+  TrendingUp,
+  X,
+} from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 import { OrderItem } from '@/types/orderItem';
 import Table from '@/components/shared/Table';
-import { IoMdCash } from 'react-icons/io';
+import CustomerSearch from '@/app/components/pos/CustomerSearch';
+import Modal from '@/components/shared/modal';
+import { ToastContainer } from '@/components/shared/toast';
+import { useToast } from '@/hooks/useToast';
 
 interface PageProps {
   params: Promise<{ orderId: string }>;
@@ -27,16 +52,48 @@ interface PageProps {
 export default function PaymentPage({ params }: PageProps) {
   const { orderId } = use(params);
   const router = useRouter();
+  const toast = useToast();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const [paymentAmount, setPaymentAmount] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodEnum>(
-    PaymentMethodEnum.CASH,
-  );
   const [isProcessing, setIsProcessing] = useState(false);
+  const [bcvRate, setBcvRate] = useState<number>(0);
+  const [loadingRate, setLoadingRate] = useState(false);
+
+  // Estados para propinas
   const [tipAmount, setTipAmount] = useState(0);
   const [selectedTip, setSelectedTip] = useState<number | null>(null);
-  const [serviceCharge, setServiceCharge] = useState(0);
+
+  // Estados para métodos de pago y montos
+  const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<
+    PaymentMethodEnum[]
+  >([]);
+  const [paymentAmounts, setPaymentAmounts] = useState<Record<PaymentMethodEnum, string>>({
+    [PaymentMethodEnum.CASH_BS]: '',
+    [PaymentMethodEnum.CASH_USD]: '',
+    [PaymentMethodEnum.CARD]: '',
+    [PaymentMethodEnum.TRANSFER]: '',
+    [PaymentMethodEnum.PAGO_MOVIL]: '',
+    [PaymentMethodEnum.MIXED]: '',
+    [PaymentMethodEnum.PENDING]: '',
+  });
+
+  // Estados para cliente y cuentas por cobrar
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null,
+  );
+  const [customerReceivables, setCustomerReceivables] = useState<
+    AccountReceivable[]
+  >([]);
+  const [showReceivables, setShowReceivables] = useState(false);
+  const [isPendingPayment, setIsPendingPayment] = useState(false);
+
+  // Estados para modal de Pago Móvil
+  const [showPagoMovilModal, setShowPagoMovilModal] = useState(false);
+  const [pagoMovilData, setPagoMovilData] = useState({
+    amount: '',
+    reference: '',
+    phone: '',
+  });
 
   const handleUpdateQuantity = async (
     itemIndex: number,
@@ -81,8 +138,6 @@ export default function PaymentPage({ params }: PageProps) {
         total: newTotal,
       };
       setOrder(updatedOrder);
-      setPaymentAmount(newTotal + tipAmount);
-      setServiceCharge(newSubtotal * 0.1);
     } catch (error) {
       console.error('Error updating order:', error);
     }
@@ -96,7 +151,7 @@ export default function PaymentPage({ params }: PageProps) {
   const columns: ColumnDef<OrderItem>[] = [
     {
       accessorKey: 'name',
-      header: 'ITEM',
+      header: 'PRODUCTO',
       cell: ({ row }) => (
         <div className="font-medium text-gray-900">
           {row.original.name}
@@ -110,7 +165,7 @@ export default function PaymentPage({ params }: PageProps) {
     },
     {
       accessorKey: 'unitPrice',
-      header: 'PRICE',
+      header: 'PRECIO',
       cell: ({ row }) => (
         <span className="font-medium">
           ${row.original.unitPrice.toFixed(2)}
@@ -119,7 +174,7 @@ export default function PaymentPage({ params }: PageProps) {
     },
     {
       accessorKey: 'quantity',
-      header: 'QTY',
+      header: 'CANT',
       cell: ({ row }) => {
         const itemIndex =
           order?.items.findIndex(
@@ -188,13 +243,10 @@ export default function PaymentPage({ params }: PageProps) {
       try {
         const orderData = await orderService.getById(orderId);
         if (!orderData) {
-          router.push('/pos');
+          router.push('/private/pos');
           return;
         }
         setOrder(orderData);
-        setPaymentAmount(orderData.total);
-        // Calcular service charge (10% ejemplo)
-        setServiceCharge(orderData.subtotal * 0.1);
       } catch (error) {
         console.error('Error loading order:', error);
       } finally {
@@ -205,37 +257,350 @@ export default function PaymentPage({ params }: PageProps) {
     loadOrder();
   }, [orderId, router]);
 
-  const handlePayment = async () => {
+  // Cargar tasa BCV al montar el componente
+  useEffect(() => {
+    const loadBcvRate = async () => {
+      setLoadingRate(true);
+      try {
+        const response = await fetch('/api/bcv-rate');
+        const data = await response.json();
+        setBcvRate(data.rate);
+      } catch (error) {
+        console.error('Error loading BCV rate:', error);
+        // Tasa por defecto si falla
+        setBcvRate(36.5);
+      } finally {
+        setLoadingRate(false);
+      }
+    };
+
+    loadBcvRate();
+  }, []);
+
+  // Cargar cuentas por cobrar cuando se selecciona un cliente
+  useEffect(() => {
+    const loadCustomerReceivables = async () => {
+      if (!selectedCustomer?.id) {
+        setCustomerReceivables([]);
+        setShowReceivables(false);
+        return;
+      }
+
+      try {
+        const receivables = await getCustomerReceivables(selectedCustomer.id);
+        setCustomerReceivables(receivables);
+        setShowReceivables(receivables.length > 0);
+      } catch (error) {
+        console.error('Error loading customer receivables:', error);
+        setCustomerReceivables([]);
+        setShowReceivables(false);
+      }
+    };
+
+    loadCustomerReceivables();
+  }, [selectedCustomer]);
+
+  // Calcular el total en bolívares
+  const totalInBs = order ? (order.total + tipAmount) * bcvRate : 0;
+  const totalWithTip = order ? order.total + tipAmount : 0;
+
+  // Calcular el total pagado en USD equivalente
+  const calculateTotalPaid = (): number => {
+    const cashBs = parseFloat(paymentAmounts[PaymentMethodEnum.CASH_BS]) || 0;
+    const cashUsd = parseFloat(paymentAmounts[PaymentMethodEnum.CASH_USD]) || 0;
+    const card = parseFloat(paymentAmounts[PaymentMethodEnum.CARD]) || 0;
+    const transfer =
+      parseFloat(paymentAmounts[PaymentMethodEnum.TRANSFER]) || 0;
+    const pagoMovil =
+      parseFloat(paymentAmounts[PaymentMethodEnum.PAGO_MOVIL]) || 0;
+
+    // Convertir bolívares a USD
+    const cashBsInUsd = bcvRate > 0 ? cashBs / bcvRate : 0;
+
+    return cashBsInUsd + cashUsd + card + transfer + pagoMovil;
+  };
+
+  // Manejar selección de métodos de pago
+  const handlePaymentMethodToggle = (method: PaymentMethodEnum) => {
+    setSelectedPaymentMethods((prev) => {
+      if (prev.includes(method)) {
+        // Remover método y limpiar su monto
+        setPaymentAmounts((prevAmounts) => ({
+          ...prevAmounts,
+          [method]: '',
+        }));
+        return prev.filter((m) => m !== method);
+      } else {
+        // Agregar método
+        if (method === PaymentMethodEnum.PAGO_MOVIL) {
+          setShowPagoMovilModal(true);
+        }
+        return [...prev, method];
+      }
+    });
+  };
+
+  // Manejar cambio de monto para un método específico
+  const handleAmountChange = (method: PaymentMethodEnum, value: string) => {
+    setPaymentAmounts((prev) => ({
+      ...prev,
+      [method]: value,
+    }));
+  };
+
+  // Manejar modal de Pago Móvil con verificación
+  const handlePagoMovilSubmit = async () => {
+    const { amount, reference, phone } = pagoMovilData;
+
+    // Validaciones
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error('Debe ingresar un monto válido', 'Error de validación');
+      return;
+    }
+
+    if (!reference || reference.length !== 6) {
+      toast.error('La referencia debe tener exactamente 6 dígitos', 'Error de validación');
+      return;
+    }
+
+    if (!phone || phone.length < 10) {
+      toast.error('Debe ingresar un número de teléfono válido', 'Error de validación');
+      return;
+    }
+
     if (!order) return;
 
     setIsProcessing(true);
     try {
-      const paymentData: Omit<Payment, 'id'> = {
+      // Verificar si ya existe un registro de esta referencia
+      const existingPagoMovil = await getPagoMovilByReference(reference);
+      
+      if (existingPagoMovil) {
+        if (existingPagoMovil.status === 'verified') {
+          toast.warning('Esta referencia ya fue verificada y utilizada', 'Referencia duplicada');
+          return;
+        }
+        
+        if (existingPagoMovil.status === 'amount_mismatch') {
+          // Verificar si ahora el monto coincide
+          if (parseFloat(amount) === existingPagoMovil.expectedAmount) {
+            // Actualizar status a verificado
+            await pagoMovilService.update(existingPagoMovil.id, {
+              status: 'verified',
+              updatedAt: new Date(),
+            });
+            
+            // Proceder con el pago
+            setPaymentAmounts((prev) => ({
+              ...prev,
+              [PaymentMethodEnum.PAGO_MOVIL]: amount,
+            }));
+            
+            setSelectedPaymentMethods((prev) => {
+              if (!prev.includes(PaymentMethodEnum.PAGO_MOVIL)) {
+                return [...prev, PaymentMethodEnum.PAGO_MOVIL];
+              }
+              return prev;
+            });
+            
+            setShowPagoMovilModal(false);
+            setPagoMovilData({ amount: '', reference: '', phone: '' });
+            toast.success('Pago Móvil verificado correctamente', 'Verificación exitosa');
+            return;
+          }
+        }
+      }
+
+      // Realizar verificación usando el scraper
+      console.log('🔍 Iniciando verificación de Pago Móvil...');
+      toast.info('Verificando transacción, esto puede tomar unos momentos...', 'Verificando', 10000);
+      
+      const verificationResponse = await fetch('/api/verify-pago-movil', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          referenceNumber: reference,
+          expectedAmount: amount,
+          phoneNumber: phone,
+        }),
+      });
+
+      const verificationResult = await verificationResponse.json();
+
+      // Crear registro de PagoMovil
+      const pagoMovilData: Omit<PagoMovil, 'id'> = {
         orderId: order.id,
-        amount: paymentAmount,
-        method: paymentMethod,
-        userId: 'current-user-id',
+        referenceNumber: reference,
+        expectedAmount: parseFloat(amount),
+        actualAmount: verificationResult.actualAmount ? parseFloat(verificationResult.actualAmount) : undefined,
+        phoneNumber: phone,
+        status: verificationResult.success && verificationResult.found && verificationResult.amountMatches 
+          ? 'verified' 
+          : verificationResult.found && !verificationResult.amountMatches
+          ? 'amount_mismatch'
+          : verificationResult.found
+          ? 'not_found'
+          : 'error',
+        verificationDate: new Date(),
+        errorMessage: verificationResult.errorMessage,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      await pagoMovilService.create(pagoMovilData);
+
+      if (verificationResult.success && verificationResult.found && verificationResult.amountMatches) {
+        // Verificación exitosa
+        setPaymentAmounts((prev) => ({
+          ...prev,
+          [PaymentMethodEnum.PAGO_MOVIL]: amount,
+        }));
+        
+        setSelectedPaymentMethods((prev) => {
+          if (!prev.includes(PaymentMethodEnum.PAGO_MOVIL)) {
+            return [...prev, PaymentMethodEnum.PAGO_MOVIL];
+          }
+          return prev;
+        });
+        
+        setShowPagoMovilModal(false);
+        setPagoMovilData({ amount: '', reference: '', phone: '' });
+        toast.success('¡Pago Móvil verificado exitosamente!', 'Verificación exitosa');
+      } else if (verificationResult.found && !verificationResult.amountMatches) {
+        // Transacción encontrada pero monto no coincide
+        toast.warning(
+          `Transacción encontrada pero el monto no coincide. Esperado: $${amount}, Encontrado: $${verificationResult.actualAmount || 'N/A'}. El registro se guardó para futuras verificaciones.`,
+          'Monto no coincide',
+          8000
+        );
+      } else if (!verificationResult.found) {
+        // Transacción no encontrada
+        toast.error('No se encontró una transacción con esa referencia. Verifique los datos e intente nuevamente.', 'Transacción no encontrada');
+      } else {
+        // Error en la verificación
+        toast.error(verificationResult.errorMessage || 'Error desconocido', 'Error en la verificación');
+      }
+
+    } catch (error) {
+      console.error('Error verificando Pago Móvil:', error);
+      toast.error('Error al verificar el Pago Móvil. Intente nuevamente.', 'Error del sistema');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePagoMovilCancel = () => {
+    setShowPagoMovilModal(false);
+    setPagoMovilData({ amount: '', reference: '', phone: '' });
+
+    // Si no hay monto, remover el método de los seleccionados
+    if (!paymentAmounts[PaymentMethodEnum.PAGO_MOVIL]) {
+      setSelectedPaymentMethods((prev) =>
+        prev.filter((m) => m !== PaymentMethodEnum.PAGO_MOVIL),
+      );
+    }
+  };
+
+  // Crear cuenta por cobrar (pago pendiente)
+  const handlePendingPayment = async () => {
+    if (!order || !selectedCustomer) return;
+
+    setIsProcessing(true);
+    try {
+      // Crear cuenta por cobrar
+      const receivableData: Omit<AccountReceivable, 'id'> = {
+        customerId: selectedCustomer.id,
+        customerName: selectedCustomer.name,
+        invoiceNumber: `INV-${orderId.slice(-8).toUpperCase()}`,
+        amount: totalWithTip,
+        paidAmount: 0,
+        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días
+        status: InvoiceStatusEnum.PENDING,
+        description: `Orden #${orderId.slice(-8).toUpperCase()}`,
         createdAt: new Date(),
       };
 
-      await paymentService.create(paymentData);
+      await accountReceivableService.create(receivableData);
+
+      // Actualizar orden
+      await orderService.update(order.id, {
+        paymentStatus: PaymentStatusEnum.PENDING,
+        status: OrderStatusEnum.DELIVERED,
+        customerId: selectedCustomer.id,
+        updatedAt: new Date(),
+      });
+
+      router.push(`/private/pos/receipt/${order.id}`);
+    } catch (error) {
+      console.error('Error creating pending payment:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Función para cancelar y volver a la página anterior
+  const handleCancelPayment = () => {
+    toast.info('Pago cancelado', 'Volviendo...');
+    router.back();
+  };
+
+  const handlePayment = async () => {
+    if (!order) return;
+
+    const totalPaid = calculateTotalPaid();
+    if (totalPaid <= 0 && !isPendingPayment) {
+      toast.error('Debe ingresar al menos un monto de pago', 'Monto requerido');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      toast.info('Procesando pago...', 'Por favor espere');
+
+      // Crear pagos por cada método usado
+      const paymentPromises = selectedPaymentMethods
+        .filter((method) => {
+          const amountStr = paymentAmounts[method];
+          return amountStr && parseFloat(amountStr) > 0;
+        })
+        .map((method) => {
+          const amountStr = paymentAmounts[method];
+          const amount = parseFloat(amountStr || '0');
+          const paymentData: Omit<Payment, 'id'> = {
+            orderId: order.id,
+            amount:
+              method === PaymentMethodEnum.CASH_BS ? amount / bcvRate : amount,
+            method: method,
+            userId: 'current-user-id',
+            createdAt: new Date(),
+          };
+          return paymentService.create(paymentData);
+        });
+
+      await Promise.all(paymentPromises);
 
       const newStatus =
-        paymentAmount >= order.total
+        totalPaid >= totalWithTip
           ? PaymentStatusEnum.PAID
           : PaymentStatusEnum.PARTIAL;
+
       await orderService.update(order.id, {
         paymentStatus: newStatus,
         status:
           newStatus === PaymentStatusEnum.PAID
             ? OrderStatusEnum.PAID
             : order.status,
+        customerId: selectedCustomer?.id || order.customerId,
         updatedAt: new Date(),
       });
 
-      router.push(`/pos/receipt/${order.id}`);
+      toast.success('¡Pago procesado exitosamente!', 'Redirigiendo al recibo...');
+      router.push(`/private/pos/receipt/${order.id}`);
     } catch (error) {
       console.error('Error processing payment:', error);
+      toast.error('Error al procesar el pago. Intente nuevamente.', 'Error del sistema');
     } finally {
       setIsProcessing(false);
     }
@@ -246,199 +611,551 @@ export default function PaymentPage({ params }: PageProps) {
     if (selectedTip === amount) {
       setSelectedTip(null);
       setTipAmount(0);
-      setPaymentAmount(order ? order.total : 0);
     } else {
       // Seleccionar nueva propina
       setSelectedTip(amount);
       setTipAmount(amount);
-      setPaymentAmount(order ? order.total + amount : amount);
     }
   };
 
-  const totalWithTip = order ? order.total + tipAmount : 0;
-  const currentTime = new Date().toLocaleTimeString('en-US', {
+  const currentTime = new Date().toLocaleTimeString('es-VE', {
     hour: '2-digit',
     minute: '2-digit',
   });
 
   if (loading || !order) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-blue-500"></div>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-cyan-50 to-teal-50">
+        <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-cyan-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="mx-auto max-w-7xl">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Panel Izquierdo - Detalles de la Orden */}
-          <div className="space-y-6 lg:col-span-2">
-            {/* Header */}
-            <div className="rounded-lg bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    ORDER #: {orderId.slice(-8).toUpperCase()}
-                  </h1>
-                  <div className="mt-2 flex items-center gap-4 text-sm text-gray-600">
-                    <span className="flex items-center gap-1">
-                      📋 TABLE: {order.tableId || 'TO GO'}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      🕒 TIME: {currentTime}
-                    </span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm text-gray-600">GUESTS</div>
-                  <div className="text-2xl font-bold">👥 2</div>
-                </div>
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 to-teal-50 p-4 overflow-x-hidden">
+      <div className="mx-auto max-w-full">
+        {/* Header Global */}
+        <Card className="p-4 mb-4 bg-white/90 backdrop-blur-sm border-cyan-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">
+                ORDEN #: {orderId.slice(-8).toUpperCase()}
+              </h1>
+              <div className="mt-1 flex items-center gap-4 text-sm text-gray-600">
+                <span className="flex items-center gap-1">
+                  📋 MESA: {order.tableId || 'PARA LLEVAR'}
+                </span>
+                <span className="flex items-center gap-1">
+                  🕒 HORA: {currentTime}
+                </span>
               </div>
             </div>
+            <div className="text-right">
+              <div className="text-sm text-gray-600">COMENSALES</div>
+              <div className="text-xl font-bold">👥 2</div>
+            </div>
+          </div>
+        </Card>
 
-            {/* Tabla de Items */}
-            <div className="overflow-hidden rounded-lg bg-white shadow-sm">
-              <Table
-                data={order.items}
-                columns={columns}
-                pageSize={10}
-                headerStyles="bg-gray-50 border-b"
-                bodyStyles="bg-white divide-y divide-gray-200"
-                rowStyles="hover:bg-gray-50 transition-colors"
-              />
+        {/* Layout Principal en 3 Columnas */}
+        <div className="grid grid-cols-12 gap-3 h-[calc(100vh-220px)] w-full max-w-none overflow-hidden">
+          {/* Columna 1: Tabla de Items (5 columnas) */}
+          <div className="col-span-5">
+            <Card className="h-full overflow-hidden bg-white/90 backdrop-blur-sm border-cyan-100">
+              <div className="h-full flex flex-col">
+                <div className="p-3 bg-cyan-50 border-b border-cyan-200">
+                  <h2 className="font-semibold text-gray-900">PRODUCTOS</h2>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  <Table
+                    data={order.items}
+                    columns={columns}
+                    pageSize={20}
+                    headerStyles="bg-cyan-50 border-b border-cyan-200"
+                    bodyStyles="bg-white divide-y divide-gray-200"
+                    rowStyles="hover:bg-cyan-50 transition-colors"
+                  />
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Columna 2: Totales, Cliente y Botones (4 columnas) */}
+          <div className="col-span-4">
+            <div className="space-y-3 h-full flex flex-col">
+              {/* Totales */}
+              <Card className="p-4 bg-gradient-to-br from-cyan-50 to-teal-50 backdrop-blur-sm border-cyan-200">
+                <h2 className="text-base font-bold text-gray-800 mb-4 text-center">
+                  TOTAL A PAGAR
+                </h2>
+
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {/* Total en USD */}
+                  <div className="bg-white/80 rounded-lg p-3 shadow-sm border border-cyan-100">
+                    <div className="text-2xl font-bold text-cyan-600 flex items-center justify-center gap-1 mb-1">
+                      <DollarSign className="h-6 w-6" />$
+                      {totalWithTip.toFixed(2)}
+                    </div>
+                    <div className="text-xs font-medium text-gray-600 text-center">
+                      DÓLARES USD
+                    </div>
+                  </div>
+
+                  {/* Total en Bolívares */}
+                  <div className="bg-white/80 rounded-lg p-3 shadow-sm border border-teal-100">
+                    <div className="text-xl font-bold text-teal-600 flex items-center justify-center gap-1 mb-1">
+                      <TrendingUp className="h-5 w-5" />
+                      Bs. {totalInBs.toFixed(0)}
+                    </div>
+                    <div className="text-xs text-gray-500 text-center">
+                      {loadingRate
+                        ? 'Cargando...'
+                        : `BCV: ${bcvRate.toFixed(2)}`}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Resumen de pago */}
+                {calculateTotalPaid() > 0 && (
+                  <div className="p-3 bg-white/90 rounded-lg border border-cyan-200 mb-4">
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-medium text-gray-700">
+                          Pagado:
+                        </span>
+                        <span className="font-bold text-sm text-cyan-600">
+                          ${calculateTotalPaid().toFixed(2)}
+                        </span>
+                      </div>
+
+                      {calculateTotalPaid() > totalWithTip && (
+                        <>
+                          <div className="border-t pt-1">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-gray-700">
+                                Cambio $:
+                              </span>
+                              <span className="font-semibold text-xs text-green-600">
+                                $
+                                {(calculateTotalPaid() - totalWithTip).toFixed(
+                                  2,
+                                )}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-gray-700">
+                                Cambio Bs:
+                              </span>
+                              <span className="font-semibold text-xs text-green-600">
+                                Bs.{' '}
+                                {(
+                                  (calculateTotalPaid() - totalWithTip) *
+                                  bcvRate
+                                ).toFixed(0)}
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      )}
+
+                      {calculateTotalPaid() < totalWithTip && (
+                        <div className="border-t pt-1">
+                          <div className="flex justify-between items-center text-orange-600">
+                            <span className="text-sm font-medium">Falta USD:</span>
+                            <span className="font-bold text-sm">
+                              ${(totalWithTip - calculateTotalPaid()).toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-orange-600">
+                            <span className="text-sm font-medium">Falta BS:</span>
+                            <span className="font-bold text-sm">
+                              Bs. {((totalWithTip - calculateTotalPaid()) * bcvRate).toFixed(0)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Propina */}
+                <div className="mb-4">
+                  <div className="mb-2 text-xs font-medium text-gray-700">
+                    PROPINA
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[1, 2, 3, 5].map((tip) => (
+                      <button
+                        key={tip}
+                        onClick={() => handleTipSelect(tip)}
+                        className={`py-2 px-2 border-2 rounded-lg text-xs font-medium transition-all touch-manipulation ${
+                          selectedTip === tip
+                            ? 'border-cyan-500 bg-cyan-500 text-white'
+                            : 'border-gray-200 hover:border-cyan-300 hover:bg-cyan-50'
+                        }`}
+                      >
+                        ${tip}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+
+              {/* Cliente */}
+              <Card className="p-3 bg-white/90 backdrop-blur-sm border-cyan-100">
+                <h3 className="mb-2 text-sm font-semibold text-gray-900">
+                  CLIENTE
+                </h3>
+                <CustomerSearch
+                  onSelectCustomer={setSelectedCustomer}
+                  selectedCustomer={selectedCustomer}
+                />
+
+                {/* Cuentas por cobrar del cliente */}
+                {showReceivables && customerReceivables.length > 0 && (
+                  <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                      <h3 className="font-medium text-xs text-amber-800">
+                        Cuentas Pendientes
+                      </h3>
+                    </div>
+                    <div className="text-xs text-amber-700">
+                      {customerReceivables.length} cuenta(s) por $
+                      {customerReceivables
+                        .reduce((sum, r) => sum + (r.amount - r.paidAmount), 0)
+                        .toFixed(2)}
+                    </div>
+                  </div>
+                )}
+              </Card>
+
+              {/* Botones de Acción */}
+              <div className="mt-auto space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    onClick={handleCancelPayment}
+                    variant="outline"
+                    className="h-12 bg-red-50 border-red-200 text-red-700 hover:bg-red-100 text-sm"
+                  >
+                    CANCELAR
+                  </Button>
+
+                  {selectedCustomer && (
+                    <Button
+                      onClick={handlePendingPayment}
+                      disabled={isProcessing}
+                      className="h-12 bg-amber-500 hover:bg-amber-600 text-white text-sm"
+                    >
+                      <Clock className="h-4 w-4 mr-1" />
+                      PENDIENTE
+                    </Button>
+                  )}
+                </div>
+
+                <Button
+                  onClick={handlePayment}
+                  disabled={isProcessing || calculateTotalPaid() <= 0}
+                  className="w-full h-14 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-bold text-base"
+                >
+                  {isProcessing ? 'PROCESANDO...' : 'PROCESAR PAGO'}
+                </Button>
+              </div>
             </div>
           </div>
 
-          {/* Panel Derecho - Pago */}
-          <div className="space-y-6">
-            {/* Resumen de Pago */}
-            <div className="rounded-lg bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-center text-xl font-semibold">
-                PAYABLE AMOUNT
-              </h2>
+          {/* Columna 3: Métodos de Pago (3 columnas) */}
+          <div className="col-span-3">
+            <Card className="h-full p-4 bg-white/90 backdrop-blur-sm border-cyan-100">
+              <h3 className="mb-4 text-base font-semibold text-gray-900">
+                MÉTODOS DE PAGO
+              </h3>
 
-              <div className="mb-6 text-center">
-                <div className="text-4xl font-bold text-green-600">
-                  ${totalWithTip.toFixed(2)}
-                </div>
-              </div>
-
-              {/* Botones de Propina */}
-              <div className="mb-6">
-                <div className="mb-2 text-sm font-medium">ADD TIP</div>
-                <div className="flex gap-2">
-                  {[5, 10, 15, 20].map((tip) => (
-                    <button
-                      key={tip}
-                      onClick={() => handleTipSelect(tip)}
-                      className={`flex-1 py-2 px-3 border-2 rounded-lg text-sm font-medium transition-all ${
-                        selectedTip === tip
-                          ? 'border-blue-500 bg-blue-500 text-white'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      ${tip}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Métodos de Pago */}
-              <div className="mb-6 grid grid-cols-3 gap-3">
-                <button
-                  onClick={() => setPaymentMethod(PaymentMethodEnum.CASH)}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    paymentMethod === PaymentMethodEnum.CASH
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <IoMdCash className="mx-auto mb-1 h-6 w-6" />
-                  <div className="text-xs font-medium">CASH</div>
-                </button>
-
-                <button
-                  onClick={() => setPaymentMethod(PaymentMethodEnum.CARD)}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    paymentMethod === PaymentMethodEnum.CARD
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <MdCreditCard className="mx-auto mb-1 h-6 w-6" />
-                  <div className="text-xs font-medium">ONLINE</div>
-                </button>
-
-                <button
-                  onClick={() => setPaymentMethod(PaymentMethodEnum.TRANSFER)}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    paymentMethod === PaymentMethodEnum.TRANSFER
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <MdAccountBalance className="mx-auto mb-1 h-6 w-6" />
-                  <div className="text-xs font-medium">OTHERS</div>
-                </button>
-              </div>
-
-              {/* Input de Efectivo Recibido */}
-              {paymentMethod === PaymentMethodEnum.CASH && (
-                <div className="mb-6">
-                  <button className="w-full rounded-lg bg-gray-100 p-4 text-left transition-colors hover:bg-gray-200">
-                    <div className="mb-1 text-sm text-gray-600">
-                      ADD CASH RECEIVED
-                    </div>
-                    <div className="text-2xl font-bold">
-                      ${paymentAmount.toFixed(2)}
-                    </div>
+              <div className="space-y-3 h-full flex flex-col">
+                {/* Efectivo BS */}
+                <div className="flex items-center gap-2 p-3 border-2 border-gray-200 rounded-lg hover:border-cyan-300 transition-colors">
+                  <button
+                    onClick={() =>
+                      handlePaymentMethodToggle(PaymentMethodEnum.CASH_BS)
+                    }
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all min-w-[120px] ${
+                      selectedPaymentMethods.includes(PaymentMethodEnum.CASH_BS)
+                        ? 'bg-cyan-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-cyan-100'
+                    }`}
+                  >
+                    <Banknote className="h-4 w-4" />
+                    <span>Efectivo BS</span>
                   </button>
+                  <Input
+                    type="number"
+                    placeholder="Monto Bs"
+                    value={paymentAmounts[PaymentMethodEnum.CASH_BS]}
+                    onChange={(e) =>
+                      handleAmountChange(
+                        PaymentMethodEnum.CASH_BS,
+                        e.target.value,
+                      )
+                    }
+                    disabled={
+                      !selectedPaymentMethods.includes(
+                        PaymentMethodEnum.CASH_BS,
+                      )
+                    }
+                    className="flex-1 h-10 text-sm border-cyan-200 focus:border-cyan-500 disabled:bg-gray-50"
+                  />
                 </div>
-              )}
 
-              {/* Resumen de Costos */}
-              <div className="border-t pt-4 text-sm space-y-2">
-                <div className="flex justify-between">
-                  <span>SUBTOTAL</span>
-                  <span>${order.subtotal.toFixed(2)}</span>
+                {/* Efectivo USD */}
+                <div className="flex items-center gap-2 p-3 border-2 border-gray-200 rounded-lg hover:border-cyan-300 transition-colors">
+                  <button
+                    onClick={() =>
+                      handlePaymentMethodToggle(PaymentMethodEnum.CASH_USD)
+                    }
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all min-w-[120px] ${
+                      selectedPaymentMethods.includes(
+                        PaymentMethodEnum.CASH_USD,
+                      )
+                        ? 'bg-cyan-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-cyan-100'
+                    }`}
+                  >
+                    <DollarSign className="h-4 w-4" />
+                    <span>Efectivo $</span>
+                  </button>
+                  <Input
+                    type="number"
+                    placeholder="Monto USD"
+                    value={paymentAmounts[PaymentMethodEnum.CASH_USD]}
+                    onChange={(e) =>
+                      handleAmountChange(
+                        PaymentMethodEnum.CASH_USD,
+                        e.target.value,
+                      )
+                    }
+                    disabled={
+                      !selectedPaymentMethods.includes(
+                        PaymentMethodEnum.CASH_USD,
+                      )
+                    }
+                    className="flex-1 h-10 text-sm border-cyan-200 focus:border-cyan-500 disabled:bg-gray-50"
+                  />
                 </div>
-                <div className="flex justify-between">
-                  <span>TIPS</span>
-                  <span>${tipAmount.toFixed(2)}</span>
+
+                {/* Pago Móvil */}
+                <div className="flex items-center gap-2 p-3 border-2 border-gray-200 rounded-lg hover:border-cyan-300 transition-colors">
+                  <button
+                    onClick={() =>
+                      handlePaymentMethodToggle(PaymentMethodEnum.PAGO_MOVIL)
+                    }
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all min-w-[120px] ${
+                      selectedPaymentMethods.includes(
+                        PaymentMethodEnum.PAGO_MOVIL,
+                      )
+                        ? 'bg-cyan-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-cyan-100'
+                    }`}
+                  >
+                    <Smartphone className="h-4 w-4" />
+                    <span>Pago Móvil</span>
+                  </button>
+                  <Input
+                    type="number"
+                    placeholder="Clic para configurar"
+                    value={paymentAmounts[PaymentMethodEnum.PAGO_MOVIL]}
+                    disabled={true}
+                    readOnly
+                    className="flex-1 h-10 text-sm border-cyan-200 disabled:bg-gray-50 cursor-pointer"
+                    onClick={() =>
+                      selectedPaymentMethods.includes(
+                        PaymentMethodEnum.PAGO_MOVIL,
+                      ) && setShowPagoMovilModal(true)
+                    }
+                  />
                 </div>
-                <div className="flex justify-between">
-                  <span>SERVICE CHARGE 10%</span>
-                  <span>${serviceCharge.toFixed(2)}</span>
+
+                {/* Tarjeta */}
+                <div className="flex items-center gap-2 p-3 border-2 border-gray-200 rounded-lg hover:border-cyan-300 transition-colors">
+                  <button
+                    onClick={() =>
+                      handlePaymentMethodToggle(PaymentMethodEnum.CARD)
+                    }
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all min-w-[120px] ${
+                      selectedPaymentMethods.includes(PaymentMethodEnum.CARD)
+                        ? 'bg-cyan-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-cyan-100'
+                    }`}
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    <span>Tarjeta</span>
+                  </button>
+                  <Input
+                    type="number"
+                    placeholder="Monto USD"
+                    value={paymentAmounts[PaymentMethodEnum.CARD]}
+                    onChange={(e) =>
+                      handleAmountChange(PaymentMethodEnum.CARD, e.target.value)
+                    }
+                    disabled={
+                      !selectedPaymentMethods.includes(PaymentMethodEnum.CARD)
+                    }
+                    className="flex-1 h-10 text-sm border-cyan-200 focus:border-cyan-500 disabled:bg-gray-50"
+                  />
                 </div>
-                <div className="flex justify-between border-t pt-2 text-lg font-bold">
-                  <span>TOTAL</span>
-                  <span>${totalWithTip.toFixed(2)}</span>
+
+                {/* Transferencia */}
+                <div className="flex items-center gap-2 p-3 border-2 border-gray-200 rounded-lg hover:border-cyan-300 transition-colors">
+                  <button
+                    onClick={() =>
+                      handlePaymentMethodToggle(PaymentMethodEnum.TRANSFER)
+                    }
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all min-w-[120px] ${
+                      selectedPaymentMethods.includes(
+                        PaymentMethodEnum.TRANSFER,
+                      )
+                        ? 'bg-cyan-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-cyan-100'
+                    }`}
+                  >
+                    <Calculator className="h-4 w-4" />
+                    <span>Transferencia</span>
+                  </button>
+                  <Input
+                    type="number"
+                    placeholder="Monto USD"
+                    value={paymentAmounts[PaymentMethodEnum.TRANSFER]}
+                    onChange={(e) =>
+                      handleAmountChange(
+                        PaymentMethodEnum.TRANSFER,
+                        e.target.value,
+                      )
+                    }
+                    disabled={
+                      !selectedPaymentMethods.includes(
+                        PaymentMethodEnum.TRANSFER,
+                      )
+                    }
+                    className="flex-1 h-10 text-sm border-cyan-200 focus:border-cyan-500 disabled:bg-gray-50"
+                  />
                 </div>
               </div>
-            </div>
-
-            {/* Botones de Acción */}
-            <div className="space-y-3">
-              <button
-                onClick={() => router.push(`/pos/order/${orderId}`)}
-                className="w-full rounded-lg bg-red-500 px-4 py-3 font-semibold text-white transition-colors hover:bg-red-600"
-              >
-                CANCEL ORDER
-              </button>
-
-              <button
-                onClick={handlePayment}
-                disabled={isProcessing || paymentAmount <= 0}
-                className="w-full rounded-lg bg-teal-500 px-4 py-3 font-semibold text-white transition-colors hover:bg-teal-600 disabled:bg-gray-300"
-              >
-                {isProcessing ? 'PROCESSING...' : 'PAY NOW'}
-              </button>
-            </div>
+            </Card>
           </div>
         </div>
       </div>
+
+      {/* Modal de Pago Móvil */}
+      <Modal
+        isOpen={showPagoMovilModal}
+        onClose={handlePagoMovilCancel}
+        className="max-w-md"
+      >
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <Smartphone className="h-6 w-6 text-cyan-600" />
+              Pago Móvil
+            </h3>
+            <button
+              onClick={handlePagoMovilCancel}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {/* Monto */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Monto (USD)
+              </label>
+              <Input
+                type="number"
+                placeholder="0.00"
+                value={pagoMovilData.amount}
+                onChange={(e) =>
+                  setPagoMovilData((prev) => ({
+                    ...prev,
+                    amount: e.target.value,
+                  }))
+                }
+                className="w-full h-12 text-lg border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500"
+                step="0.01"
+                min="0"
+              />
+            </div>
+
+            {/* Número de Referencia */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Número de Referencia (6 dígitos)
+              </label>
+              <Input
+                type="text"
+                placeholder="123456"
+                value={pagoMovilData.reference}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setPagoMovilData((prev) => ({ ...prev, reference: value }));
+                }}
+                className="w-full h-12 text-lg border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500"
+                maxLength={6}
+              />
+              <div className="text-xs text-gray-500 mt-1">
+                {pagoMovilData.reference.length}/6 dígitos
+              </div>
+            </div>
+
+            {/* Teléfono */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Número de Teléfono
+              </label>
+              <Input
+                type="tel"
+                placeholder="04123456789"
+                value={pagoMovilData.phone}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  setPagoMovilData((prev) => ({ ...prev, phone: value }));
+                }}
+                className="w-full h-12 text-lg border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500"
+                maxLength={11}
+              />
+              <div className="text-xs text-gray-500 mt-1">
+                Formato: 04123456789
+              </div>
+            </div>
+          </div>
+
+          {/* Botones */}
+          <div className="flex gap-3 mt-8">
+            <Button
+              onClick={handlePagoMovilCancel}
+              variant="outline"
+              className="flex-1 h-12 border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handlePagoMovilSubmit}
+              className="flex-1 h-12 bg-cyan-500 hover:bg-cyan-600 text-white"
+              disabled={
+                !pagoMovilData.amount ||
+                parseFloat(pagoMovilData.amount) <= 0 ||
+                pagoMovilData.reference.length !== 6 ||
+                pagoMovilData.phone.length < 10
+              }
+            >
+              Confirmar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+      
+      {/* Toast Container para mostrar notificaciones */}
+      <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
     </div>
   );
 }

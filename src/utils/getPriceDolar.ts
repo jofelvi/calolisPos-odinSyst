@@ -3,7 +3,7 @@ import puppeteer from 'puppeteer';
 
 type TextCleaner = (text: string) => string;
 
-const getPriceBcv = async (): Promise<string> => {
+export const getPriceBcv = async (): Promise<string> => {
   let browser: Browser | null = null;
   try {
     browser = await puppeteer.launch({
@@ -67,13 +67,17 @@ const getPriceBcv = async (): Promise<string> => {
     }
   } finally {
     // Cerrar el navegador siempre
-    if (browser && !browser.isConnected()) {
-      await browser.close();
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error('Error cerrando el navegador:', closeError);
+      }
     }
   }
 };
 
 // Ejecutar la función con manejo de promesas tipado
-getPriceBcv()
-  .then((price: string) => console.log('Precio obtenido:', price))
-  .catch((err: Error) => console.error('Error en el proceso:', err.message));
+/*getPriceBcv()
+  .then((price: string) => price)
+  .catch((err: Error) => console.error('Error en el proceso:', err.message));*/

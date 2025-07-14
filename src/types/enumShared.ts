@@ -35,10 +35,13 @@ export enum OrderStatusEnum {
 }
 
 export enum PaymentMethodEnum {
-  CASH = 'CASH',
+  CASH_BS = 'CASH_BS',
+  CASH_USD = 'CASH_USD',
   CARD = 'CARD',
   TRANSFER = 'TRANSFER',
+  PAGO_MOVIL = 'PAGO_MOVIL',
   MIXED = 'MIXED',
+  PENDING = 'PENDING',
 }
 
 export enum PaymentStatusEnum {

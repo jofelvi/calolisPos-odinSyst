@@ -7,6 +7,8 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  query,
+  where,
 } from 'firebase/firestore';
 import { db } from '@/services/firebase/firebase';
 import { User } from '@/types/user';
@@ -18,6 +20,8 @@ import { PurchaseOrder } from '@/types/purchaseOrder';
 import { Order } from '@/types/order';
 import { Customer } from '@/types/customer';
 import { Payment } from '@/types/payment';
+import { AccountReceivable } from '@/types/accountReceivable';
+import { PagoMovil } from '@/types/pagoMovil';
 
 class FirestoreService<T extends { id: string }> {
   constructor(private collectionName: string) {}
@@ -190,3 +194,109 @@ export const purchaseOrderService = new FirestoreService<PurchaseOrder>(
 export const orderService = new FirestoreService<Order>('orders');
 export const customerService = new FirestoreService<Customer>('customers');
 export const paymentService = new FirestoreService<Payment>('payments');
+export const accountReceivableService = new FirestoreService<AccountReceivable>('accountReceivables');
+export const pagoMovilService = new FirestoreService<PagoMovil>('pagoMoviles');
+
+// Helper function to get customer receivables
+export const getCustomerReceivables = async (customerId: string): Promise<AccountReceivable[]> => {
+  try {
+    const q = query(
+      collection(db, 'accountReceivables'),
+      where('customerId', '==', customerId),
+      where('status', 'in', ['pending', 'partially_paid'])
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as AccountReceivable);
+  } catch (error) {
+    console.error('Error getting customer receivables:', error);
+    throw error;
+  }
+};
+
+// Helper function to get pago movil by reference number
+export const getPagoMovilByReference = async (referenceNumber: string): Promise<PagoMovil | null> => {
+  try {
+    const q = query(
+      collection(db, 'pagoMoviles'),
+      where('referenceNumber', '==', referenceNumber)
+    );
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) {
+      return null;
+    }
+    const doc = snapshot.docs[0];
+    return { id: doc.id, ...doc.data() } as PagoMovil;
+  } catch (error) {
+    console.error('Error getting pago movil by reference:', error);
+    throw error;
+  }
+};
+
+// Helper function to get active order for a specific table
+export const getActiveOrderByTable = async (tableId: string): Promise<Order | null> => {
+  try {
+    const q = query(
+      collection(db, 'orders'),
+      where('tableId', '==', tableId),
+      where('status', 'in', ['pending', 'in_progress', 'ready'])
+    );
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) {
+      return null;
+    }
+    const doc = snapshot.docs[0]; // Solo debería haber una orden activa por mesa
+    return { id: doc.id, ...doc.data() } as Order;
+  } catch (error) {
+    console.error('Error getting active order by table:', error);
+    throw error;
+  }
+};
+
+// Helper function to get all active takeaway orders
+export const getActiveTakeawayOrders = async (): Promise<Order[]> => {
+  try {
+    const q = query(
+      collection(db, 'orders'),
+      where('tableId', '==', null),
+      where('status', 'in', ['pending', 'in_progress', 'ready'])
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Order);
+  } catch (error) {
+    console.error('Error getting active takeaway orders:', error);
+    throw error;
+  }
+};
+
+// Helper function to get all active orders with table info
+export const getActiveOrdersWithTables = async (): Promise<(Order & { tableNumber?: number })[]> => {
+  try {
+    const q = query(
+      collection(db, 'orders'),
+      where('status', 'in', ['pending', 'in_progress', 'ready'])
+    );
+    const snapshot = await getDocs(q);
+    const orders = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Order);
+    
+    // Get table info for orders that have tableId
+    const ordersWithTables = await Promise.all(
+      orders.map(async (order) => {
+        if (order.tableId) {
+          try {
+            const table = await tableService.getById(order.tableId);
+            return { ...order, tableNumber: table?.number };
+          } catch (error) {
+            console.error('Error getting table info for order:', error);
+            return order;
+          }
+        }
+        return order;
+      })
+    );
+    
+    return ordersWithTables;
+  } catch (error) {
+    console.error('Error getting active orders with tables:', error);
+    throw error;
+  }
+};
