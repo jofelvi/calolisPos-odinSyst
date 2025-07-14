@@ -1,3 +1,5 @@
+import { Button } from '@/components/shared/button/Button';
+
 interface FormActionsProps {
   isSubmitting: boolean;
   isNew: boolean;
@@ -10,19 +12,20 @@ export default function FormActions({
   onCancel,
 }: FormActionsProps) {
   return (
-    <div className="flex justify-end space-x-3">
-      <button
+    <div className="flex justify-end space-x-3 pt-6 border-t border-cyan-100">
+      <Button
         type="button"
+        variant="outline"
         onClick={onCancel}
-        className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         disabled={isSubmitting}
+        className="bg-white/80 border-cyan-200 text-cyan-700 hover:bg-cyan-50 hover:border-cyan-300"
       >
         Cancelar
-      </button>
-      <button
+      </Button>
+      <Button
         type="submit"
-        className="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
         disabled={isSubmitting}
+        className="bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white shadow-lg"
       >
         {isSubmitting ? (
           <span className="flex items-center">
@@ -51,9 +54,9 @@ export default function FormActions({
         ) : isNew ? (
           'Crear Producto'
         ) : (
-          'Actualizar'
+          'Actualizar Producto'
         )}
-      </button>
+      </Button>
     </div>
   );
 }

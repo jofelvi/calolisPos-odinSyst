@@ -226,11 +226,11 @@ export default function IngredientsManager({
   return (
     <div className="md:col-span-2">
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 px-6 py-4">
+        <div className="bg-gradient-to-r from-cyan-50 to-teal-50 border-b border-cyan-100 px-6 py-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-lg">
-                <Package className="w-4 h-4 text-blue-600" />
+              <div className="flex items-center justify-center w-8 h-8 bg-cyan-100 rounded-lg">
+                <Package className="w-4 h-4 text-cyan-600" />
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
@@ -245,7 +245,7 @@ export default function IngredientsManager({
             <div className="flex flex-wrap items-center gap-4">
               <div className="text-sm bg-white px-3 py-1.5 rounded-md border border-gray-200">
                 <span className="text-gray-600">Guardados: </span>
-                <span className="font-semibold text-blue-600">
+                <span className="font-semibold text-cyan-600">
                   {savedIngredients.size}/{fields.length}
                 </span>
               </div>
@@ -260,7 +260,7 @@ export default function IngredientsManager({
               <Button
                 type="button"
                 onClick={addIngredient}
-                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 shadow-sm hover:shadow-md whitespace-nowrap"
+                className="bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white shadow-lg"
               >
                 <Plus className="w-4 h-4" />
                 Agregar Ingrediente
@@ -285,7 +285,7 @@ export default function IngredientsManager({
               <Button
                 type="button"
                 onClick={addIngredient}
-                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
+                className="bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white shadow-lg"
               >
                 <Plus className="w-4 h-4" />
                 Agregar primer ingrediente

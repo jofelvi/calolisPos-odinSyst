@@ -1,9 +1,9 @@
 // components/purchase-orders/PurchaseOrderForm.tsx
 'use client';
 
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -48,7 +48,7 @@ export default function PurchaseOrderForm({
     reset,
     watch,
     setValue,
-    formState: { errors, isValid, isDirty },
+    formState: { errors },
   } = useForm<PurchaseOrderFormValues>({
     resolver: yupResolver(purchaseOrderSchema),
     mode: 'onChange', // Validar en tiempo real
@@ -161,6 +161,7 @@ export default function PurchaseOrderForm({
   const handleItemChange = (
     index: number,
     field: keyof PurchaseOrderItemFormValues,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any,
   ) => {
     const items = watch('items');
@@ -262,6 +263,7 @@ export default function PurchaseOrderForm({
         // Redirigir a la página de detalles de la orden editada
         router.push(PRIVATE_ROUTES.PURCHASE_ORDERS_DETAILS(initialData.id));
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Error saving purchase order:', error);
 

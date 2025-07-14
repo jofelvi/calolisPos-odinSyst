@@ -26,7 +26,7 @@ export default function ProductsPage() {
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [isScrolling, setIsScrolling] = useState(false);
+  const [_isScrolling, setIsScrolling] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Cargar productos y categorías

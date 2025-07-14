@@ -1,20 +1,19 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Order } from '@/types/order';
 import { useUserStore } from '@/store/useUserStore';
 import {
   collection,
+  getDocs,
+  limit,
+  orderBy,
   query,
   where,
-  orderBy,
-  limit,
-  getDocs,
 } from 'firebase/firestore';
 import { db } from '@/services/firebase/firebase';
-import { CheckCircle, XCircle, Package, ChefHat, Coffee } from 'lucide-react';
+import { CheckCircle, ChefHat, Coffee, Package, XCircle } from 'lucide-react';
 import { OrderStatusEnum } from '@/types/enumShared';
 import { CUSTOMER_ROUTES } from '@/constants/routes';
-import Link from 'next/link';
 
 const statusSteps = [
   {

@@ -1,5 +1,6 @@
 import { UseFormRegister, FieldErrors } from 'react-hook-form';
 import { ProductFormData } from '@/app/components/types/schemaYup/productSchema';
+import { Input } from '@/components/shared/input/input';
 
 interface ProductInventoryProps {
   register: UseFormRegister<ProductFormData>;
@@ -13,72 +14,43 @@ export default function ProductInventory({
   return (
     <>
       {/* Stock */}
-      <div>
-        <label
-          htmlFor="stock"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Stock *
-        </label>
-        <input
-          type="number"
-          id="stock"
-          {...register('stock')}
-          className={`mt-1 block w-full border ${errors.stock ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
-        />
-        {errors.stock && (
-          <p className="mt-1 text-sm text-red-600">{errors.stock.message}</p>
-        )}
-      </div>
+      <Input
+        label="Stock *"
+        id="stock"
+        type="number"
+        variant="numeric"
+        {...register('stock')}
+        error={errors.stock?.message}
+        required
+      />
 
       {/* Stock Mínimo */}
-      <div>
-        <label
-          htmlFor="minStock"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Stock Mínimo
-        </label>
-        <input
-          type="number"
-          id="minStock"
-          {...register('minStock')}
-          className={`mt-1 block w-full border ${errors.minStock ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
-        />
-        {errors.minStock && (
-          <p className="mt-1 text-sm text-red-600">{errors.minStock.message}</p>
-        )}
-      </div>
+      <Input
+        label="Stock Mínimo"
+        id="minStock"
+        type="number"
+        variant="numeric"
+        {...register('minStock')}
+        error={errors.minStock?.message}
+      />
 
       {/* SKU */}
-      <div>
-        <label
-          htmlFor="sku"
-          className="block text-sm font-medium text-gray-700"
-        >
-          SKU
-        </label>
-        <input
-          id="sku"
-          {...register('sku')}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        />
-      </div>
+      <Input
+        label="SKU"
+        id="sku"
+        {...register('sku')}
+        error={errors.sku?.message}
+        placeholder="Código de producto único"
+      />
 
       {/* Código de Barras */}
-      <div>
-        <label
-          htmlFor="barcode"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Código de Barras
-        </label>
-        <input
-          id="barcode"
-          {...register('barcode')}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        />
-      </div>
+      <Input
+        label="Código de Barras"
+        id="barcode"
+        {...register('barcode')}
+        error={errors.barcode?.message}
+        placeholder="Código de barras del producto"
+      />
     </>
   );
 }

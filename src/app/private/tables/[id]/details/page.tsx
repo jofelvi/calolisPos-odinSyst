@@ -13,9 +13,10 @@ import { tableService } from '@/services/firebase/genericServices';
 export default async function TableDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const table = await tableService.getById(params.id);
+  const { id } = await params;
+  const table = await tableService.getById(id);
   if (!table) return notFound();
 
   return (

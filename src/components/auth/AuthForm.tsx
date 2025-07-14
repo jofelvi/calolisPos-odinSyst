@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { signInWithEmail, signUpWithEmail } from '@/services/firebase/auth';
+import { signUpWithEmail } from '@/services/firebase/auth';
 import { useRouter } from 'next/navigation';
 import * as yup from 'yup';
 import { loginSchema, registerSchema } from '@/schemas/userSchema';
@@ -61,6 +61,7 @@ export function AuthForm() {
         await signUpWithEmail(data as RegisterInput);
         router.push(PUBLIC_ROUTES.ROOT);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       // Mapea códigos de error de Firebase a mensajes amigables
       const errorCode = error.code;

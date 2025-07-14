@@ -53,17 +53,31 @@ export default function ProductPresentation({
         error={errors.presentation?.message}
       />
       {/* Cantidad por Presentación */}
-      <div>
-        <Input
-          id="presentationQuantity"
-          type="number"
-          min={1}
-          label="Cantidad por Presentación"
-          {...register('presentationQuantity')}
-          error={errors.presentationQuantity?.message}
-          textHelper="Ej: 1 para unidad, 12 para docena, etc."
-          className={`mt-1 block w-full border ${errors.presentationQuantity ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
+      <Input
+        id="presentationQuantity"
+        type="number"
+        min={1}
+        variant="numeric"
+        label="Cantidad por Presentación"
+        {...register('presentationQuantity')}
+        error={errors.presentationQuantity?.message}
+        textHelper="Ej: 1 para unidad, 12 para docena, etc."
+      />
+
+      {/* Estado Activo */}
+      <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl border border-gray-200">
+        <input
+          type="checkbox"
+          id="isActive"
+          {...register('isActive')}
+          className="h-5 w-5 text-cyan-600 focus:ring-cyan-500 border-cyan-300 rounded bg-white/90 backdrop-blur-sm transition-all duration-200"
         />
+        <label
+          htmlFor="isActive"
+          className="text-sm font-semibold text-cyan-700 cursor-pointer"
+        >
+          Producto activo
+        </label>
       </div>
     </>
   );

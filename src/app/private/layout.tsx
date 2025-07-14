@@ -24,6 +24,7 @@ export default function DashboardLayout({
     }
 
     // Check if user is customer (should go to customer area)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const userRole = (session?.user as any)?.role;
     if (userRole === UserRoleEnum.CUSTOMER) {
       router.push(CUSTOMER_ROUTES.HOME);
@@ -42,7 +43,7 @@ export default function DashboardLayout({
   if (status === 'unauthenticated') {
     return null;
   }
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const userRole = (session?.user as any)?.role;
   if (userRole === UserRoleEnum.CUSTOMER) {
     return null;

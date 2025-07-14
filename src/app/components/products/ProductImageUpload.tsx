@@ -32,33 +32,40 @@ export default function ProductImageUpload({
     <div className="md:col-span-2">
       <label
         htmlFor="imageFile"
-        className="block text-sm font-medium text-gray-700 mb-1"
+        className="block text-sm font-semibold text-cyan-700 mb-3"
       >
         Imagen del Producto
       </label>
-      <div className="flex flex-col space-y-2">
-        <input
-          type="file"
-          id="imageFile"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="block w-full text-sm text-gray-500
-                        file:mr-4 file:py-2 file:px-4
-                        file:rounded-md file:border-0
+      <div className="space-y-4">
+        {/* File Input Container */}
+        <div className="relative">
+          <input
+            type="file"
+            id="imageFile"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="block w-full text-sm text-gray-600 bg-white/90 backdrop-blur-sm border border-cyan-200 rounded-xl shadow-sm transition-all duration-200 ease-in-out
+                        file:mr-4 file:py-3 file:px-4
+                        file:rounded-xl file:border-0
                         file:text-sm file:font-semibold
-                        file:bg-blue-50 file:text-blue-700
-                        hover:file:bg-blue-100"
-        />
+                        file:bg-gradient-to-r file:from-cyan-50 file:to-teal-50 file:text-cyan-700
+                        hover:file:from-cyan-100 hover:file:to-teal-100
+                        focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-cyan-500
+                        hover:border-cyan-300"
+          />
+        </div>
         <input type="hidden" {...register('imageUrl')} />
 
         {imagePreview && (
-          <div className="mt-2">
-            <p className="text-sm text-gray-500 mb-1">Vista previa:</p>
-            <img
-              src={imagePreview}
-              alt="Vista previa"
-              className="h-40 object-contain border border-gray-200 rounded-md"
-            />
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-cyan-700">Vista previa:</p>
+            <div className="bg-gradient-to-r from-slate-50 to-gray-50 p-4 rounded-xl border border-gray-200">
+              <img
+                src={imagePreview}
+                alt="Vista previa del producto"
+                className="h-48 w-full object-contain rounded-lg shadow-sm bg-white"
+              />
+            </div>
           </div>
         )}
       </div>

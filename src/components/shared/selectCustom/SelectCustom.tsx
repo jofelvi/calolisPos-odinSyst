@@ -71,10 +71,10 @@ const CustomSelectInner = <T extends FieldValues>(
   };
 
   const baseClasses = cn(
-    // Altura exacta igual al Input (h-11)
-    'h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm',
+    // Base styling moderno con glassmorphism - igual al Input
+    'h-11 w-full rounded-xl border bg-white/90 backdrop-blur-sm px-3 py-2 text-sm shadow-sm',
     'transition-all duration-200 ease-in-out',
-    'focus:outline-none focus:ring-2 focus:ring-offset-1',
+    'focus:outline-none focus:ring-2 focus:ring-offset-0',
     // Apariencia del select
     'appearance-none cursor-pointer',
     // Disabled state
@@ -82,17 +82,17 @@ const CustomSelectInner = <T extends FieldValues>(
   );
 
   const stateClasses = cn(
-    // Estados normales
+    // Estados con colores cyan/teal
     hasError
-      ? ['border-red-500 focus:border-red-500 focus:ring-red-500/20']
+      ? ['border-red-300 focus:border-red-500 focus:ring-red-500/30']
       : disabled
         ? ['border-gray-200 bg-gray-50 text-gray-400']
-        : ['border-gray-300 focus:border-blue-500 focus:ring-blue-500/20'],
+        : ['border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500/30 focus:bg-white'],
   );
 
   const labelClasses = cn(
-    'block text-sm font-medium mb-2',
-    hasError ? 'text-red-700' : 'text-gray-700',
+    'block text-sm font-semibold mb-2',
+    hasError ? 'text-red-700' : 'text-cyan-700',
     disabled && 'text-gray-400',
     labelClassName,
   );
@@ -158,7 +158,7 @@ const CustomSelectInner = <T extends FieldValues>(
             <ChevronDown
               className={cn(
                 'w-4 h-4 transition-colors duration-200',
-                disabled ? 'text-gray-300' : 'text-gray-400',
+                disabled ? 'text-gray-300' : 'text-cyan-500',
               )}
             />
           )}

@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const formatDateForDisplay = (dateValue: any): string => {
   if (!dateValue) return 'No especificada';
 

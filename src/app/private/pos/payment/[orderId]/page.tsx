@@ -1,7 +1,7 @@
 // app/pos/payment/[orderId]/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Order } from '@/types/order';
 import {
@@ -21,11 +21,11 @@ import Table from '@/components/shared/Table';
 import { IoMdCash } from 'react-icons/io';
 
 interface PageProps {
-  params: { orderId: string };
+  params: Promise<{ orderId: string }>;
 }
 
 export default function PaymentPage({ params }: PageProps) {
-  const { orderId } = params;
+  const { orderId } = use(params);
   const router = useRouter();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);

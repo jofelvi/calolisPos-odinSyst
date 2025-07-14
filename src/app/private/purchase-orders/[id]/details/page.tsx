@@ -21,9 +21,10 @@ import { ArrowLeft, Edit } from 'lucide-react';
 export default async function PurchaseOrderDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const orderData = await purchaseOrderService.getById(params.id);
+  const { id } = await params;
+  const orderData = await purchaseOrderService.getById(id);
   if (!orderData) return notFound();
 
   // Fetch supplier data

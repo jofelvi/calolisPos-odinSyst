@@ -4,10 +4,9 @@ import SupplierForm from '@/app/components/suppliers/SupplierForm';
 export default async function SupplierEditPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const resolvedParams = await params;
-  const { id } = resolvedParams;
+  const { id } = await params;
 
   const supplier = id === 'new' ? null : await supplierService.getById(id);
 

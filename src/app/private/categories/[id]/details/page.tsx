@@ -14,12 +14,11 @@ import { PRIVATE_ROUTES } from '@/constants/routes';
 import Link from 'next/link';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function CategoryDetailPage({ params }: PageProps) {
-  const resolvedParams = await params;
-  const { id } = resolvedParams;
+  const { id } = await params;
   const categoryData = await categoryService.getById(id);
   if (!categoryData) return notFound();
 

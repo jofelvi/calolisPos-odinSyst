@@ -3,8 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { UserRoleEnum } from '@/types/enumShared';
-import { getDefaultRouteByRole, AUTH_ROUTES } from '@/constants/routes';
+import { AUTH_ROUTES, getDefaultRouteByRole } from '@/constants/routes';
 
 export default function HomePage() {
   const { data: session, status } = useSession();
@@ -15,6 +14,7 @@ export default function HomePage() {
 
     if (status === 'authenticated' && session?.user) {
       // Redirect based on user role using centralized routes
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const userRole = (session.user as any).role;
       const defaultRoute = getDefaultRouteByRole(userRole);
       router.push(defaultRoute);

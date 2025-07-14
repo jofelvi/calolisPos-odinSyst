@@ -88,6 +88,7 @@ export const isRouteAccessibleForRole = (
   role: UserRoleEnum,
 ): boolean => {
   // Rutas públicas son accesibles para todos
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (Object.values(PUBLIC_ROUTES).includes(route as any)) {
     return true;
   }

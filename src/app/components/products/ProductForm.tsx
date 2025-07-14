@@ -41,6 +41,7 @@ import {
 } from '@/app/components/products/productsUtils';
 import { FormErrorSummary } from '@/components/shared/formErrorSummary/FormErrorSummary';
 import Loader from '@/components/shared/Loader/Loader';
+import { PRIVATE_ROUTES } from '@/constants/routes';
 
 interface ProductFormProps {
   initialData?: Product | null;
@@ -159,7 +160,7 @@ export default function ProductForm({
         await productService.update(initialData.id, productToUpdate);
       }
 
-      router.push('/products');
+      router.push(PRIVATE_ROUTES.PRODUCTS);
     } catch (error) {
       console.error('Error saving product:', error);
     } finally {
@@ -236,7 +237,7 @@ export default function ProductForm({
       <FormActions
         isSubmitting={isSubmitting}
         isNew={isNew}
-        onCancel={() => router.push('/products')}
+        onCancel={() => router.push(PRIVATE_ROUTES.PRODUCTS)}
       />
 
       {/* modal para nueva categoría */}

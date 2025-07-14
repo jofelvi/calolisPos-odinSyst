@@ -1,12 +1,12 @@
 import {
+  addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
   setDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from '@/services/firebase/firebase';
 import { User } from '@/types/user';
@@ -129,8 +129,10 @@ class FirestoreService<T extends { id: string }> {
   }
 
   // Método auxiliar para sanitizar datos antes de enviarlos a Firestore
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private sanitizeData<D extends Record<string, any>>(
     data: D | null | undefined,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Record<string, any> {
     if (data === null || data === undefined) {
       return {};

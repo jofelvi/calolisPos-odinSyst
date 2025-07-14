@@ -12,8 +12,7 @@ import { cn } from '@/lib/utils';
 // Header.jsx
 export function Header() {
   const { user, logout } = useUserStore();
-  const { isCollapsed, isMobileOpen, toggleCollapsed, toggleMobile } =
-    useSidebarStore();
+  const { isMobileOpen, toggleCollapsed, toggleMobile } = useSidebarStore();
   const router = useRouter();
   const [showDropdown, setShowDropdown] = useState(false);
 

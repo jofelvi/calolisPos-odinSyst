@@ -10,6 +10,7 @@ import { loginSchema, registerSchema } from '@/schemas/userSchema';
 import * as yup from 'yup';
 import { auth, db } from '@/services/firebase/firebase';
 import { User } from '@/types/user';
+import { UserRoleEnum } from '@/types/enumShared';
 
 // Tipos inferidos de los esquemas para los argumentos de las funciones
 export type LoginInput = yup.InferType<typeof loginSchema>;
@@ -35,7 +36,7 @@ export const signUpWithEmail = async ({
       name,
       email: user.email!,
       image: `https://i.pravatar.cc/150?u=${user.uid}`, // Placeholder image
-      role: 'user',
+      role: UserRoleEnum.CUSTOMER,
       isActive: true,
     };
 

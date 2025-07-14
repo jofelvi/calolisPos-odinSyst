@@ -15,9 +15,10 @@ import { PRIVATE_ROUTES } from '@/constants/routes';
 export default async function CustomersPage({
   searchParams,
 }: {
-  searchParams?: { query?: string };
+  searchParams?: Promise<{ query?: string }>;
 }) {
-  const query = searchParams?.query || '';
+  const resolvedSearchParams = await searchParams;
+  const query = resolvedSearchParams?.query || '';
   let customers = await customerService.getAll();
 
   if (query) {

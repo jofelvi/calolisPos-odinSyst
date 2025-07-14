@@ -3,12 +3,11 @@ import { tableService } from '@/services/firebase/genericServices';
 import TableForm from '@/app/components/tables/TableForm';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditTablePage({ params }: PageProps) {
-  const resolvedParams = await params;
-  const { id } = resolvedParams;
+  const { id } = await params;
   const table = await tableService.getById(id);
   if (!table) return notFound();
 

@@ -48,7 +48,9 @@ export default function ProductBasicInfo({
           <Button
             type="button"
             onClick={onAddCategory}
-            className="mt-2inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 shadow-sm hover:shadow-md"
+            variant="outline"
+            size="sm"
+            className="bg-white/80 border-cyan-200 text-cyan-700 hover:bg-cyan-50 hover:border-cyan-300"
           >
             + Agregar nueva categoría
           </Button>
@@ -59,7 +61,7 @@ export default function ProductBasicInfo({
       <div className="md:col-span-2">
         <label
           htmlFor="description"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-semibold mb-2 text-cyan-700"
         >
           Descripción
         </label>
@@ -67,7 +69,8 @@ export default function ProductBasicInfo({
           id="description"
           {...register('description')}
           rows={3}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Describe las características del producto..."
+          className="w-full rounded-xl border border-cyan-200 bg-white/90 backdrop-blur-sm py-3 px-3 text-sm shadow-sm transition-all duration-200 ease-in-out placeholder:text-cyan-400/60 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:border-cyan-500 focus:ring-cyan-500/30 focus:bg-white resize-none"
         />
       </div>
       <div className="grid grid-cols-1 gap-6">

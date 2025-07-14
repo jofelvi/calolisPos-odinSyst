@@ -6,11 +6,12 @@ import BackIcon from '@/components/shared/BackButton/BackButton';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditPurchaseOrderPage({ params }: PageProps) {
-  const orderData = await purchaseOrderService.getById(params.id);
+  const { id } = await params;
+  const orderData = await purchaseOrderService.getById(id);
   if (!orderData) return notFound();
 
   const order = {
@@ -25,7 +26,7 @@ export default async function EditPurchaseOrderPage({ params }: PageProps) {
       <div className="container mx-auto p-6">
         <div className="mb-6">
           <BackIcon
-            href={PRIVATE_ROUTES.PURCHASE_ORDERS_DETAILS(params.id)}
+            href={PRIVATE_ROUTES.PURCHASE_ORDERS_DETAILS(id)}
             tooltip="Volver a Detalles"
           />
           <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-700 to-teal-600 bg-clip-text text-transparent mt-4">

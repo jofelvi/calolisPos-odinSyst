@@ -24,6 +24,7 @@ export default function CustomerDashboardLayout({
     }
 
     // Check if user has customer role
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const userRole = (session?.user as any)?.role;
     if (userRole && userRole !== UserRoleEnum.CUSTOMER) {
       router.push(PRIVATE_ROUTES.DASHBOARD);
@@ -42,7 +43,7 @@ export default function CustomerDashboardLayout({
   if (status === 'unauthenticated') {
     return null;
   }
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const userRole = (session?.user as any)?.role;
   if (userRole && userRole !== UserRoleEnum.CUSTOMER) {
     return null;

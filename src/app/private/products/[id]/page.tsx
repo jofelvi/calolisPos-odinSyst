@@ -4,12 +4,11 @@ import { productService } from '@/services/firebase/genericServices';
 import BackIcon from '@/components/shared/BackButton/BackButton';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function ProductEditPage({ params }: PageProps) {
-  const resolvedParams = await params;
-  const { id } = resolvedParams;
+  const { id } = await params;
   const productData = await productService.getById(id);
 
   if (!productData) return notFound();
