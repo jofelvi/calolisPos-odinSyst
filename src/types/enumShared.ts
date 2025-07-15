@@ -62,8 +62,12 @@ export enum TableStatusEnum {
 export enum AttendanceStatusEnum {
   PRESENT = 'present',
   ABSENT = 'absent',
-  MEDICALREST = 'medicalRest',
   LATE = 'late',
+  EARLY_DEPARTURE = 'early_departure',
+  HOLIDAY = 'holiday',
+  SICK_LEAVE = 'sick_leave',
+  VACATION = 'vacation',
+  MEDICALREST = 'medicalRest', // Mantener por compatibilidad
 }
 
 export enum PurchaseOrderStatusEnum {
@@ -122,4 +126,11 @@ export enum InvoiceStatusEnum {
 export enum OrderTypeEnum {
   DineIn = 'dine-in',
   Takeaway = 'takeaway',
+}
+
+export enum PayrollStatusEnum {
+  DRAFT = 'draft',
+  APPROVED = 'approved',
+  PAID = 'paid',
+  CANCELLED = 'cancelled',
 }

@@ -30,7 +30,9 @@ export default function ProductSelector({
     const loadCategories = async () => {
       const allCategories = await categoryService.getAll();
       // Filter only categories that are for sale
-      const categoriesForSale = allCategories.filter(category => category.isForSale === true);
+      const categoriesForSale = allCategories.filter(
+        (category) => category.isForSale === true,
+      );
       setCategories(categoriesForSale);
     };
     void loadCategories();
@@ -50,15 +52,18 @@ export default function ProductSelector({
 
     if (searchTerm.trim()) {
       const lower = searchTerm.toLowerCase();
-      result = result.filter(
-        (product) => {
-          const productNameMatch = product.name.toLowerCase().includes(lower);
-          const categoryMatch = categories.find(cat => cat.id === product.categoryId)?.name.toLowerCase().includes(lower) || false;
-          const descriptionMatch = product.description?.toLowerCase().includes(lower) || false;
-          
-          return productNameMatch || categoryMatch || descriptionMatch;
-        }
-      );
+      result = result.filter((product) => {
+        const productNameMatch = product.name.toLowerCase().includes(lower);
+        const categoryMatch =
+          categories
+            .find((cat) => cat.id === product.categoryId)
+            ?.name.toLowerCase()
+            .includes(lower) || false;
+        const descriptionMatch =
+          product.description?.toLowerCase().includes(lower) || false;
+
+        return productNameMatch || categoryMatch || descriptionMatch;
+      });
     }
 
     setFilteredProducts(result);

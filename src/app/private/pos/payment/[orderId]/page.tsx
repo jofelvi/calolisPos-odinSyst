@@ -5,16 +5,19 @@ import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Order } from '@/types/order';
 import {
+  CurrencyEnum,
   InvoiceStatusEnum,
   OrderStatusEnum,
   PaymentMethodEnum,
   PaymentStatusEnum,
+  PaymentTypeEnum,
   TableStatusEnum,
 } from '@/types/enumShared';
 import {
   accountReceivableService,
   getCustomerReceivables,
   getPagoMovilByReference,
+  invoiceService,
   orderService,
   pagoMovilService,
   paymentService,
@@ -24,6 +27,7 @@ import { Payment } from '@/types/payment';
 import { Customer } from '@/types/customer';
 import { AccountReceivable } from '@/types/accountReceivable';
 import { PagoMovil } from '@/types/pagoMovil';
+import { Invoice } from '@/types/invoice';
 // BCV rate will be fetched from API route
 import { Input } from '@/components/shared/input/input';
 import { Card } from '@/components/shared/card/card';
@@ -46,6 +50,7 @@ import CustomerSearch from '@/app/components/pos/CustomerSearch';
 import Modal from '@/components/shared/modal';
 import { ToastContainer } from '@/components/shared/toast';
 import { useToast } from '@/hooks/useToast';
+import { useUserStore } from '@/store/useUserStore';
 
 interface PageProps {
   params: Promise<{ orderId: string }>;
@@ -55,6 +60,7 @@ export default function PaymentPage({ params }: PageProps) {
   const { orderId } = use(params);
   const router = useRouter();
   const toast = useToast();
+  const { user } = useUserStore();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -89,7 +95,6 @@ export default function PaymentPage({ params }: PageProps) {
     AccountReceivable[]
   >([]);
   const [showReceivables, setShowReceivables] = useState(false);
-  const [isPendingPayment, setIsPendingPayment] = useState(false);
 
   // Estados para modal de Pago Móvil
   const [showPagoMovilModal, setShowPagoMovilModal] = useState(false);
@@ -307,6 +312,100 @@ export default function PaymentPage({ params }: PageProps) {
   // Calcular el total en bolívares
   const totalInBs = order ? (order.total + tipAmount) * bcvRate : 0;
   const totalWithTip = order ? order.total + tipAmount : 0;
+
+  // Función helper para crear factura automáticamente
+  const createInvoiceForOrder = async (
+    order: Order,
+    paymentStatus: PaymentStatusEnum,
+  ): Promise<void> => {
+    try {
+      // Determinar el tipo de pago principal
+      let paymentType: PaymentTypeEnum = PaymentTypeEnum.CASH;
+      if (selectedPaymentMethods.includes(PaymentMethodEnum.CARD)) {
+        paymentType = PaymentTypeEnum.CARD;
+      } else if (selectedPaymentMethods.includes(PaymentMethodEnum.TRANSFER)) {
+        paymentType = PaymentTypeEnum.TRANSFER;
+      } else if (
+        selectedPaymentMethods.includes(PaymentMethodEnum.PAGO_MOVIL)
+      ) {
+        paymentType = PaymentTypeEnum.PAYMOBIL;
+      }
+
+      // Determinar el estado de la factura
+      let invoiceStatus: InvoiceStatusEnum;
+      let paidAt: Date | undefined;
+      switch (paymentStatus) {
+        case PaymentStatusEnum.PAID:
+          invoiceStatus = InvoiceStatusEnum.PAID;
+          paidAt = new Date();
+          break;
+        case PaymentStatusEnum.PARTIAL:
+          invoiceStatus = InvoiceStatusEnum.PARTIALLY_PAID;
+          break;
+        case PaymentStatusEnum.PENDING:
+          invoiceStatus = InvoiceStatusEnum.PENDING;
+          break;
+        default:
+          invoiceStatus = InvoiceStatusEnum.PENDING;
+      }
+
+      // Generar número de factura único
+      const invoiceNumber = `FAC-${Date.now().toString().slice(-8)}-${order.id.slice(-4).toUpperCase()}`;
+
+      // Calcular totales
+      const subtotal = order.subtotal || 0;
+      const tax = order.tax || 0;
+      const total = totalWithTip;
+
+      // Crear items de la factura basados en los items de la orden
+      const invoiceItems =
+        order.items?.map((item) => ({
+          productId: item.productId,
+          name: item.name,
+          description: item.notes || item.name,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          total: item.quantity * item.unitPrice,
+          notes: item.notes,
+        })) || [];
+
+      const invoiceData: Omit<Invoice, 'id'> = {
+        invoiceNumber,
+        orderId: order.id,
+        customerId: selectedCustomer?.id || order.customerId || '',
+        customerName: selectedCustomer?.name || 'Cliente no especificado',
+        subtotal,
+        tax,
+        total,
+        totalAmount: totalWithTip, // Campo legacy, mantener por compatibilidad
+
+        // Configuración
+        paymentType,
+        currency: CurrencyEnum.USD,
+        status: invoiceStatus,
+
+        // Fechas
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        dueDate:
+          paymentStatus === PaymentStatusEnum.PENDING
+            ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 días para pagos pendientes
+            : undefined,
+        paidAt,
+
+        // Información adicional
+        notes:
+          tipAmount > 0
+            ? `Propina incluida: $${tipAmount.toFixed(2)}`
+            : undefined,
+        items: invoiceItems,
+      };
+
+      await invoiceService.create(invoiceData);
+    } catch (error) {
+      // No lanzamos el error para no interrumpir el flujo de pago
+    }
+  };
 
   // Calcular el total pagado en USD equivalente
   const calculateTotalPaid = (): number => {
@@ -575,6 +674,9 @@ export default function PaymentPage({ params }: PageProps) {
         updatedAt: new Date(),
       });
 
+      // Crear factura automáticamente para pagos pendientes
+      await createInvoiceForOrder(order, PaymentStatusEnum.PENDING);
+
       router.push(`/private/pos/receipt/${order.id}`);
     } catch (error) {
       console.error('Error creating pending payment:', error);
@@ -610,6 +712,9 @@ export default function PaymentPage({ params }: PageProps) {
           isAvailable: true,
         });
       }
+
+      // Crear factura automáticamente
+      await createInvoiceForOrder(order, PaymentStatusEnum.PAID);
 
       toast.success('Orden cobrada exitosamente', 'Volviendo al POS...');
       router.push('/private/pos');
@@ -648,7 +753,7 @@ export default function PaymentPage({ params }: PageProps) {
             amount:
               method === PaymentMethodEnum.CASH_BS ? amount / bcvRate : amount,
             method: method,
-            userId: 'current-user-id',
+            userId: user?.id || 'unknown-user',
             createdAt: new Date(),
           };
           return paymentService.create(paymentData);
@@ -679,6 +784,9 @@ export default function PaymentPage({ params }: PageProps) {
           isAvailable: true,
         });
       }
+
+      // Crear factura automáticamente
+      await createInvoiceForOrder(order, newStatus);
 
       toast.success(
         '¡Pago procesado exitosamente!',

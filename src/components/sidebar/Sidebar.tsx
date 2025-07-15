@@ -12,6 +12,8 @@ import { useEffect } from 'react';
 import {
   FiClipboard,
   FiCreditCard,
+  FiDollarSign,
+  FiFileText,
   FiFolder,
   FiGrid,
   FiLayout,
@@ -19,6 +21,7 @@ import {
   FiShoppingCart,
   FiTruck,
   FiUsers,
+  FiUserCheck,
 } from 'react-icons/fi';
 
 const menuItems = [
@@ -43,6 +46,11 @@ const menuItems = [
     icon: <FiShoppingCart size={20} />,
   },
   {
+    label: 'Facturas',
+    path: PRIVATE_ROUTES.INVOICES,
+    icon: <FiFileText size={20} />,
+  },
+  {
     label: 'Proveedores',
     path: PRIVATE_ROUTES.SUPPLIERS,
     icon: <FiTruck size={20} />,
@@ -57,6 +65,16 @@ const menuItems = [
     label: 'Clientes',
     path: PRIVATE_ROUTES.CUSTOMERS,
     icon: <FiUsers size={20} />,
+  },
+  {
+    label: 'Empleados',
+    path: PRIVATE_ROUTES.EMPLOYEES,
+    icon: <FiUserCheck size={20} />,
+  },
+  {
+    label: 'Cuentas por Cobrar',
+    path: PRIVATE_ROUTES.ACCOUNTS_RECEIVABLE,
+    icon: <FiDollarSign size={20} />,
   },
   {
     label: 'Punto de Venta',

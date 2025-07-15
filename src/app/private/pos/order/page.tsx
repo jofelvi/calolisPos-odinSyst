@@ -1,7 +1,7 @@
-// app/pos/order/page.tsx
+// app/private/pos/order/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -25,9 +25,14 @@ import { Button } from '@/components/shared/button/Button';
 import ProductSelector from '@/app/components/pos/ProductSelector';
 import OrderSummary from '@/app/components/pos/OrderSummary';
 import Loader from '@/components/shared/Loader/Loader';
+import { useSession } from 'next-auth/react'; // Constantes para las tasas de impuestos y servicios para mejor legibilidad y mantenimiento
+
+const TAX_RATE = 0.17;
+const SERVICE_CHARGE_RATE = 0.1;
 
 export default function OrderPage() {
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
   const tableId = searchParams.get('tableId');
   const orderId = searchParams.get('orderId');
   const router = useRouter();
@@ -39,7 +44,7 @@ export default function OrderPage() {
   const [existingOrder, setExistingOrder] = useState<Order | null>(null);
   const [isLoadingOrder, setIsLoadingOrder] = useState(false);
 
-  const { handleSubmit, setValue, watch } = useForm<OrderFormValues>({
+  const { handleSubmit, setValue, watch, reset } = useForm<OrderFormValues>({
     resolver: yupResolver(orderSchema),
     defaultValues: {
       tableId: tableId || null,
@@ -62,13 +67,18 @@ export default function OrderPage() {
 
   useEffect(() => {
     const loadProducts = async () => {
-      const activeProducts = await productService.getAll();
-      setProducts(activeProducts);
+      try {
+        const activeProducts = await productService.getAll();
+        setProducts(activeProducts);
+      } catch (error) {
+        console.error('Error loading products:', error);
+        // Considera mostrar una notificación de error al usuario
+      }
     };
     void loadProducts();
   }, []);
 
-  // Load existing order if orderId or tableId with active order
+  // Carga una orden existente si se provee orderId o si la mesa tiene una orden activa
   useEffect(() => {
     const loadExistingOrder = async () => {
       if (!orderId && !tableId) return;
@@ -78,32 +88,25 @@ export default function OrderPage() {
         let order: Order | null = null;
 
         if (orderId) {
-          // Load specific order by ID
           order = await orderService.getById(orderId);
         } else if (tableId) {
-          // Check if table has active order
           order = await getActiveOrderByTable(tableId);
         }
 
         if (order) {
           setExistingOrder(order);
-
-          // Populate form with existing order data
-          setValue('tableId', order.tableId || '');
-          setValue('customerId', order.customerId || '');
-          setValue('status', order.status || '');
-          setValue('items', order.items);
-          setValue('subtotal', order.subtotal);
-          setValue('tax', order.tax);
-          setValue('total', order.total);
-          setValue('paymentMethod', order.paymentMethod);
-          setValue('paymentStatus', order.paymentStatus);
-          setValue('notes', order.notes || '');
-
-          // Set customer if exists
-          if (order.customerId) {
-            // TODO: Load customer data if needed
-          }
+          reset({
+            tableId: order.tableId || null,
+            customerId: order.customerId || null,
+            status: order.status,
+            items: order.items,
+            subtotal: order.subtotal,
+            tax: order.tax,
+            total: order.total,
+            paymentMethod: order.paymentMethod || null,
+            paymentStatus: order.paymentStatus || PaymentStatusEnum.PENDING,
+            notes: order.notes || '',
+          });
         }
       } catch (error) {
         console.error('Error loading existing order:', error);
@@ -113,112 +116,129 @@ export default function OrderPage() {
     };
 
     void loadExistingOrder();
-  }, [orderId, tableId, setValue]);
+  }, [orderId, tableId, reset]);
 
+  // Recalcula los totales cada vez que el array de `items` cambia
   useEffect(() => {
     const newSubtotal = items.reduce((sum, item) => sum + item.total, 0);
-    const newTax = newSubtotal * 0.17; // impuestos 17%
-    const newTotal = newSubtotal + newTax + newSubtotal * 0.1; // +10% service charge
+    const newTaxAmount = newSubtotal * TAX_RATE;
+    const serviceCharge = newSubtotal * SERVICE_CHARGE_RATE;
+    const newTotal = newSubtotal + newTaxAmount + serviceCharge;
 
     setValue('subtotal', newSubtotal);
-    setValue('tax', 0.17); // solo almacenamos porcentaje
+    setValue('tax', TAX_RATE); // Almacena la tasa de impuesto
     setValue('total', newTotal);
   }, [items, setValue]);
 
-  const handleAddProduct = (product: Product) => {
-    const existingItemIndex = items.findIndex(
-      (item) => item.productId === product.id,
-    );
-    if (existingItemIndex >= 0) {
-      const updatedItems = [...items];
-      updatedItems[existingItemIndex].quantity += 1;
-      updatedItems[existingItemIndex].total =
-        updatedItems[existingItemIndex].quantity *
-        updatedItems[existingItemIndex].unitPrice;
-      setValue('items', updatedItems);
-    } else {
-      setValue('items', [
-        ...items,
-        {
-          productId: product.id,
-          name: product.name,
-          quantity: 1,
-          unitPrice: product.price,
-          total: product.price,
-          notes: '',
-        },
-      ]);
-    }
-  };
+  const handleAddProduct = useCallback(
+    (product: Product) => {
+      const currentItems = watch('items');
+      const existingItemIndex = currentItems.findIndex(
+        (item) => item.productId === product.id,
+      );
 
-  const handleRemoveItem = (e: React.MouseEvent, index: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const newItems = items.filter((_, i) => i !== index);
-    setValue('items', newItems);
-  };
-
-  const handleQuantityChange = (index: number, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    const updatedItems = [...items];
-    updatedItems[index].quantity = newQuantity;
-    updatedItems[index].total = newQuantity * updatedItems[index].unitPrice;
-    setValue('items', updatedItems);
-  };
-
-  const handleItemNotesChange = (index: number, notes: string) => {
-    const updatedItems = [...items];
-    updatedItems[index].notes = notes;
-    setValue('items', updatedItems);
-  };
-
-  const onSubmit = async (data: OrderFormValues) => {
-    setIsSubmitting(true);
-    try {
-      if (existingOrder) {
-        // Update existing order
-        const updateData = {
-          ...data,
-          customerId: selectedCustomer?.id || data.customerId,
-          updatedAt: new Date(),
-          notes: data.notes || null,
-        };
-
-        await orderService.update(existingOrder.id, updateData);
-        router.push(`/private/pos/payment/${existingOrder.id}`);
+      if (existingItemIndex >= 0) {
+        const updatedItems = [...currentItems];
+        updatedItems[existingItemIndex].quantity += 1;
+        updatedItems[existingItemIndex].total =
+          updatedItems[existingItemIndex].quantity *
+          updatedItems[existingItemIndex].unitPrice;
+        setValue('items', updatedItems);
       } else {
-        // Create new order
-        const orderData: Omit<Order, 'id'> = {
-          ...data,
-          customerId: selectedCustomer?.id || null,
-          userId: 'current-user-id', // TODO: Reemplazar
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          notes: data.notes || null,
-        };
-
-        const createdOrder = await orderService.create(orderData);
-
-        // Si la orden tiene una mesa asociada, asignar el orderId y cambiar status
-        if (createdOrder.tableId) {
-          console.log(
-            'entro a aquiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii',
-          );
-          await tableService.update(createdOrder.tableId, {
-            orderId: createdOrder.id,
-            status: TableStatusEnum.OCCUPIED,
-            isAvailable: false,
-          });
-        }
-
-        router.push(`/private/pos/payment/${createdOrder.id}`);
+        setValue('items', [
+          ...currentItems,
+          {
+            productId: product.id,
+            name: product.name,
+            quantity: 1,
+            unitPrice: product.price,
+            total: product.price,
+            notes: '',
+          },
+        ]);
       }
-    } catch (error) {
-      console.error('Error saving order:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    },
+    [watch, setValue],
+  );
+
+  const handleRemoveItem = useCallback(
+    (e: React.MouseEvent, index: number) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const currentItems = watch('items');
+      const newItems = currentItems.filter((_, i) => i !== index);
+      setValue('items', newItems);
+    },
+    [watch, setValue],
+  );
+
+  const handleQuantityChange = useCallback(
+    (index: number, newQuantity: number) => {
+      if (newQuantity < 1) return;
+      const currentItems = watch('items');
+      const updatedItems = [...currentItems];
+      updatedItems[index].quantity = newQuantity;
+      updatedItems[index].total = newQuantity * updatedItems[index].unitPrice;
+      setValue('items', updatedItems);
+    },
+    [watch, setValue],
+  );
+
+  const handleItemNotesChange = useCallback(
+    (index: number, notes: string) => {
+      const currentItems = watch('items');
+      const updatedItems = [...currentItems];
+      updatedItems[index].notes = notes;
+      setValue('items', updatedItems);
+    },
+    [watch, setValue],
+  );
+
+  const onSubmit = useCallback(
+    async (data: OrderFormValues) => {
+      setIsSubmitting(true);
+      try {
+        if (existingOrder) {
+          const updateData = {
+            ...data,
+            customerId: selectedCustomer?.id || data.customerId,
+            updatedAt: new Date(),
+            notes: data.notes || null,
+          };
+
+          await orderService.update(existingOrder.id, updateData);
+          router.push(`/private/pos/payment/${existingOrder.id}`);
+        } else {
+          const orderData: Omit<Order, 'id'> = {
+            ...data,
+            customerId: selectedCustomer?.id || null,
+            userId: session?.user.id || '', // TODO: Reemplazar con el ID del usuario autenticado
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            notes: data.notes || null,
+          };
+
+          const createdOrder = await orderService.create(orderData);
+
+          if (createdOrder.tableId) {
+            await tableService.update(createdOrder.tableId, {
+              orderId: createdOrder.id,
+              status: TableStatusEnum.OCCUPIED,
+              isAvailable: false,
+            });
+          }
+
+          router.push(`/private/pos/payment/${createdOrder.id}`);
+        }
+      } catch (error) {
+        console.error('Error saving order:', error);
+        // TODO: Mostrar una notificación de error al usuario
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [existingOrder, router, selectedCustomer],
+  );
 
   if (isLoadingOrder) {
     return (
@@ -244,7 +264,6 @@ export default function OrderPage() {
               onAddProduct={handleAddProduct}
             />
           </div>
-          {/* Resumen + Botones */}
           <div className="w-full xl:w-[400px] space-y-6 flex flex-col">
             <OrderSummary
               items={items}
@@ -257,7 +276,7 @@ export default function OrderPage() {
               onQuantityChange={handleQuantityChange}
               onItemNotesChange={handleItemNotesChange}
             />
-            {/* Botones */}
+            {/* Botones de Acción */}
             <Card className="bg-white/90 backdrop-blur-sm shadow-xl border border-cyan-100/50 p-6">
               <div className="flex flex-col gap-4">
                 <Button

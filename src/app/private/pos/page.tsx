@@ -17,7 +17,6 @@ import {
   ChefHat,
   Clock,
   Coffee,
-  Eye,
   MapPin,
   Package,
   Plus,
@@ -27,6 +26,7 @@ import {
 } from 'lucide-react';
 import Loader from '@/components/shared/Loader/Loader';
 import { Table } from '@/types/table';
+import { formatTime } from '@/utils/dateHelpers';
 
 interface TableWithOrder extends Table {
   currentOrder?: Order | null;
@@ -78,17 +78,16 @@ export default function POSPage() {
 
   const handleTableClick = async (table: TableWithOrder) => {
     const { currentOrder } = table;
-    console.log('currentOrder', currentOrder);
-    console.log('table', table);
-    if (currentOrder) {
-      // Mesa ocupada: mostrar resumen de la orden existente
-      setSelectedOrder(currentOrder);
+
+    if (table.orderId) {
+      router.push(
+        `${PRIVATE_ROUTES.POS_ORDER}?tableId=${table.id}&orderId=${table.orderId}`,
+      );
     } else {
       // Mesa libre: crear nueva orden
       router.push(`${PRIVATE_ROUTES.POS_ORDER}?tableId=${table.id}`);
     }
   };
-
   const handleCreateNewOrder = async (tableId?: string) => {
     if (tableId) {
       router.push(`${PRIVATE_ROUTES.POS_ORDER}?tableId=${tableId}`);
@@ -272,100 +271,6 @@ export default function POSPage() {
           </Card>
         </div>
 
-        {/* Order Summary Section */}
-        {selectedOrder && (
-          <div className="mb-8">
-            <Card className="bg-white/90 backdrop-blur-sm shadow-xl border border-cyan-100/50">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-2xl font-bold text-cyan-800">
-                      Orden #{selectedOrder.id.slice(-8).toUpperCase()}
-                    </h2>
-                    <p className="text-cyan-600">
-                      Mesa{' '}
-                      {
-                        tables.find((t) => t.id === selectedOrder.tableId)
-                          ?.number
-                      }{' '}
-                      • {selectedOrder.items.length} items
-                    </p>
-                  </div>
-                  <div className="flex gap-3">
-                    <Button
-                      onClick={handleEditOrder}
-                      variant="outline"
-                      className="border-cyan-300 text-cyan-700 hover:bg-cyan-50"
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Editar
-                    </Button>
-                    <Button
-                      onClick={handlePayOrder}
-                      className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white"
-                    >
-                      💰 Cobrar ${selectedOrder.total.toFixed(2)}
-                    </Button>
-                    <Button
-                      onClick={() => setSelectedOrder(null)}
-                      variant="outline"
-                      className="border-gray-300 text-gray-700 hover:bg-gray-50"
-                    >
-                      ✕
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {selectedOrder.items.map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-3 p-3 bg-cyan-50 rounded-lg border border-cyan-200"
-                    >
-                      <div className="w-10 h-10 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-lg flex items-center justify-center">
-                        <Package className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900">
-                          {item.name}
-                        </h4>
-                        <p className="text-sm text-gray-600">
-                          {item.quantity}x ${item.unitPrice.toFixed(2)} = $
-                          {item.total.toFixed(2)}
-                        </p>
-                        {item.notes && (
-                          <p className="text-xs text-gray-500 italic">
-                            {item.notes}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-cyan-200">
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold text-gray-700">
-                      Total:
-                    </span>
-                    <span className="text-2xl font-bold text-cyan-700">
-                      ${selectedOrder.total.toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm text-gray-600">
-                    <span>Estado:</span>
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${getOrderStatusColor(selectedOrder.status)}`}
-                    >
-                      {getOrderStatusText(selectedOrder.status)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
-
         {/* Tables Grid - Mejorada */}
         <div>
           <h2 className="text-2xl font-bold text-cyan-800 mb-6 flex items-center">
@@ -511,13 +416,7 @@ export default function POSPage() {
                             {order.items.length === 1 ? 'item' : 'items'}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {new Date(order.createdAt).toLocaleTimeString(
-                              'es-VE',
-                              {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              },
-                            )}
+                            {formatTime(order.createdAt)}
                           </div>
                         </div>
                       </div>

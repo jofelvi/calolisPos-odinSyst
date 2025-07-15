@@ -10,6 +10,7 @@ import {
   query,
   where,
 } from 'firebase/firestore';
+import { convertFirebaseDate } from '@/utils/dateHelpers';
 import { db } from '@/services/firebase/firebase';
 import { User } from '@/types/user';
 import { Supplier } from '@/types/supplier';
@@ -22,6 +23,10 @@ import { Customer } from '@/types/customer';
 import { Payment } from '@/types/payment';
 import { AccountReceivable } from '@/types/accountReceivable';
 import { PagoMovil } from '@/types/pagoMovil';
+import { Invoice } from '@/types/invoice';
+import { Employee } from '@/types/employee';
+import { Payroll } from '@/types/payroll';
+import { Attendance } from '@/types/attendance';
 
 class FirestoreService<T extends { id: string }> {
   constructor(private collectionName: string) {}
@@ -29,7 +34,13 @@ class FirestoreService<T extends { id: string }> {
   async getAll(): Promise<T[]> {
     try {
       const snapshot = await getDocs(collection(db, this.collectionName));
-      return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as T);
+      return snapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...this.convertDocumentDates(doc.data()),
+          }) as T,
+      );
     } catch (error) {
       console.error(
         `Error al obtener documentos de ${this.collectionName}:`,
@@ -44,7 +55,10 @@ class FirestoreService<T extends { id: string }> {
       const docRef = doc(db, this.collectionName, id);
       const docSnap = await getDoc(docRef);
       return docSnap.exists()
-        ? ({ id: docSnap.id, ...docSnap.data() } as T)
+        ? ({
+            id: docSnap.id,
+            ...this.convertDocumentDates(docSnap.data()),
+          } as T)
         : null;
     } catch (error) {
       console.error(
@@ -181,6 +195,49 @@ class FirestoreService<T extends { id: string }> {
 
     return sanitized;
   }
+
+  // Método auxiliar para convertir fechas de Firestore a objetos Date
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private convertDocumentDates(data: Record<string, any>): Record<string, any> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const converted: Record<string, any> = {};
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const [key, value] of Object.entries(data)) {
+      // Convertir campos de fecha comunes
+      if (
+        key === 'createdAt' ||
+        key === 'updatedAt' ||
+        key === 'dueDate' ||
+        key === 'expectedDeliveryDate'
+      ) {
+        converted[key] = convertFirebaseDate(value);
+      }
+      // Manejar objetos anidados
+      else if (
+        value !== null &&
+        typeof value === 'object' &&
+        !Array.isArray(value)
+      ) {
+        converted[key] = this.convertDocumentDates(value);
+      }
+      // Manejar arrays con objetos anidados
+      else if (Array.isArray(value)) {
+        converted[key] = value.map((item) => {
+          if (item !== null && typeof item === 'object') {
+            return this.convertDocumentDates(item);
+          }
+          return item;
+        });
+      }
+      // Valores primitivos
+      else {
+        converted[key] = value;
+      }
+    }
+
+    return converted;
+  }
 }
 
 export const userService = new FirestoreService<User>('users');
@@ -198,6 +255,12 @@ export const accountReceivableService = new FirestoreService<AccountReceivable>(
   'accountReceivables',
 );
 export const pagoMovilService = new FirestoreService<PagoMovil>('pagoMoviles');
+export const invoiceService = new FirestoreService<Invoice>('invoices');
+
+// Employee, Payroll and Attendance services
+export const employeeService = new FirestoreService<Employee>('employees');
+export const payrollService = new FirestoreService<Payroll>('payrolls');
+export const attendanceService = new FirestoreService<Attendance>('attendances');
 
 // Helper function to get customer receivables
 export const getCustomerReceivables = async (
@@ -311,6 +374,100 @@ export const getActiveOrdersWithTables = async (): Promise<
     return ordersWithTables;
   } catch (error) {
     console.error('Error getting active orders with tables:', error);
+    throw error;
+  }
+};
+
+// Employee helper functions
+export const getActiveEmployees = async (): Promise<Employee[]> => {
+  try {
+    const q = query(
+      collection(db, 'employees'),
+      where('isActive', '==', true)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Employee);
+  } catch (error) {
+    console.error('Error getting active employees:', error);
+    throw error;
+  }
+};
+
+// Attendance helper functions
+export const getEmployeeAttendanceByDate = async (
+  employeeId: string,
+  date: Date
+): Promise<Attendance | null> => {
+  try {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const q = query(
+      collection(db, 'attendances'),
+      where('employeeId', '==', employeeId),
+      where('date', '>=', startOfDay),
+      where('date', '<=', endOfDay)
+    );
+    const snapshot = await getDocs(q);
+    
+    if (snapshot.empty) {
+      return null;
+    }
+    
+    const doc = snapshot.docs[0];
+    return { id: doc.id, ...doc.data() } as Attendance;
+  } catch (error) {
+    console.error('Error getting employee attendance by date:', error);
+    throw error;
+  }
+};
+
+export const getEmployeeAttendanceByPeriod = async (
+  employeeId: string,
+  startDate: Date,
+  endDate: Date
+): Promise<Attendance[]> => {
+  try {
+    const q = query(
+      collection(db, 'attendances'),
+      where('employeeId', '==', employeeId),
+      where('date', '>=', startDate),
+      where('date', '<=', endDate)
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Attendance);
+  } catch (error) {
+    console.error('Error getting employee attendance by period:', error);
+    throw error;
+  }
+};
+
+// Payroll helper functions
+export const getEmployeePayrollByPeriod = async (
+  employeeId: string,
+  month: number,
+  year: number
+): Promise<Payroll | null> => {
+  try {
+    const q = query(
+      collection(db, 'payrolls'),
+      where('employeeId', '==', employeeId),
+      where('period.month', '==', month),
+      where('period.year', '==', year)
+    );
+    const snapshot = await getDocs(q);
+    
+    if (snapshot.empty) {
+      return null;
+    }
+    
+    const doc = snapshot.docs[0];
+    return { id: doc.id, ...doc.data() } as Payroll;
+  } catch (error) {
+    console.error('Error getting employee payroll by period:', error);
     throw error;
   }
 };

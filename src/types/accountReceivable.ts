@@ -4,6 +4,7 @@ export interface AccountReceivable {
   id: string;
   customerId: string;
   customerName: string;
+  orderId?: string | null;
   invoiceNumber: string;
   amount: number;
   paidAmount: number;

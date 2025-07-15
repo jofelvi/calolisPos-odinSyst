@@ -35,7 +35,7 @@ export default function ProductPricing({
 
       {/* Precio */}
       <Input
-        label={isForSale ? "Precio de Venta *" : "Precio de Compra *"}
+        label={isForSale ? 'Precio de Venta *' : 'Precio de Compra *'}
         id="price"
         type="number"
         min={0.01}
@@ -45,7 +45,11 @@ export default function ProductPricing({
         {...register('price')}
         error={errors.price?.message}
         placeholder="0.00"
-        textHelper={isForSale ? "Precio al que se vende al cliente" : "Precio al que se compra el producto"}
+        textHelper={
+          isForSale
+            ? 'Precio al que se vende al cliente'
+            : 'Precio al que se compra el producto'
+        }
       />
 
       {/* Costo de Elaboración */}

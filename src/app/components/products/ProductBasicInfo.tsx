@@ -85,7 +85,7 @@ export default function ProductBasicInfo({
           register={register}
         />
       </div>
-      
+
       {/* Estado para venta */}
       <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl border border-gray-200">
         <input

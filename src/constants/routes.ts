@@ -33,8 +33,20 @@ export const PRIVATE_ROUTES = {
   // Clientes
   CUSTOMERS: '/private/customers',
 
+  // Cuentas por Cobrar
+  ACCOUNTS_RECEIVABLE: '/private/accounts-receivable',
+  ACCOUNTS_RECEIVABLE_NEW: '/private/accounts-receivable/new',
+  ACCOUNTS_RECEIVABLE_DETAILS: (id: string) =>
+    `/private/accounts-receivable/${id}`,
+  ACCOUNTS_RECEIVABLE_EDIT: (id: string) =>
+    `/private/accounts-receivable/${id}/edit`,
+
   // Órdenes
   ORDERS: '/private/orders',
+
+  // Facturas
+  INVOICES: '/private/invoices',
+  INVOICES_DETAILS: (id: string) => `/private/invoices/${id}/details`,
 
   // POS (Point of Sale)
   POS: '/private/pos',
@@ -59,6 +71,14 @@ export const PRIVATE_ROUTES = {
   TABLES_NEW: '/private/tables/new',
   TABLES_DETAILS: (id: string) => `/private/tables/${id}/details`,
   TABLES_EDIT: (id: string) => `/private/tables/${id}`,
+
+  // Empleados
+  EMPLOYEES: '/private/employees',
+  EMPLOYEES_NEW: '/private/employees/new',
+  EMPLOYEES_DETAILS: (id: string) => `/private/employees/${id}`,
+  EMPLOYEES_EDIT: (id: string) => `/private/employees/${id}/edit`,
+  EMPLOYEES_ATTENDANCE: (id: string) => `/private/employees/${id}/attendance`,
+  EMPLOYEES_PAYROLL: (id: string) => `/private/employees/${id}/payroll`,
 
   // Configuración
   SETTINGS: '/private/settings',

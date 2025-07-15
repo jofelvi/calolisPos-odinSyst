@@ -1,13 +1,9 @@
 // components/pos/PaymentMethodSelector.tsx
-
+'use client';
 import { PaymentMethodEnum } from '@/types/enumShared';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/shared/select/select';
+import SelectCustom, {
+  SelectOption,
+} from '@/components/shared/selectCustom/SelectCustom';
 
 interface PaymentMethodSelectorProps {
   selectedMethod: PaymentMethodEnum;
@@ -15,7 +11,8 @@ interface PaymentMethodSelectorProps {
 }
 
 const paymentMethodLabels = {
-  [PaymentMethodEnum.CASH]: 'Efectivo',
+  [PaymentMethodEnum.CASH_BS]: 'Efectivo Bs',
+  [PaymentMethodEnum.CASH_USD]: 'Efectivo Usd',
   [PaymentMethodEnum.CARD]: 'Tarjeta',
   [PaymentMethodEnum.TRANSFER]: 'Transferencia',
   [PaymentMethodEnum.MIXED]: 'Mixto',
@@ -25,21 +22,20 @@ export default function PaymentMethodSelector({
   selectedMethod,
   onSelectMethod,
 }: PaymentMethodSelectorProps) {
+  const paymentMethodOptions: SelectOption[] = Object.entries(
+    paymentMethodLabels,
+  ).map(([value, label]) => ({
+    value,
+    label,
+  }));
+
   return (
-    <Select
+    <SelectCustom
+      id="payment-method-selector"
+      options={paymentMethodOptions}
       value={selectedMethod}
-      onValueChange={(value: PaymentMethodEnum) => onSelectMethod(value)}
-    >
-      <SelectTrigger className="w-full">
-        <SelectValue placeholder="Seleccione método de pago" />
-      </SelectTrigger>
-      <SelectContent>
-        {Object.values(PaymentMethodEnum).map((method) => (
-          <SelectItem key={method} value={method}>
-            {paymentMethodLabels[method]}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+      onChange={(value) => onSelectMethod(value as PaymentMethodEnum)}
+      placeholder="Seleccione método de pago"
+    />
   );
 }

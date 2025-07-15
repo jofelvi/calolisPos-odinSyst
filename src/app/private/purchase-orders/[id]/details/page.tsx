@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from '@/components/shared/card/card';
 import { Badge } from '@/components/shared/badge/badge';
-import { formatDateForDisplay } from '@/utils/serializeTimestamp';
+import { formatDate, formatDateTime } from '@/utils/dateHelpers';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 import { Button } from '@/components/shared/button/Button';
 import { ArrowLeft, Edit } from 'lucide-react';
@@ -45,8 +45,6 @@ export default async function PurchaseOrderDetailPage({
   const order = {
     ...orderData,
     items: enrichedItems,
-    createdAt: formatDateForDisplay(orderData.createdAt),
-    expectedDeliveryDate: formatDateForDisplay(orderData.expectedDeliveryDate),
   };
 
   return (
@@ -111,30 +109,32 @@ export default async function PurchaseOrderDetailPage({
                   Fecha de Creación
                 </p>
                 <p className="font-bold text-blue-900">
-                  {order.createdAt || 'N/A'}
+                  {orderData.createdAt
+                    ? formatDateTime(orderData.createdAt)
+                    : 'N/A'}
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {order.expectedDeliveryDate && (
+              {orderData.expectedDeliveryDate && (
                 <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-4 rounded-xl border border-amber-100">
                   <p className="text-sm font-semibold text-amber-600 mb-1">
                     Fecha Esperada de Entrega
                   </p>
                   <p className="font-bold text-amber-900">
-                    {new Date(order.expectedDeliveryDate).toLocaleDateString()}
+                    {formatDate(orderData.expectedDeliveryDate)}
                   </p>
                 </div>
               )}
 
-              {order.receivedAt && (
+              {orderData.receivedAt && (
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl border border-green-100">
                   <p className="text-sm font-semibold text-green-600 mb-1">
                     Fecha de Recepción
                   </p>
                   <p className="font-bold text-green-900">
-                    {new Date(order.receivedAt).toLocaleDateString()}
+                    {formatDateTime(orderData.receivedAt)}
                   </p>
                 </div>
               )}

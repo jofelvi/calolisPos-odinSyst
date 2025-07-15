@@ -1,13 +1,48 @@
 'use client';
+import { useEffect, useState } from 'react';
 import { useUserStore } from '@/store/useUserStore';
 import { useCustomerCartStore } from '@/store/useCustomerCartStore';
 import { ShoppingBag, Clock, CheckCircle, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { CUSTOMER_ROUTES } from '@/constants/routes';
+import { orderService } from '@/services/firebase/genericServices';
+import { Order } from '@/types/order';
 
 export default function CustomerDashboard() {
   const { user } = useUserStore();
   const { items, getTotalPrice, getTotalItems } = useCustomerCartStore();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadUserOrders = async () => {
+      if (user?.id) {
+        try {
+          const allOrders = await orderService.getAll();
+          const userOrders = allOrders.filter(
+            (order) => order.customerId === user.id,
+          );
+          setOrders(userOrders);
+        } catch (error) {
+          console.error('Error loading user orders:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setIsLoading(false);
+      }
+    };
+
+    void loadUserOrders();
+  }, [user?.id]);
+
+  // Calculate real order statistics
+  const pendingOrders = orders.filter(
+    (order) => order.status === 'PENDING',
+  ).length;
+  const completedOrders = orders.filter(
+    (order) => order.status === 'COMPLETED' || order.paymentStatus === 'paid',
+  ).length;
 
   const stats = [
     {
@@ -26,14 +61,14 @@ export default function CustomerDashboard() {
     },
     {
       name: 'Pedidos Pendientes',
-      value: '1',
+      value: isLoading ? '...' : pendingOrders.toString(),
       icon: Clock,
       color: 'bg-yellow-500',
       href: CUSTOMER_ROUTES.CURRENT_ORDER,
     },
     {
       name: 'Pedidos Completados',
-      value: '5',
+      value: isLoading ? '...' : completedOrders.toString(),
       icon: CheckCircle,
       color: 'bg-purple-500',
       href: CUSTOMER_ROUTES.HISTORY,

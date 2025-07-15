@@ -25,6 +25,7 @@ import { PRIVATE_ROUTES } from '@/constants/routes';
 import { Button } from '@/components/shared/button/Button';
 import { useToast } from '@/components/hooks/useToast';
 import { Toaster } from 'react-hot-toast';
+import { useUserStore } from '@/store/useUserStore';
 
 interface PurchaseOrderFormProps {
   initialData?: PurchaseOrder | null;
@@ -36,6 +37,7 @@ export default function PurchaseOrderForm({
   isNew = false,
 }: PurchaseOrderFormProps) {
   const router = useRouter();
+  const { user } = useUserStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -232,7 +234,7 @@ export default function PurchaseOrderForm({
       if (isNew) {
         const orderData: Omit<PurchaseOrder, 'id'> = {
           ...data,
-          userId: 'current-user-id', // Reemplazar con el ID del usuario real
+          userId: user?.id || 'unknown-user',
           createdAt: new Date(),
           supplierName: filteredSuppliers?.name || '',
         };
@@ -249,7 +251,7 @@ export default function PurchaseOrderForm({
         const orderData: PurchaseOrder = {
           ...data,
           id: initialData.id,
-          userId: 'current-user-id', // Reemplazar con el ID del usuario real
+          userId: user?.id || 'unknown-user',
           createdAt: initialData.createdAt,
           supplierName: filteredSuppliers?.name || '',
         };

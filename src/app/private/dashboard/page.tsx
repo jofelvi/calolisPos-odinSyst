@@ -11,26 +11,31 @@ import {
 import { Badge } from '@/components/shared/badge/badge';
 import Loader from '@/components/shared/Loader/Loader';
 import {
-  BarChart3,
-  Users,
-  ShoppingCart,
-  TrendingUp,
-  Package,
   AlertCircle,
+  BarChart3,
+  Package,
+  ShoppingCart,
   TableProperties,
+  TrendingUp,
   Truck,
+  Users,
 } from 'lucide-react';
 import { PRIVATE_ROUTES } from '@/constants/routes';
-import { 
-  productService, 
-  customerService, 
-  orderService, 
-  supplierService 
+import {
+  customerService,
+  orderService,
+  productService,
+  supplierService,
 } from '@/services/firebase/genericServices';
 import { Product } from '@/types/product';
 import { Customer } from '@/types/customer';
 import { Order } from '@/types/order';
 import { Supplier } from '@/types/supplier';
+import {
+  getRelativeTime,
+  getTimeValue,
+  convertFirebaseDate,
+} from '@/utils/dateHelpers';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -69,7 +74,7 @@ export default function DashboardPage() {
           });
         } catch (error) {
           console.error('Error loading dashboard data:', error);
-          setDashboardData(prev => ({ ...prev, isLoading: false }));
+          setDashboardData((prev) => ({ ...prev, isLoading: false }));
         }
       }
     };
@@ -79,16 +84,110 @@ export default function DashboardPage() {
 
   // Calculate statistics
   const totalProducts = dashboardData.products.length;
-  const productsForSale = dashboardData.products.filter(p => p.isForSale).length;
-  const lowStockProducts = dashboardData.products.filter(p => p.stock <= (p.minStock || 5)).length;
+  const productsForSale = dashboardData.products.filter(
+    (p) => p.isForSale,
+  ).length;
+  const lowStockProducts = dashboardData.products.filter(
+    (p) => p.stock <= (p.minStock || 5),
+  ).length;
   const totalCustomers = dashboardData.customers.length;
   const totalOrders = dashboardData.orders.length;
-  const pendingOrders = dashboardData.orders.filter(o => o.status === 'PENDING').length;
-  
-  // Calculate today's revenue (simplified - you may want to add date filtering)
-  const todayRevenue = dashboardData.orders.reduce((sum, order) => sum + (order.total || 0), 0);
+  const pendingOrders = dashboardData.orders.filter(
+    (o) => o.status === 'PENDING',
+  ).length;
 
-  if (status === 'loading' || dashboardData.isLoading) return <Loader text="Cargando dashboard..." />;
+  // Calculate today's revenue with proper date filtering
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayRevenue = dashboardData.orders
+    .filter((order) => {
+      if (!order.createdAt) return false;
+      const orderDate = convertFirebaseDate(order.createdAt);
+      orderDate.setHours(0, 0, 0, 0);
+      return (
+        orderDate.getTime() === today.getTime() &&
+        order.paymentStatus === 'paid'
+      );
+    })
+    .reduce((sum, order) => sum + (order.total || 0), 0);
+
+  // Generate real recent activities
+  const generateRecentActivities = () => {
+    const activities: { action: string; time: string; type: string }[] = [];
+
+    // Recent orders (last 3) - filtrar órdenes con fechas válidas
+    const recentOrders = dashboardData.orders
+      .filter((order) => order.createdAt) // Solo órdenes con fecha
+      .sort((a, b) => {
+        const dateA = convertFirebaseDate(a.createdAt);
+        const dateB = convertFirebaseDate(b.createdAt);
+        return dateB.getTime() - dateA.getTime();
+      })
+      .slice(0, 3);
+
+    recentOrders.forEach((order) => {
+      if (order.createdAt) {
+        activities.push({
+          action: `Nueva orden #${order.id.slice(-4).toUpperCase()}`,
+          time: getRelativeTime(order.createdAt),
+          type: 'order',
+        });
+      }
+    });
+
+    // Recent customers (last 2) - filtrar clientes con fechas válidas
+    const recentCustomers = dashboardData.customers
+      .filter((customer) => customer.createdAt) // Solo clientes con fecha
+      .sort((a, b) => {
+        const dateA = convertFirebaseDate(a.createdAt);
+        const dateB = convertFirebaseDate(b.createdAt);
+        return dateB.getTime() - dateA.getTime();
+      })
+      .slice(0, 2);
+
+    recentCustomers.forEach((customer) => {
+      if (customer.createdAt) {
+        activities.push({
+          action: `Cliente registrado: ${customer.name}`,
+          time: getRelativeTime(customer.createdAt),
+          type: 'user',
+        });
+      }
+    });
+
+    // Recent products (last 1) - filtrar productos con fechas válidas
+    const recentProducts = dashboardData.products
+      .filter((product) => product.updatedAt || product.createdAt) // Solo productos con fecha
+      .sort((a, b) => {
+        const dateA = convertFirebaseDate(a.updatedAt || a.createdAt);
+        const dateB = convertFirebaseDate(b.updatedAt || b.createdAt);
+        return dateB.getTime() - dateA.getTime();
+      })
+      .slice(0, 1);
+
+    recentProducts.forEach((product) => {
+      const productDate = product.updatedAt || product.createdAt;
+      if (productDate) {
+        activities.push({
+          action: `Producto actualizado: ${product.name}`,
+          time: getRelativeTime(productDate),
+          type: 'product',
+        });
+      }
+    });
+
+    // Sort all activities by time and return top 5
+    return activities
+      .sort((a, b) => getTimeValue(b.time) - getTimeValue(a.time))
+      .slice(0, 5);
+  };
+
+  // Las funciones getRelativeTime y getTimeValue ahora se importan desde dateHelpers
+
+  const recentActivities = generateRecentActivities();
+
+  if (status === 'loading' || dashboardData.isLoading)
+    return <Loader text="Cargando dashboard..." />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-blue-50 p-6">
@@ -105,7 +204,7 @@ export default function DashboardPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Revenue Card */}
-        <Card 
+        <Card
           className="hover:scale-105 transition-transform duration-300 cursor-pointer"
           onClick={() => router.push(PRIVATE_ROUTES.ORDERS)}
         >
@@ -118,7 +217,9 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-cyan-900">${todayRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-cyan-900">
+              ${todayRevenue.toFixed(2)}
+            </div>
             <Badge variant="success" className="mt-2">
               {totalOrders} órdenes
             </Badge>
@@ -126,7 +227,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Orders Card */}
-        <Card 
+        <Card
           className="hover:scale-105 transition-transform duration-300 cursor-pointer"
           onClick={() => router.push(PRIVATE_ROUTES.ORDERS)}
         >
@@ -139,7 +240,9 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-cyan-900">{totalOrders}</div>
+            <div className="text-2xl font-bold text-cyan-900">
+              {totalOrders}
+            </div>
             <Badge variant="info" className="mt-2">
               Pendientes: {pendingOrders}
             </Badge>
@@ -147,7 +250,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Customers Card */}
-        <Card 
+        <Card
           className="hover:scale-105 transition-transform duration-300 cursor-pointer"
           onClick={() => router.push(PRIVATE_ROUTES.CUSTOMERS)}
         >
@@ -160,7 +263,9 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-cyan-900">{totalCustomers}</div>
+            <div className="text-2xl font-bold text-cyan-900">
+              {totalCustomers}
+            </div>
             <Badge variant="default" className="mt-2">
               Registrados
             </Badge>
@@ -168,7 +273,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Products Card */}
-        <Card 
+        <Card
           className="hover:scale-105 transition-transform duration-300 cursor-pointer"
           onClick={() => router.push(PRIVATE_ROUTES.PRODUCTS)}
         >
@@ -181,9 +286,16 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-cyan-900">{totalProducts}</div>
-            <Badge variant={lowStockProducts > 0 ? "warning" : "success"} className="mt-2">
-              {lowStockProducts > 0 ? `${lowStockProducts} stock bajo` : 'Stock OK'}
+            <div className="text-2xl font-bold text-cyan-900">
+              {totalProducts}
+            </div>
+            <Badge
+              variant={lowStockProducts > 0 ? 'warning' : 'success'}
+              className="mt-2"
+            >
+              {lowStockProducts > 0
+                ? `${lowStockProducts} stock bajo`
+                : 'Stock OK'}
             </Badge>
           </CardContent>
         </Card>
@@ -221,41 +333,35 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                {
-                  action: 'Nueva orden #1234',
-                  time: 'Hace 5 min',
-                  type: 'order',
-                },
-                {
-                  action: 'Cliente registrado',
-                  time: 'Hace 12 min',
-                  type: 'user',
-                },
-                {
-                  action: 'Producto actualizado',
-                  time: 'Hace 1 hora',
-                  type: 'product',
-                },
-                {
-                  action: 'Pago procesado',
-                  time: 'Hace 2 horas',
-                  type: 'payment',
-                },
-              ].map((activity, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-r from-cyan-50/50 to-teal-50/50 border border-cyan-100/50"
-                >
-                  <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-400 rounded-full mt-2 animate-pulse" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-cyan-900">
-                      {activity.action}
-                    </p>
-                    <p className="text-xs text-cyan-600">{activity.time}</p>
+              {recentActivities.length > 0 ? (
+                recentActivities.map((activity, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-r from-cyan-50/50 to-teal-50/50 border border-cyan-100/50"
+                  >
+                    <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-400 rounded-full mt-2 animate-pulse" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-cyan-900">
+                        {activity.action}
+                      </p>
+                      <p className="text-xs text-cyan-600">{activity.time}</p>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-gradient-to-br from-cyan-100 to-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <AlertCircle className="h-8 w-8 text-cyan-500" />
+                  </div>
+                  <p className="text-cyan-600 font-medium mb-2">
+                    Sin actividad reciente
+                  </p>
+                  <p className="text-cyan-500 text-sm">
+                    Las actividades aparecerán aquí cuando comiences a usar el
+                    sistema
+                  </p>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>
