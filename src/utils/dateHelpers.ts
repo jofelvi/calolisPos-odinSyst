@@ -1,9 +1,9 @@
 // utils/dateHelpers.ts
-import { Timestamp } from 'firebase/firestore';
 
 /**
  * Convierte cualquier tipo de fecha de Firebase a un objeto Date
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function convertFirebaseDate(date: any): Date {
   if (!date) return new Date();
 
@@ -32,6 +32,7 @@ export function convertFirebaseDate(date: any): Date {
  * Formatea una fecha en formato español
  */
 export function formatDate(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   date: any,
   options: Intl.DateTimeFormatOptions = {},
 ): string {
@@ -50,6 +51,7 @@ export function formatDate(
 /**
  * Formatea solo la hora
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function formatTime(date: any): string {
   const convertedDate = convertFirebaseDate(date);
 
@@ -62,6 +64,7 @@ export function formatTime(date: any): string {
 /**
  * Formatea fecha y hora completas
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function formatDateTime(date: any): string {
   const convertedDate = convertFirebaseDate(date);
 
@@ -77,6 +80,7 @@ export function formatDateTime(date: any): string {
 /**
  * Obtiene tiempo relativo (hace X minutos/horas/días)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getRelativeTime(date: any): string {
   const convertedDate = convertFirebaseDate(date);
   const now = new Date();
@@ -112,6 +116,7 @@ export function getTimeValue(timeString: string): number {
 /**
  * Verifica si una fecha está vencida
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isOverdue(date: any): boolean {
   const convertedDate = convertFirebaseDate(date);
   return convertedDate < new Date();
@@ -120,6 +125,7 @@ export function isOverdue(date: any): boolean {
 /**
  * Formatea fecha para inputs (YYYY-MM-DD)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function formatDateForInput(date: any): string {
   const convertedDate = convertFirebaseDate(date);
   return convertedDate.toISOString().split('T')[0];
@@ -128,6 +134,7 @@ export function formatDateForInput(date: any): string {
 /**
  * Obtiene el inicio del día para comparaciones
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getStartOfDay(date: any): Date {
   const convertedDate = convertFirebaseDate(date);
   const startOfDay = new Date(convertedDate);
@@ -138,6 +145,7 @@ export function getStartOfDay(date: any): Date {
 /**
  * Obtiene el final del día para comparaciones
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getEndOfDay(date: any): Date {
   const convertedDate = convertFirebaseDate(date);
   const endOfDay = new Date(convertedDate);

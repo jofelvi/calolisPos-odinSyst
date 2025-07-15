@@ -1,6 +1,6 @@
-// utils/pdfGenerator.ts
+// eslint-disable @typescript-eslint/no-explicit-any
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import autoTable from 'jspdf-autotable'; // Asegúrate de que los tipos de jspdf-autotable estén instalados: npm i -D @types/jspdf-autotable
 import { Invoice } from '@/types/invoice';
 import { Customer } from '@/types/customer';
 import { formatDate, formatDateTime } from './dateHelpers';
@@ -10,91 +10,120 @@ interface PDFData {
   customer?: Customer | null;
 }
 
-export const generateInvoicePDF = ({ invoice, customer }: PDFData) => {
-  // Crear nueva instancia de PDF
-  const doc = new jsPDF();
+// Interface para extender jsPDF con la propiedad de autoTable
+interface jsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: {
+    finalY: number;
+  };
+}
 
-  // Configuración de colores
-  const primaryColor = [0, 150, 136]; // Teal
-  const secondaryColor = [0, 188, 212]; // Cyan
-  const textColor = [37, 47, 63]; // Dark blue-gray
+// --- Constantes de Estilo y Diseño ---
 
-  // Header de la empresa
-  doc.setFillColor(...primaryColor);
-  doc.rect(0, 0, 210, 40, 'F');
+const STYLES = {
+  primaryColor: [0, 150, 136] as const,
+  secondaryColor: [0, 188, 212] as const,
+  textColor: [37, 47, 63] as const,
+  lightGrayColor: [245, 245, 245] as const,
+  grayTextColor: [100, 100, 100] as const,
+  whiteColor: [255, 255, 255] as const,
+  margin: 20,
+  pageWidth: 210,
+};
 
-  // Logo y nombre de la empresa (simulado)
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
-  doc.setFont('helvetica', 'bold');
-  doc.text('OdinSystem', 20, 25);
+const FONT = {
+  size: {
+    xs: 8,
+    sm: 9,
+    md: 10,
+    lg: 12,
+    xl: 16,
+    xxl: 24,
+  },
+  family: 'helvetica',
+};
 
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Sistema de Punto de Venta', 20, 35);
+// --- Funciones de Dibujo Auxiliares ---
 
-  // Información de la factura en el header
-  doc.setTextColor(...textColor);
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
+const drawHeader = (doc: jsPDF, invoice: Invoice): void => {
+  doc.setFillColor(...STYLES.primaryColor);
+  doc.rect(0, 0, STYLES.pageWidth, 40, 'F');
+
+  doc.setTextColor(...STYLES.whiteColor);
+  doc.setFont(FONT.family, 'bold');
+  doc.setFontSize(FONT.size.xxl);
+  doc.text('OdinSystem', STYLES.margin, 25);
+
+  doc.setFont(FONT.family, 'normal');
+  doc.setFontSize(FONT.size.lg);
+  doc.text('Sistema de Punto de Venta', STYLES.margin, 35);
+
+  doc.setTextColor(...STYLES.textColor);
+  doc.setFont(FONT.family, 'bold');
+  doc.setFontSize(FONT.size.xl);
   doc.text(`FACTURA #${invoice.invoiceNumber}`, 150, 25);
 
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
+  doc.setFont(FONT.family, 'normal');
+  doc.setFontSize(FONT.size.md);
   doc.text(`Fecha: ${formatDate(invoice.createdAt)}`, 150, 35);
+};
 
-  // Información del cliente
-  let yPosition = 60;
+const drawSectionTitle = (doc: jsPDF, y: number, title: string): number => {
+  doc.setFillColor(...STYLES.secondaryColor);
+  doc.rect(STYLES.margin, y, STYLES.pageWidth - STYLES.margin * 2, 8, 'F');
+  doc.setTextColor(...STYLES.whiteColor);
+  doc.setFont(FONT.family, 'bold');
+  doc.setFontSize(FONT.size.lg);
+  doc.text(title, STYLES.margin + 5, y + 6);
+  return y + 15;
+};
 
-  doc.setFillColor(...secondaryColor);
-  doc.rect(20, yPosition, 170, 8, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('INFORMACIÓN DEL CLIENTE', 25, yPosition + 6);
+const drawCustomerInfo = (
+  doc: jsPDF,
+  y: number,
+  invoice: Invoice,
+  customer?: Customer | null,
+): number => {
+  let yPosition = drawSectionTitle(doc, y, 'INFORMACIÓN DEL CLIENTE');
+  const xPosition = STYLES.margin + 5;
 
-  yPosition += 15;
-  doc.setTextColor(...textColor);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...STYLES.textColor);
+  doc.setFont(FONT.family, 'normal');
+  doc.setFontSize(FONT.size.md);
 
   const customerName =
     customer?.name || invoice.customerName || 'Cliente no especificado';
-  doc.text(`Nombre: ${customerName}`, 25, yPosition);
+  doc.text(`Nombre: ${customerName}`, xPosition, yPosition);
 
   if (customer?.email) {
     yPosition += 6;
-    doc.text(`Email: ${customer.email}`, 25, yPosition);
+    doc.text(`Email: ${customer.email}`, xPosition, yPosition);
   }
-
   if (customer?.phone) {
     yPosition += 6;
-    doc.text(`Teléfono: ${customer.phone}`, 25, yPosition);
+    doc.text(`Teléfono: ${customer.phone}`, xPosition, yPosition);
   }
-
   if (customer?.address) {
     yPosition += 6;
-    doc.text(`Dirección: ${customer.address}`, 25, yPosition);
+    doc.text(`Dirección: ${customer.address}`, xPosition, yPosition);
   }
+  return yPosition + 15;
+};
 
-  // Información de fechas
-  yPosition += 15;
+const drawDateAndStatusInfo = (
+  doc: jsPDF,
+  y: number,
+  invoice: Invoice,
+): number => {
+  let yPosition = drawSectionTitle(doc, y, 'INFORMACIÓN DE LA FACTURA');
+  const xPosition = STYLES.margin + 5;
 
-  doc.setFillColor(...secondaryColor);
-  doc.rect(20, yPosition, 170, 8, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('INFORMACIÓN DE FECHAS', 25, yPosition + 6);
-
-  yPosition += 15;
-  doc.setTextColor(...textColor);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...STYLES.textColor);
+  doc.setFont(FONT.family, 'normal');
+  doc.setFontSize(FONT.size.md);
 
   doc.text(
     `Fecha de creación: ${formatDateTime(invoice.createdAt)}`,
-    25,
+    xPosition,
     yPosition,
   );
 
@@ -102,35 +131,37 @@ export const generateInvoicePDF = ({ invoice, customer }: PDFData) => {
     yPosition += 6;
     doc.text(
       `Fecha de vencimiento: ${formatDate(invoice.dueDate)}`,
-      25,
+      xPosition,
       yPosition,
     );
   }
 
   if (invoice.paidAt) {
     yPosition += 6;
-    doc.text(`Fecha de pago: ${formatDateTime(invoice.paidAt)}`, 25, yPosition);
+    doc.text(
+      `Fecha de pago: ${formatDateTime(invoice.paidAt)}`,
+      xPosition,
+      yPosition,
+    );
   }
 
-  // Estado de la factura
-  yPosition += 10;
-  const statusLabels = {
+  const statusLabels: Record<string, string> = {
     PAID: 'Pagada',
     PENDING: 'Pendiente',
     OVERDUE: 'Vencida',
     CANCELLED: 'Cancelada',
   };
+  const statusLabel = statusLabels[invoice.status] || invoice.status;
 
-  const statusLabel =
-    statusLabels[invoice.status as unknown as keyof typeof statusLabels] ||
-    invoice.status;
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Estado: ${statusLabel}`, 25, yPosition);
+  yPosition += 10;
+  doc.setFont(FONT.family, 'bold');
+  doc.setFontSize(FONT.size.lg);
+  doc.text(`Estado: ${statusLabel}`, xPosition, yPosition);
 
-  // Tabla de items
-  yPosition += 20;
+  return yPosition + 15;
+};
 
+const drawItemsTable = (doc: jsPDF, y: number, invoice: Invoice): number => {
   const tableColumns = ['Descripción', 'Cantidad', 'Precio Unitario', 'Total'];
   const tableRows = (invoice.items || []).map((item) => [
     item.description || 'Sin descripción',
@@ -140,24 +171,32 @@ export const generateInvoicePDF = ({ invoice, customer }: PDFData) => {
   ]);
 
   autoTable(doc, {
-    startY: yPosition,
+    startY: y,
     head: [tableColumns],
     body: tableRows,
     theme: 'grid',
     headStyles: {
-      fillColor: primaryColor,
-      textColor: 255,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      fillColor: STYLES.primaryColor || [0, 150, 136],
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      textColor: STYLES.whiteColor,
       fontStyle: 'bold',
-      fontSize: 10,
+      fontSize: FONT.size.md,
     },
     bodyStyles: {
-      fontSize: 9,
-      textColor: textColor,
+      fontSize: FONT.size.sm,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      textColor: STYLES.textColor,
     },
     alternateRowStyles: {
-      fillColor: [245, 245, 245],
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error
+      fillColor: STYLES.lightGrayColor,
     },
-    margin: { left: 20, right: 20 },
+    margin: { left: STYLES.margin, right: STYLES.margin },
     columnStyles: {
       0: { cellWidth: 80 },
       1: { cellWidth: 30, halign: 'center' },
@@ -166,97 +205,138 @@ export const generateInvoicePDF = ({ invoice, customer }: PDFData) => {
     },
   });
 
-  // Obtener la posición Y después de la tabla
-  // @ts-expect-error - autoTable añade esta propiedad
-  yPosition = doc.lastAutoTable.finalY + 20;
+  return (doc as jsPDFWithAutoTable).lastAutoTable.finalY + 15;
+};
 
-  // Totales
-  const pageHeight = doc.internal.pageSize.height;
+const drawTotals = (doc: jsPDF, y: number, invoice: Invoice): number => {
+  let yPosition = y;
+  const totalsX = 120;
+  const totalsWidth = 70;
 
-  // Si no hay espacio suficiente, crear nueva página
-  if (yPosition > pageHeight - 60) {
-    doc.addPage();
-    yPosition = 30;
-  }
-
-  // Box para totales
-  doc.setFillColor(245, 245, 245);
-  doc.rect(120, yPosition, 70, 40, 'F');
-  doc.setDrawColor(...primaryColor);
+  doc.setFillColor(...STYLES.lightGrayColor);
+  doc.rect(totalsX, yPosition, totalsWidth, 40, 'F');
+  doc.setDrawColor(...STYLES.primaryColor);
   doc.setLineWidth(0.5);
-  doc.rect(120, yPosition, 70, 40);
+  doc.rect(totalsX, yPosition, totalsWidth, 40);
 
-  // Subtotal
-  doc.setTextColor(...textColor);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Subtotal:', 125, yPosition + 10);
-  doc.text(`$${(invoice.subtotal || 0).toFixed(2)}`, 185, yPosition + 10, {
+  doc.setTextColor(...STYLES.textColor);
+  doc.setFont(FONT.family, 'normal');
+  doc.setFontSize(FONT.size.md);
+
+  const rightAlignX = totalsX + totalsWidth - 5;
+
+  yPosition += 10;
+  doc.text('Subtotal:', totalsX + 5, yPosition);
+  doc.text(`$${(invoice.subtotal || 0).toFixed(2)}`, rightAlignX, yPosition, {
     align: 'right',
   });
 
-  // Impuestos
-  const taxPercentage = invoice.subtotal
-    ? ((invoice.tax / invoice.subtotal) * 100).toFixed(0)
-    : '0';
-  doc.text(`Impuestos (${taxPercentage}%):`, 125, yPosition + 18);
-  doc.text(`$${(invoice.tax || 0).toFixed(2)}`, 185, yPosition + 18, {
+  const subtotal = invoice.subtotal || 0;
+  const tax = invoice.tax || 0;
+  const taxPercentage =
+    subtotal > 0 ? ((tax / subtotal) * 100).toFixed(0) : '0';
+  yPosition += 8;
+  doc.text(`Impuestos (${taxPercentage}%):`, totalsX + 5, yPosition);
+  doc.text(`$${tax.toFixed(2)}`, rightAlignX, yPosition, { align: 'right' });
+
+  yPosition += 7;
+  doc.setDrawColor(...STYLES.primaryColor);
+  doc.line(totalsX + 5, yPosition, rightAlignX, yPosition);
+
+  yPosition += 8;
+  doc.setFont(FONT.family, 'bold');
+  doc.setFontSize(FONT.size.lg);
+  doc.text('TOTAL:', totalsX + 5, yPosition);
+  doc.text(`$${(invoice.total || 0).toFixed(2)}`, rightAlignX, yPosition, {
     align: 'right',
   });
 
-  // Línea divisoria
-  doc.setDrawColor(...primaryColor);
-  doc.line(125, yPosition + 25, 185, yPosition + 25);
+  return y + 40 + 10;
+};
 
-  // Total
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('TOTAL:', 125, yPosition + 35);
-  doc.text(`$${(invoice.total || 0).toFixed(2)}`, 185, yPosition + 35, {
-    align: 'right',
-  });
+const drawNotes = (doc: jsPDF, y: number, notes: string): void => {
+  doc.setFont(FONT.family, 'bold');
+  doc.setFontSize(FONT.size.md);
+  doc.setTextColor(...STYLES.textColor);
+  doc.text('NOTAS:', STYLES.margin, y);
 
-  // Footer
-  const footerY = pageHeight - 30;
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 100, 100);
+  doc.setFont(FONT.family, 'normal');
+  doc.setFontSize(FONT.size.sm);
+  const splitNotes = doc.splitTextToSize(
+    notes,
+    STYLES.pageWidth - STYLES.margin * 2,
+  );
+  doc.text(splitNotes, STYLES.margin, y + 8);
+};
+
+const drawFooter = (doc: jsPDF): void => {
+  const pageHeight = doc.internal.pageSize.height;
+  const footerY = pageHeight - 20;
+  doc.setFont(FONT.family, 'normal');
+  doc.setFontSize(FONT.size.xs);
+  doc.setTextColor(...STYLES.grayTextColor);
   doc.text(
     'Generado por OdinSystem - Sistema de Punto de Venta',
-    105,
+    STYLES.pageWidth / 2,
     footerY,
     { align: 'center' },
   );
-  doc.text(`Generado el: ${formatDateTime(new Date())}`, 105, footerY + 5, {
-    align: 'center',
-  });
+  doc.text(
+    `Generado el: ${formatDateTime(new Date())}`,
+    STYLES.pageWidth / 2,
+    footerY + 5,
+    { align: 'center' },
+  );
+};
 
-  // Notas adicionales si existen
-  if (invoice.notes) {
-    yPosition += 50;
-    if (yPosition > footerY - 30) {
-      doc.addPage();
-      yPosition = 30;
-    }
+// --- Función Principal ---
 
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...textColor);
-    doc.text('NOTAS:', 20, yPosition);
+export const generateInvoicePDF = ({ invoice, customer }: PDFData): jsPDF => {
+  const doc = new jsPDF();
+  const pageHeight = doc.internal.pageSize.height;
+  const footerZone = 40;
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    const splitNotes = doc.splitTextToSize(invoice.notes, 170);
-    doc.text(splitNotes, 20, yPosition + 8);
+  drawHeader(doc, invoice);
+
+  let yPosition = 55;
+  yPosition = drawCustomerInfo(doc, yPosition, invoice, customer);
+  yPosition = drawDateAndStatusInfo(doc, yPosition, invoice);
+  yPosition = drawItemsTable(doc, yPosition, invoice);
+
+  const TOTALS_HEIGHT = 60;
+  if (yPosition + TOTALS_HEIGHT > pageHeight - footerZone) {
+    doc.addPage();
+    yPosition = STYLES.margin;
   }
+  yPosition = drawTotals(doc, yPosition, invoice);
 
+  if (invoice.notes) {
+    const notesHeight =
+      doc.splitTextToSize(invoice.notes, STYLES.pageWidth - STYLES.margin * 2)
+        .length *
+        5 +
+      10;
+    if (yPosition + notesHeight > pageHeight - footerZone) {
+      doc.addPage();
+      yPosition = STYLES.margin;
+    }
+    drawNotes(doc, yPosition, invoice.notes);
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pageCount = (doc as any).internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    drawFooter(doc);
+  }
   return doc;
 };
+
+// --- Funciones de Exportación ---
 
 export const downloadInvoicePDF = (
   invoice: Invoice,
   customer?: Customer | null,
-) => {
+): void => {
   const doc = generateInvoicePDF({ invoice, customer });
   const fileName = `factura-${invoice.invoiceNumber}-${formatDate(invoice.createdAt).replace(/\s/g, '-')}.pdf`;
   doc.save(fileName);
@@ -265,7 +345,7 @@ export const downloadInvoicePDF = (
 export const previewInvoicePDF = (
   invoice: Invoice,
   customer?: Customer | null,
-) => {
+): void => {
   const doc = generateInvoicePDF({ invoice, customer });
   const pdfBlob = doc.output('blob');
   const pdfUrl = URL.createObjectURL(pdfBlob);

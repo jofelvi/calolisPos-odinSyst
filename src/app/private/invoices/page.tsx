@@ -15,7 +15,7 @@ import { Button } from '@/components/shared/button/Button';
 import Table from '@/components/shared/Table';
 import Loader from '@/components/shared/Loader/Loader';
 import { Calendar, DollarSign, Eye, FileText, Filter } from 'lucide-react';
-import { PRIVATE_ROUTES } from '@/c<onstants/routes';
+import { PRIVATE_ROUTES } from '@/constants/routes';
 import { invoiceService } from '@/services/firebase/genericServices';
 import { Invoice } from '@/types/invoice';
 import { InvoiceStatusEnum } from '@/types/enumShared';
@@ -351,13 +351,7 @@ export default function InvoicesPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table
-            data={filteredInvoices}
-            columns={columns}
-            searchable={true}
-            searchPlaceholder="Buscar por número de factura, cliente..."
-            emptyMessage="No se encontraron facturas"
-          />
+          <Table data={filteredInvoices} columns={columns} />
         </CardContent>
       </Card>
     </div>

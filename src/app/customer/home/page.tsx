@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useUserStore } from '@/store/useUserStore';
 import { useCustomerCartStore } from '@/store/useCustomerCartStore';
-import { ShoppingBag, Clock, CheckCircle, TrendingUp } from 'lucide-react';
+import { CheckCircle, Clock, ShoppingBag, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { CUSTOMER_ROUTES } from '@/constants/routes';
 import { orderService } from '@/services/firebase/genericServices';
@@ -40,7 +40,10 @@ export default function CustomerDashboard() {
   const pendingOrders = orders.filter(
     (order) => order.status === 'PENDING',
   ).length;
+
   const completedOrders = orders.filter(
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
     (order) => order.status === 'COMPLETED' || order.paymentStatus === 'paid',
   ).length;
 
