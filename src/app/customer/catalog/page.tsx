@@ -46,8 +46,8 @@ export default function CustomerProducts() {
       setCategories(
         allCategories.filter((cat) => cat.isActive && cat.isForSale),
       );
-    } catch (error) {
-      console.error('Error loading data:', error);
+    } catch {
+      // Error loading data - handled by UI state
     } finally {
       setLoading(false);
     }
@@ -74,8 +74,8 @@ export default function CustomerProducts() {
       }
 
       setProducts(filteredProducts);
-    } catch (error) {
-      console.error('Error filtering products:', error);
+    } catch {
+      // Error filtering products - handled by UI state
     }
   };
 

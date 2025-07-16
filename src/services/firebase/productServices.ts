@@ -81,11 +81,9 @@ export const getProductsByCategory = async (
     return querySnapshot.docs.map(
       (doc) => ({ id: doc.id, ...doc.data() }) as Product,
     );
-  } catch (error) {
-    console.error(
-      `Error al obtener productos por categoría ${categoryId}:`,
-      error,
-    );
+  } catch {
+    // Handle error silently and return empty array
+    // In production, you might want to log to a service or show user notification
     return [];
   }
 };

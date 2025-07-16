@@ -116,9 +116,6 @@ export function CategoryForm({
         await categoryService.create(categoryToCreate);
       } else {
         if (!initialData || !initialData.id) {
-          console.error(
-            'Error de actualización: initialData o initialData.id no están presentes.',
-          );
           setIsSubmitting(false);
           return;
         }
@@ -139,8 +136,8 @@ export function CategoryForm({
       } else {
         router.push('/categories');
       }
-    } catch (error) {
-      console.error('Error al guardar la categoría:', error);
+    } catch {
+      // console.error('Error al guardar la categoría:', error);
     } finally {
       setIsSubmitting(false);
     }

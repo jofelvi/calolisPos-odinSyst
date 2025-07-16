@@ -129,8 +129,8 @@ export default function IngredientsManager({
         product.presentationQuantity || 1,
         ingredient.wastePercentage || 0,
       );
-    } catch (error) {
-      console.error(error);
+    } catch {
+      // Error calculating ingredient cost, returning 0 as fallback
       return 0;
     }
   };

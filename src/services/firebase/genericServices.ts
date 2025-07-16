@@ -42,10 +42,6 @@ class FirestoreService<T extends { id: string }> {
           }) as T,
       );
     } catch (error) {
-      console.error(
-        `Error al obtener documentos de ${this.collectionName}:`,
-        error,
-      );
       throw error;
     }
   }
@@ -61,10 +57,6 @@ class FirestoreService<T extends { id: string }> {
           } as T)
         : null;
     } catch (error) {
-      console.error(
-        `Error al obtener documento ${id} de ${this.collectionName}:`,
-        error,
-      );
       throw error;
     }
   }
@@ -80,10 +72,6 @@ class FirestoreService<T extends { id: string }> {
       );
       return { id: docRef.id, ...sanitizedItem } as T;
     } catch (error) {
-      console.error(
-        `Error al crear documento en ${this.collectionName}:`,
-        error,
-      );
       throw error;
     }
   }
@@ -97,10 +85,6 @@ class FirestoreService<T extends { id: string }> {
       await setDoc(docRef, sanitizedItem);
       return { id, ...sanitizedItem } as T;
     } catch (error) {
-      console.error(
-        `Error al crear documento con ID ${id} en ${this.collectionName}:`,
-        error,
-      );
       throw error;
     }
   }
@@ -116,19 +100,12 @@ class FirestoreService<T extends { id: string }> {
 
       // Verificar que haya datos para actualizar
       if (Object.keys(sanitizedItem).length === 0) {
-        console.warn(
-          `No hay datos válidos para actualizar el documento ${id} en ${this.collectionName}`,
-        );
         return;
       }
 
       const docRef = doc(db, this.collectionName, id);
       await updateDoc(docRef, sanitizedItem);
     } catch (error) {
-      console.error(
-        `Error al actualizar documento ${id} en ${this.collectionName}:`,
-        error,
-      );
       throw error;
     }
   }
@@ -138,10 +115,6 @@ class FirestoreService<T extends { id: string }> {
       const docRef = doc(db, this.collectionName, id);
       await deleteDoc(docRef);
     } catch (error) {
-      console.error(
-        `Error al eliminar documento ${id} de ${this.collectionName}:`,
-        error,
-      );
       throw error;
     }
   }
@@ -202,7 +175,6 @@ class FirestoreService<T extends { id: string }> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const converted: Record<string, any> = {};
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const [key, value] of Object.entries(data)) {
       // Convertir campos de fecha comunes
       if (
@@ -260,7 +232,9 @@ export const invoiceService = new FirestoreService<Invoice>('invoices');
 // Employee, Payroll and Attendance services
 export const employeeService = new FirestoreService<Employee>('employees');
 export const payrollService = new FirestoreService<Payroll>('payrolls');
-export const attendanceService = new FirestoreService<Attendance>('attendances');
+export const attendanceService = new FirestoreService<Attendance>(
+  'attendances',
+);
 
 // Helper function to get customer receivables
 export const getCustomerReceivables = async (
@@ -277,7 +251,6 @@ export const getCustomerReceivables = async (
       (doc) => ({ id: doc.id, ...doc.data() }) as AccountReceivable,
     );
   } catch (error) {
-    console.error('Error getting customer receivables:', error);
     throw error;
   }
 };
@@ -298,7 +271,6 @@ export const getPagoMovilByReference = async (
     const doc = snapshot.docs[0];
     return { id: doc.id, ...doc.data() } as PagoMovil;
   } catch (error) {
-    console.error('Error getting pago movil by reference:', error);
     throw error;
   }
 };
@@ -320,7 +292,6 @@ export const getActiveOrderByTable = async (
     const doc = snapshot.docs[0]; // Solo debería haber una orden activa por mesa
     return { id: doc.id, ...doc.data() } as Order;
   } catch (error) {
-    console.error('Error getting active order by table:', error);
     throw error;
   }
 };
@@ -336,7 +307,6 @@ export const getActiveTakeawayOrders = async (): Promise<Order[]> => {
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Order);
   } catch (error) {
-    console.error('Error getting active takeaway orders:', error);
     throw error;
   }
 };
@@ -362,8 +332,7 @@ export const getActiveOrdersWithTables = async (): Promise<
           try {
             const table = await tableService.getById(order.tableId);
             return { ...order, tableNumber: table?.number };
-          } catch (error) {
-            console.error('Error getting table info for order:', error);
+          } catch {
             return order;
           }
         }
@@ -373,7 +342,6 @@ export const getActiveOrdersWithTables = async (): Promise<
 
     return ordersWithTables;
   } catch (error) {
-    console.error('Error getting active orders with tables:', error);
     throw error;
   }
 };
@@ -381,14 +349,12 @@ export const getActiveOrdersWithTables = async (): Promise<
 // Employee helper functions
 export const getActiveEmployees = async (): Promise<Employee[]> => {
   try {
-    const q = query(
-      collection(db, 'employees'),
-      where('isActive', '==', true)
-    );
+    const q = query(collection(db, 'employees'), where('isActive', '==', true));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Employee);
+    return snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() }) as Employee,
+    );
   } catch (error) {
-    console.error('Error getting active employees:', error);
     throw error;
   }
 };
@@ -396,12 +362,12 @@ export const getActiveEmployees = async (): Promise<Employee[]> => {
 // Attendance helper functions
 export const getEmployeeAttendanceByDate = async (
   employeeId: string,
-  date: Date
+  date: Date,
 ): Promise<Attendance | null> => {
   try {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
-    
+
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
@@ -409,18 +375,17 @@ export const getEmployeeAttendanceByDate = async (
       collection(db, 'attendances'),
       where('employeeId', '==', employeeId),
       where('date', '>=', startOfDay),
-      where('date', '<=', endOfDay)
+      where('date', '<=', endOfDay),
     );
     const snapshot = await getDocs(q);
-    
+
     if (snapshot.empty) {
       return null;
     }
-    
+
     const doc = snapshot.docs[0];
     return { id: doc.id, ...doc.data() } as Attendance;
   } catch (error) {
-    console.error('Error getting employee attendance by date:', error);
     throw error;
   }
 };
@@ -428,19 +393,20 @@ export const getEmployeeAttendanceByDate = async (
 export const getEmployeeAttendanceByPeriod = async (
   employeeId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<Attendance[]> => {
   try {
     const q = query(
       collection(db, 'attendances'),
       where('employeeId', '==', employeeId),
       where('date', '>=', startDate),
-      where('date', '<=', endDate)
+      where('date', '<=', endDate),
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Attendance);
+    return snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() }) as Attendance,
+    );
   } catch (error) {
-    console.error('Error getting employee attendance by period:', error);
     throw error;
   }
 };
@@ -449,25 +415,24 @@ export const getEmployeeAttendanceByPeriod = async (
 export const getEmployeePayrollByPeriod = async (
   employeeId: string,
   month: number,
-  year: number
+  year: number,
 ): Promise<Payroll | null> => {
   try {
     const q = query(
       collection(db, 'payrolls'),
       where('employeeId', '==', employeeId),
       where('period.month', '==', month),
-      where('period.year', '==', year)
+      where('period.year', '==', year),
     );
     const snapshot = await getDocs(q);
-    
+
     if (snapshot.empty) {
       return null;
     }
-    
+
     const doc = snapshot.docs[0];
     return { id: doc.id, ...doc.data() } as Payroll;
   } catch (error) {
-    console.error('Error getting employee payroll by period:', error);
     throw error;
   }
 };

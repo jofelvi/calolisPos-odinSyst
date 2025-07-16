@@ -8,17 +8,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  ArrowLeftIcon, 
-  EditIcon, 
-  UserIcon, 
-  MailIcon, 
-  PhoneIcon, 
+import {
+  ArrowLeftIcon,
+  EditIcon,
+  UserIcon,
+  MailIcon,
+  PhoneIcon,
   MapPinIcon,
   CalendarIcon,
   DollarSignIcon,
   ContactIcon,
-  CreditCardIcon
+  CreditCardIcon,
 } from 'lucide-react';
 
 export default function EmployeeDetailPage() {
@@ -43,9 +43,9 @@ export default function EmployeeDetailPage() {
       } else {
         setError('Empleado no encontrado');
       }
-    } catch (err) {
+    } catch {
       setError('Error al cargar empleado');
-      console.error('Error fetching employee:', err);
+      // Error fetching employee - handled by error state
     } finally {
       setLoading(false);
     }
@@ -65,14 +65,14 @@ export default function EmployeeDetailPage() {
     return d.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
     }).format(amount);
   };
 
@@ -126,7 +126,7 @@ export default function EmployeeDetailPage() {
                 <h2 className="text-xl font-semibold">
                   {employee.firstName} {employee.lastName}
                 </h2>
-                <Badge variant={employee.isActive ? "default" : "secondary"}>
+                <Badge variant={employee.isActive ? 'default' : 'secondary'}>
                   {employee.isActive ? 'Activo' : 'Inactivo'}
                 </Badge>
               </div>
@@ -173,14 +173,18 @@ export default function EmployeeDetailPage() {
                 </div>
 
                 <div>
-                  <span className="text-sm text-gray-600">Fecha de Contratación:</span>
+                  <span className="text-sm text-gray-600">
+                    Fecha de Contratación:
+                  </span>
                   <p className="font-medium">{formatDate(employee.hireDate)}</p>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <DollarSignIcon className="h-4 w-4 text-gray-500" />
                   <span className="text-sm text-gray-600">Salario:</span>
-                  <span className="font-medium">{formatCurrency(employee.salary)}</span>
+                  <span className="font-medium">
+                    {formatCurrency(employee.salary)}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -197,17 +201,23 @@ export default function EmployeeDetailPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <span className="text-sm text-gray-600">Nombre:</span>
-                  <p className="font-medium">{employee.emergencyContact.name}</p>
+                  <p className="font-medium">
+                    {employee.emergencyContact.name}
+                  </p>
                 </div>
 
                 <div>
                   <span className="text-sm text-gray-600">Teléfono:</span>
-                  <p className="font-medium">{employee.emergencyContact.phone}</p>
+                  <p className="font-medium">
+                    {employee.emergencyContact.phone}
+                  </p>
                 </div>
 
                 <div>
                   <span className="text-sm text-gray-600">Relación:</span>
-                  <p className="font-medium">{employee.emergencyContact.relationship}</p>
+                  <p className="font-medium">
+                    {employee.emergencyContact.relationship}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -224,18 +234,28 @@ export default function EmployeeDetailPage() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <span className="text-sm text-gray-600">Número de Cuenta:</span>
-                    <p className="font-medium">{employee.bankAccount.accountNumber}</p>
+                    <span className="text-sm text-gray-600">
+                      Número de Cuenta:
+                    </span>
+                    <p className="font-medium">
+                      {employee.bankAccount.accountNumber}
+                    </p>
                   </div>
 
                   <div>
                     <span className="text-sm text-gray-600">Banco:</span>
-                    <p className="font-medium">{employee.bankAccount.bankName}</p>
+                    <p className="font-medium">
+                      {employee.bankAccount.bankName}
+                    </p>
                   </div>
 
                   <div>
-                    <span className="text-sm text-gray-600">Tipo de Cuenta:</span>
-                    <p className="font-medium">{employee.bankAccount.accountType}</p>
+                    <span className="text-sm text-gray-600">
+                      Tipo de Cuenta:
+                    </span>
+                    <p className="font-medium">
+                      {employee.bankAccount.accountType}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -265,24 +285,34 @@ export default function EmployeeDetailPage() {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Estado:</span>
-                  <Badge variant={employee.isActive ? "default" : "secondary"}>
+                  <Badge variant={employee.isActive ? 'default' : 'secondary'}>
                     {employee.isActive ? 'Activo' : 'Inactivo'}
                   </Badge>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Salario:</span>
-                  <span className="font-medium">{formatCurrency(employee.salary)}</span>
+                  <span className="font-medium">
+                    {formatCurrency(employee.salary)}
+                  </span>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Fecha de Ingreso:</span>
-                  <span className="text-sm">{formatDate(employee.hireDate)}</span>
+                  <span className="text-sm text-gray-600">
+                    Fecha de Ingreso:
+                  </span>
+                  <span className="text-sm">
+                    {formatDate(employee.hireDate)}
+                  </span>
                 </div>
 
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Registro creado:</span>
-                  <span className="text-sm">{formatDate(employee.createdAt)}</span>
+                  <span className="text-sm text-gray-600">
+                    Registro creado:
+                  </span>
+                  <span className="text-sm">
+                    {formatDate(employee.createdAt)}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -293,22 +323,26 @@ export default function EmployeeDetailPage() {
               <CardTitle>Acciones Rápidas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push(`/private/employees/${employee.id}/attendance`)}
+                onClick={() =>
+                  router.push(`/private/employees/${employee.id}/attendance`)
+                }
               >
                 Ver Asistencias
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push(`/private/employees/${employee.id}/payroll`)}
+                onClick={() =>
+                  router.push(`/private/employees/${employee.id}/payroll`)
+                }
               >
                 Ver Nómina
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start"
                 onClick={handleEdit}
               >

@@ -1,8 +1,5 @@
 import { Button } from '@/components/shared/button/Button';
-import {
-  accountReceivableService,
-  customerService,
-} from '@/services/firebase/genericServices';
+import { accountReceivableService } from '@/services/firebase/genericServices';
 import Link from 'next/link';
 import {
   Card,
@@ -24,16 +21,6 @@ export default async function AccountsReceivablePage({
   const statusFilter = resolvedSearchParams?.status || '';
 
   let accountsReceivable = await accountReceivableService.getAll();
-  const customers = await customerService.getAll();
-
-  // Create customer lookup map
-  const customerMap = customers.reduce(
-    (acc, customer) => {
-      acc[customer.id] = customer.name;
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
 
   // Apply filters
   if (query) {

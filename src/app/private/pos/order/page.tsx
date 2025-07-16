@@ -37,7 +37,7 @@ export default function OrderPage() {
   const orderId = searchParams.get('orderId');
   const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+  const [_selectedCustomer, _setSelectedCustomer] = useState<Customer | null>(
     null,
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -70,8 +70,7 @@ export default function OrderPage() {
       try {
         const activeProducts = await productService.getAll();
         setProducts(activeProducts);
-      } catch (error) {
-        console.error('Error loading products:', error);
+      } catch {
         // Considera mostrar una notificación de error al usuario
       }
     };
@@ -108,8 +107,8 @@ export default function OrderPage() {
             notes: order.notes || '',
           });
         }
-      } catch (error) {
-        console.error('Error loading existing order:', error);
+      } catch {
+        // console.error('Error loading existing order:', error);
       } finally {
         setIsLoadingOrder(false);
       }
@@ -201,7 +200,7 @@ export default function OrderPage() {
         if (existingOrder) {
           const updateData = {
             ...data,
-            customerId: selectedCustomer?.id || data.customerId,
+            customerId: _selectedCustomer?.id || data.customerId,
             updatedAt: new Date(),
             notes: data.notes || null,
           };
@@ -211,7 +210,7 @@ export default function OrderPage() {
         } else {
           const orderData: Omit<Order, 'id'> = {
             ...data,
-            customerId: selectedCustomer?.id || null,
+            customerId: _selectedCustomer?.id || null,
             userId: session?.user.id || '', // TODO: Reemplazar con el ID del usuario autenticado
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -237,7 +236,7 @@ export default function OrderPage() {
         setIsSubmitting(false);
       }
     },
-    [existingOrder, router, selectedCustomer],
+    [existingOrder, router, _selectedCustomer],
   );
 
   if (isLoadingOrder) {

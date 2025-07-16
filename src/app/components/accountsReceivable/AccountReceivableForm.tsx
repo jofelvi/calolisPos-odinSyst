@@ -95,12 +95,12 @@ export default function AccountReceivableForm({
         const all = await customerService.getAll();
         setCustomers(all.filter((c) => c.isActive));
       } catch {
-        console.error('Error cargando clientes');
+        // console
       } finally {
         setIsLoadingCustomers(false);
       }
     };
-    loadCustomers();
+    void loadCustomers();
   }, []);
 
   const calculateStatus = (amount: number, paid: number): InvoiceStatusEnum => {
@@ -142,8 +142,8 @@ export default function AccountReceivableForm({
 
       if (onSuccess) onSuccess();
       else router.push('/private/accounts-receivable');
-    } catch (err) {
-      console.error('Error guardando cuenta por cobrar', err);
+    } catch {
+      // console
     } finally {
       setIsLoading(false);
     }

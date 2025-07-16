@@ -43,17 +43,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🔍 Iniciando verificación de Pago Móvil:', body);
-
     // Realizar verificación
     const result = await pagoMovilVerifier.verifyPayment(body);
-
-    console.log('✅ Resultado de verificación:', result);
-
     return NextResponse.json(result);
   } catch (error) {
-    console.error('❌ Error en API verify-pago-movil:', error);
-
     return NextResponse.json(
       {
         success: false,

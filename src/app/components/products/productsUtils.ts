@@ -18,7 +18,6 @@ export const calculateMixedProductCost = (
 export const mapProductToFormData = (
   product: Product,
 ): Partial<ProductFormData> => {
-  console.log({ product });
   return {
     name: product.name,
     description: product.description,

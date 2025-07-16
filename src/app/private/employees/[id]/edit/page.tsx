@@ -48,16 +48,14 @@ export default function EditEmployeePage() {
       const updatedData: Partial<Omit<Employee, 'id'>> = {
         ...data,
         updatedAt: new Date(),
-        bankAccount: data.bankAccount?.accountNumber
-          ? data.bankAccount
-          : null,
+        bankAccount: data.bankAccount?.accountNumber ? data.bankAccount : null,
       };
 
       await employeeService.update(employee.id, updatedData);
       router.push(`/private/employees/${employee.id}`);
-    } catch (err) {
+    } catch {
       setError('Error al actualizar empleado');
-      console.error('Error updating employee:', err);
+      // Error updating employee - handled by error state
     } finally {
       setLoading(false);
     }

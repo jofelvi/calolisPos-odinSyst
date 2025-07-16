@@ -37,8 +37,8 @@ export default async function AccountReceivableDetailsPage({
   if (accountReceivable.orderId) {
     try {
       order = await orderService.getById(accountReceivable.orderId);
-    } catch (error) {
-      console.error('Error fetching order:', error);
+    } catch {
+      // Error fetching order - handled by optional order display
     }
   }
 

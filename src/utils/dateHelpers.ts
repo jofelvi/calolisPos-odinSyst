@@ -24,7 +24,7 @@ export function convertFirebaseDate(date: any): Date {
   }
 
   // Fallback: fecha actual
-  console.warn('No se pudo convertir la fecha, usando fecha actual:', date);
+  // Fallback: using current date if conversion fails
   return new Date();
 }
 

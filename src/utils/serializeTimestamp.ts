@@ -1,9 +1,10 @@
-import { formatDate, type FirebaseDateValue } from '@/utils/dateHelpers';
+import { formatDate } from '@/utils/dateHelpers';
 
 /**
  * @deprecated Use formatDate from dateHelpers instead
  * Kept for backward compatibility
  */
-export const formatDateForDisplay = (dateValue: FirebaseDateValue): string => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const formatDateForDisplay = (dateValue: any): string => {
   return formatDate(dateValue);
 };

@@ -35,7 +35,6 @@ interface TableWithOrder extends Table {
 export default function POSPage() {
   const [tables, setTables] = useState<TableWithOrder[]>([]);
   const [takeawayOrders, setTakeawayOrders] = useState<Order[]>([]);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -66,8 +65,8 @@ export default function POSPage() {
 
         setTables(enrichedTables);
         setTakeawayOrders(takeawayOrdersData);
-      } catch (error) {
-        console.error('Error loading data:', error);
+      } catch {
+        // Handle error silently - user will see empty state if no data loads
       } finally {
         setLoading(false);
       }
@@ -77,8 +76,6 @@ export default function POSPage() {
   }, []);
 
   const handleTableClick = async (table: TableWithOrder) => {
-    const { currentOrder } = table;
-
     if (table.orderId) {
       router.push(
         `${PRIVATE_ROUTES.POS_ORDER}?tableId=${table.id}&orderId=${table.orderId}`,
@@ -93,20 +90,6 @@ export default function POSPage() {
       router.push(`${PRIVATE_ROUTES.POS_ORDER}?tableId=${tableId}`);
     } else {
       router.push(PRIVATE_ROUTES.POS_ORDER);
-    }
-  };
-
-  const handleEditOrder = () => {
-    if (selectedOrder) {
-      router.push(
-        `${PRIVATE_ROUTES.POS_ORDER}?tableId=${selectedOrder.tableId}&orderId=${selectedOrder.id}`,
-      );
-    }
-  };
-
-  const handlePayOrder = () => {
-    if (selectedOrder) {
-      router.push(`/private/pos/payment/${selectedOrder.id}`);
     }
   };
 

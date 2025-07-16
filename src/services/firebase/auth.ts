@@ -45,8 +45,7 @@ export const signUpWithEmail = async ({
 
     return userCredential;
   } catch (error) {
-    // Para un mejor manejo de errores, puedes lanzar errores específicos
-    console.error('Error during sign up: ', error);
+    // Re-throw error to be handled by calling component
     throw error;
   }
 };
@@ -64,7 +63,7 @@ export const signInWithEmail = async ({
     );
     return userCredential;
   } catch (error) {
-    console.error('Error during sign in: ', error);
+    // Re-throw error to be handled by calling component
     throw error;
   }
 };

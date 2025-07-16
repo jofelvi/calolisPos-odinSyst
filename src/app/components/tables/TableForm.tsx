@@ -69,7 +69,8 @@ export default function TableForm({
 
       router.push('/tables');
     } catch (error) {
-      console.error('Error saving table:', error);
+      // Handle error appropriately - could show a toast notification here
+      throw error;
     } finally {
       setIsSubmitting(false);
     }

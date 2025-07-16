@@ -13,9 +13,9 @@ export function useOrders() {
       setError(null);
       const fetchedOrders = await purchaseOrderService.getAll();
       setOrders(fetchedOrders);
-    } catch (err) {
+    } catch {
       setError('Error al cargar las órdenes');
-      console.error('Error fetching orders:', err);
+      // Error fetching orders - handled by error state
     } finally {
       setLoading(false);
     }

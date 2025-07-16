@@ -267,8 +267,6 @@ export default function PurchaseOrderForm({
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error('Error saving purchase order:', error);
-
       // Mostrar mensaje de error específico
       const errorMessage = error?.message || 'Error desconocido';
       toast.error({

@@ -1,6 +1,7 @@
 'use client';
 import { Payment } from '@/types/payment';
 import { Order } from '@/types/order';
+import { PaymentMethodEnum } from '@/types/enumShared';
 
 interface ReceiptProps {
   order: Order;
@@ -8,11 +9,14 @@ interface ReceiptProps {
 }
 
 export default function Receipt({ order, payments }: ReceiptProps) {
-  const paymentMethodNames = {
-    CASH: 'Efectivo',
-    CARD: 'Tarjeta',
-    TRANSFER: 'Transferencia',
-    MIXED: 'Mixto',
+  const paymentMethodNames: Record<PaymentMethodEnum, string> = {
+    [PaymentMethodEnum.CASH_BS]: 'Efectivo Bs',
+    [PaymentMethodEnum.CASH_USD]: 'Efectivo USD',
+    [PaymentMethodEnum.CARD]: 'Tarjeta',
+    [PaymentMethodEnum.TRANSFER]: 'Transferencia',
+    [PaymentMethodEnum.PAGO_MOVIL]: 'Pago Móvil',
+    [PaymentMethodEnum.MIXED]: 'Mixto',
+    [PaymentMethodEnum.PENDING]: 'Pendiente',
   };
 
   return (
@@ -83,7 +87,9 @@ export default function Receipt({ order, payments }: ReceiptProps) {
           {payments.map((payment, index) => (
             <div key={index} className="flex justify-between mb-1">
               <div>
-                <span>{paymentMethodNames[payment.method]}: </span>
+                <span>
+                  {paymentMethodNames[payment.method] || payment.method}:{' '}
+                </span>
               </div>
               <span>${payment.amount.toFixed(2)}</span>
             </div>

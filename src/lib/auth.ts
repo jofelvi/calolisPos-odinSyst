@@ -74,9 +74,7 @@ export const authOptions: NextAuthOptions = {
               role: UserRoleEnum.CUSTOMER,
               isActive: true,
             });
-            console.log('Created new user with customer role:', dbUser);
-          } catch (error) {
-            console.error('Error creating user:', error);
+          } catch {
             // Fallback to default role if creation fails
             token.role = UserRoleEnum.CUSTOMER;
             return token;

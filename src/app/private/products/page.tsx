@@ -40,8 +40,9 @@ export default function ProductsPage() {
         ]);
         setProducts(prods);
         setCategories(cats);
-      } catch (error) {
-        console.error('Error cargando datos:', error);
+      } catch {
+        // Error loading data - components will show empty state
+        // Consider implementing a retry mechanism or user notification
       } finally {
         setLoading(false);
       }
@@ -86,8 +87,9 @@ export default function ProductsPage() {
         await productService.delete(productToDelete.id);
         setProducts(products.filter((p) => p.id !== productToDelete.id));
         setDeleteModalOpen(false);
-      } catch (error) {
-        console.error('Error eliminando producto:', error);
+      } catch {
+        // Error deleting product - consider showing user feedback
+        // The delete modal will remain open for user to retry
       } finally {
         setDeleting(false);
         setProductToDelete(null);

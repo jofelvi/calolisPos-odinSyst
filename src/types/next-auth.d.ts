@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { UserRoleEnum } from '@/types/enumShared';
 
 declare module 'next-auth' {

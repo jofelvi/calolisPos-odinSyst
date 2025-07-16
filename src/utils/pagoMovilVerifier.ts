@@ -20,8 +20,6 @@ export class PagoMovilVerifier {
     request: PagoMovilVerificationRequest,
   ): Promise<PagoMovilVerificationResult> {
     try {
-      console.log(`🔍 Verificando Pago Móvil: ${request.referenceNumber}`);
-
       // Realizar login y navegar a movimientos
       await this.scraper.performLogin(this.credentials, true);
       await this.scraper.navigateToMovimientos();
@@ -58,7 +56,6 @@ export class PagoMovilVerifier {
         actualAmount: transactionResult.amount,
       };
     } catch (error) {
-      console.error('❌ Error verificando Pago Móvil:', error);
       return {
         success: false,
         found: false,

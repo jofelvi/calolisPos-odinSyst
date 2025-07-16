@@ -53,16 +53,13 @@ export const getPriceBcv = async (): Promise<string> => {
 
     const precioDolar: string = cleanPriceText(rawText);
 
-    console.log(`Precio del dólar BCV: ${precioDolar}`);
     return precioDolar;
   } catch (error: unknown) {
     // Manejo de errores fuertemente tipado
     if (error instanceof Error) {
-      console.error('Error al obtener el precio:', error.message);
       throw new Error(`Fallo en getPriceBcv: ${error.message}`);
     } else {
       const message = 'Error desconocido al obtener el precio del BCV';
-      console.error(message);
       throw new Error(message);
     }
   } finally {
@@ -70,8 +67,8 @@ export const getPriceBcv = async (): Promise<string> => {
     if (browser) {
       try {
         await browser.close();
-      } catch (closeError) {
-        console.error('Error cerrando el navegador:', closeError);
+      } catch {
+        // console.error('Error cerrando el navegador:', closeError);
       }
     }
   }

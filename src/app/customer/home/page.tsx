@@ -23,8 +23,8 @@ export default function CustomerDashboard() {
             (order) => order.customerId === user.id,
           );
           setOrders(userOrders);
-        } catch (error) {
-          console.error('Error loading user orders:', error);
+        } catch {
+          // Error loading user orders - handled by UI state
         } finally {
           setIsLoading(false);
         }

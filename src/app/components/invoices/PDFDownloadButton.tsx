@@ -11,7 +11,7 @@ interface PDFDownloadButtonProps {
   invoice: Invoice;
   customer?: Customer | null;
   variant?: 'default' | 'outline' | 'ghost';
-  size?: 'sm' | 'default' | 'lg';
+  size?: 'sm' | 's' | 'lg';
   showPreview?: boolean;
 }
 
@@ -19,7 +19,6 @@ export default function PDFDownloadButton({
   invoice,
   customer,
   variant = 'outline',
-  size = 'default',
   showPreview = true,
 }: PDFDownloadButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -30,8 +29,7 @@ export default function PDFDownloadButton({
       // Pequeño delay para mostrar el loading
       await new Promise((resolve) => setTimeout(resolve, 500));
       downloadInvoicePDF(invoice, customer);
-    } catch (error) {
-      console.error('Error generating PDF:', error);
+    } catch {
       alert('Error al generar el PDF. Por favor, intenta de nuevo.');
     } finally {
       setIsGenerating(false);
@@ -43,8 +41,7 @@ export default function PDFDownloadButton({
       setIsGenerating(true);
       await new Promise((resolve) => setTimeout(resolve, 300));
       previewInvoicePDF(invoice, customer);
-    } catch (error) {
-      console.error('Error generating PDF preview:', error);
+    } catch {
       alert(
         'Error al generar la vista previa del PDF. Por favor, intenta de nuevo.',
       );
@@ -58,7 +55,7 @@ export default function PDFDownloadButton({
       <div className="flex gap-2">
         <Button
           variant={variant}
-          size={size}
+          size="md"
           onClick={handlePreviewPDF}
           disabled={isGenerating}
         >
@@ -71,7 +68,7 @@ export default function PDFDownloadButton({
         </Button>
         <Button
           variant={variant}
-          size={size}
+          size="md"
           onClick={handleDownloadPDF}
           disabled={isGenerating}
         >
@@ -89,7 +86,7 @@ export default function PDFDownloadButton({
   return (
     <Button
       variant={variant}
-      size={size}
+      size="md"
       onClick={handleDownloadPDF}
       disabled={isGenerating}
     >

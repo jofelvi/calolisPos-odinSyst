@@ -95,8 +95,8 @@ export class InvoiceDetailService {
           if (order.userId) {
             try {
               user = await userService.getById(order.userId);
-            } catch (error) {
-              console.warn('No se pudo cargar el usuario:', error);
+            } catch {
+              // Silently handle user loading error - user data will be null
             }
           }
         }
@@ -105,8 +105,8 @@ export class InvoiceDetailService {
         if (invoice.customerId) {
           try {
             customer = await customerService.getById(invoice.customerId);
-          } catch (error) {
-            console.warn('No se pudo cargar el cliente de la factura:', error);
+          } catch {
+            // Silently handle customer loading error - customer data will be null
           }
         }
       }

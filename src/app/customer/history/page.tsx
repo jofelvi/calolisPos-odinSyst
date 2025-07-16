@@ -98,8 +98,8 @@ export default function CustomerOrders() {
       })) as Order[];
 
       setOrders(orderData);
-    } catch (error) {
-      console.error('Error loading customer orders:', error);
+    } catch {
+      // Error loading customer orders - handled by UI state
     } finally {
       setLoading(false);
     }

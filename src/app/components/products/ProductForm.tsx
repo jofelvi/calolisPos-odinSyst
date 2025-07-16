@@ -116,8 +116,9 @@ export default function ProductForm({
           reset(formData);
           if (initialData.imageUrl) setImagePreview(initialData.imageUrl);
         }
-      } catch (error) {
-        console.error('Error loading data:', error);
+      } catch {
+        // Error loading form data - form will remain with default values
+        // Consider showing a user-friendly error message here
       } finally {
         setIsLoading(false);
       }
@@ -142,7 +143,6 @@ export default function ProductForm({
 
       // Calcular costo automáticamente para productos MIXED
       let finalCost = data.cost;
-      console.log({ finalCost });
       if (data.type === ProductTypeEnum.MIXED && data.ingredients) {
         finalCost = calculateMixedProductCost(data.ingredients, products);
       }
@@ -162,8 +162,9 @@ export default function ProductForm({
       }
 
       router.push(PRIVATE_ROUTES.PRODUCTS);
-    } catch (error) {
-      console.error('Error saving product:', error);
+    } catch {
+      // Error saving product - consider showing a user-friendly error message
+      // or implementing retry logic here
     } finally {
       setIsSubmitting(false);
     }

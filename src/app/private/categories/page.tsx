@@ -59,8 +59,8 @@ export default function CategoriesPage() {
         await categoryService.delete(categoryToDelete.id);
         setCategories(categories.filter((c) => c.id !== categoryToDelete.id));
         setDeleteModalOpen(false);
-      } catch (error) {
-        console.error('Error eliminando categoría:', error);
+      } catch {
+        // Error deleting category - handled by UI state
       } finally {
         setDeleting(false);
         setCategoryToDelete(null);

@@ -16,13 +16,13 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
     return (
       <label className="flex items-center space-x-2 cursor-pointer">
         <div className="relative">
-          <input 
-            type="checkbox" 
-            className="sr-only peer" 
-            ref={ref} 
+          <input
+            type="checkbox"
+            className="sr-only peer"
+            ref={ref}
             checked={checked}
             onChange={handleChange}
-            {...props} 
+            {...props}
           />
           <div
             className={cn(

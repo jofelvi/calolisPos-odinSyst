@@ -72,8 +72,8 @@ export default function DashboardPage() {
             suppliers,
             isLoading: false,
           });
-        } catch (error) {
-          console.error('Error loading dashboard data:', error);
+        } catch {
+          // Error loading dashboard data - silently handle and stop loading state
           setDashboardData((prev) => ({ ...prev, isLoading: false }));
         }
       }
@@ -84,9 +84,6 @@ export default function DashboardPage() {
 
   // Calculate statistics
   const totalProducts = dashboardData.products.length;
-  const productsForSale = dashboardData.products.filter(
-    (p) => p.isForSale,
-  ).length;
   const lowStockProducts = dashboardData.products.filter(
     (p) => p.stock <= (p.minStock || 5),
   ).length;

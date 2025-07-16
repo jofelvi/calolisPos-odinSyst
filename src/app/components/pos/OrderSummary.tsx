@@ -25,7 +25,6 @@ export default function OrderSummary({
   items,
   products,
   subtotal,
-  tax,
   total,
   tableId,
   onRemoveItem,

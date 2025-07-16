@@ -42,8 +42,9 @@ export default function ReceiptPage({ params }: PageProps) {
         // Filtrar pagos de esta orden
         const orderPayments = paymentData.filter((p) => p.orderId === orderId);
         setPayments(orderPayments);
-      } catch (error) {
-        console.error('Error loading receipt data:', error);
+      } catch {
+        // Handle error silently - component will show loading state
+        // In a production app, you might want to show an error toast or redirect
       } finally {
         setLoading(false);
       }

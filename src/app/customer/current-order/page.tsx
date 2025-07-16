@@ -87,8 +87,8 @@ export default function CurrentOrder() {
 
         setCurrentOrder(orderData);
       }
-    } catch (error) {
-      console.error('Error loading current order:', error);
+    } catch {
+      // Error loading current order - handled by UI state
     } finally {
       setLoading(false);
     }

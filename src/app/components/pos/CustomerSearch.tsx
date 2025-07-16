@@ -58,8 +58,8 @@ export default function CustomerSearch({
     try {
       const results = await searchCustomers(searchTerm);
       setSearchResults(results);
-    } catch (error) {
-      console.error('Error searching customers:', error);
+    } catch {
+      // console.error('Error searching customers:', error);
     } finally {
       setIsSearching(false);
     }
@@ -102,8 +102,8 @@ export default function CustomerSearch({
 
       onSelectCustomer(newCustomer);
       handleCloseModal();
-    } catch (error) {
-      console.error('Error creating customer:', error);
+    } catch {
+      // console.error('Error creating customer:', error);
     } finally {
       setIsCreatingCustomer(false);
     }

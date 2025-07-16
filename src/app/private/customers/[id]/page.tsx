@@ -1,7 +1,6 @@
 import {
   customerService,
   orderService,
-  accountReceivableService,
   getCustomerReceivables,
 } from '@/services/firebase/genericServices';
 import {
@@ -15,7 +14,6 @@ import { Button } from '@/components/shared/button/Button';
 import Link from 'next/link';
 import { InvoiceStatusEnum } from '@/types/enumShared';
 import { notFound } from 'next/navigation';
-import { Order } from '@/types/order';
 import { OrderItem } from '@/types/orderItem';
 
 interface CustomerProfilePageProps {
@@ -81,7 +79,7 @@ export default async function CustomerProfilePage({
         } else {
           productCount[item.productId] = {
             count: item.quantity,
-            name: item.productName,
+            name: item.name,
             lastOrdered: new Date(order.createdAt),
           };
         }

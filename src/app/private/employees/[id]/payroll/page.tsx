@@ -5,26 +5,23 @@ import { useParams, useRouter } from 'next/navigation';
 import { Employee } from '@/types/employee';
 import { Payroll } from '@/types/payroll';
 import { PayrollStatusEnum } from '@/types/enumShared';
-import { 
-  employeeService, 
-  payrollService, 
-  getEmployeePayrollByPeriod 
+import {
+  employeeService,
+  payrollService,
 } from '@/services/firebase/genericServices';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  ArrowLeftIcon, 
-  PlusIcon, 
-  DollarSignIcon, 
-  CalendarIcon,
+import {
+  ArrowLeftIcon,
+  PlusIcon,
+  DollarSignIcon,
   FileTextIcon,
   CheckCircleIcon,
   ClockIcon,
-  XCircleIcon
+  XCircleIcon,
 } from 'lucide-react';
 
 export default function EmployeePayrollPage() {
@@ -56,28 +53,25 @@ export default function EmployeePayrollPage() {
       } else {
         setError('Empleado no encontrado');
       }
-    } catch (err) {
+    } catch {
       setError('Error al cargar empleado');
-      console.error('Error fetching employee:', err);
     }
   };
 
   const fetchPayrolls = async () => {
     if (!employee) return;
-    
+
     try {
       setLoading(true);
       // Fetch payrolls for the entire year
       const allPayrolls = await payrollService.getAll();
-      const employeePayrolls = allPayrolls.filter(p => 
-        p.employeeId === employee.id && 
-        p.period.year === selectedYear
+      const employeePayrolls = allPayrolls.filter(
+        (p) => p.employeeId === employee.id && p.period.year === selectedYear,
       );
       setPayrolls(employeePayrolls);
       setError(null);
-    } catch (err) {
+    } catch {
       setError('Error al cargar nóminas');
-      console.error('Error fetching payrolls:', err);
     } finally {
       setLoading(false);
     }
@@ -89,12 +83,12 @@ export default function EmployeePayrollPage() {
 
   const handleCreatePayroll = async (month: number) => {
     if (!employee) return;
-    
+
     try {
       const year = selectedYear;
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0);
-      
+
       const payrollData = {
         employeeId: employee.id,
         period: {
@@ -123,16 +117,18 @@ export default function EmployeePayrollPage() {
       };
 
       // Calculate gross pay
-      const grossPay = payrollData.salary.baseSalary + 
-                     payrollData.salary.overtime + 
-                     payrollData.salary.bonuses + 
-                     payrollData.salary.commissions;
+      const grossPay =
+        payrollData.salary.baseSalary +
+        payrollData.salary.overtime +
+        payrollData.salary.bonuses +
+        payrollData.salary.commissions;
 
       // Calculate total deductions
-      const totalDeductions = payrollData.deductions.taxes + 
-                            payrollData.deductions.socialSecurity + 
-                            payrollData.deductions.insurance + 
-                            payrollData.deductions.other;
+      const totalDeductions =
+        payrollData.deductions.taxes +
+        payrollData.deductions.socialSecurity +
+        payrollData.deductions.insurance +
+        payrollData.deductions.other;
 
       // Calculate net pay
       const netPay = grossPay - totalDeductions;
@@ -142,26 +138,38 @@ export default function EmployeePayrollPage() {
         grossPay,
         netPay,
       };
-      
+
       await payrollService.create(finalPayrollData);
       await fetchPayrolls();
-    } catch (err) {
+    } catch {
       setError('Error al crear nómina');
-      console.error('Error creating payroll:', err);
     }
   };
 
   const getStatusBadge = (status: PayrollStatusEnum) => {
     const statusConfig = {
-      [PayrollStatusEnum.DRAFT]: { color: 'bg-gray-100 text-gray-800', icon: ClockIcon },
-      [PayrollStatusEnum.APPROVED]: { color: 'bg-blue-100 text-blue-800', icon: CheckCircleIcon },
-      [PayrollStatusEnum.PAID]: { color: 'bg-green-100 text-green-800', icon: CheckCircleIcon },
-      [PayrollStatusEnum.CANCELLED]: { color: 'bg-red-100 text-red-800', icon: XCircleIcon },
+      [PayrollStatusEnum.DRAFT]: {
+        color: 'bg-gray-100 text-gray-800',
+        icon: ClockIcon,
+      },
+      [PayrollStatusEnum.APPROVED]: {
+        color: 'bg-blue-100 text-blue-800',
+        icon: CheckCircleIcon,
+      },
+      [PayrollStatusEnum.PAID]: {
+        color: 'bg-green-100 text-green-800',
+        icon: CheckCircleIcon,
+      },
+      [PayrollStatusEnum.CANCELLED]: {
+        color: 'bg-red-100 text-red-800',
+        icon: XCircleIcon,
+      },
     };
-    
-    const config = statusConfig[status] || statusConfig[PayrollStatusEnum.DRAFT];
+
+    const config =
+      statusConfig[status] || statusConfig[PayrollStatusEnum.DRAFT];
     const IconComponent = config.icon;
-    
+
     return (
       <Badge className={`${config.color} border-0`}>
         <IconComponent className="h-3 w-3 mr-1" />
@@ -173,7 +181,7 @@ export default function EmployeePayrollPage() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
     }).format(amount);
   };
 
@@ -181,20 +189,22 @@ export default function EmployeePayrollPage() {
     const d = new Date(date);
     return d.toLocaleDateString('es-ES', {
       month: 'long',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
   const getMonthName = (month: number) => {
-    return new Date(0, month - 1).toLocaleDateString('es-ES', { month: 'long' });
+    return new Date(0, month - 1).toLocaleDateString('es-ES', {
+      month: 'long',
+    });
   };
 
   const getPayrollForMonth = (month: number) => {
-    return payrolls.find(p => p.period.month === month);
+    return payrolls.find((p) => p.period.month === month);
   };
 
   const totalPaidThisYear = payrolls
-    .filter(p => p.status === PayrollStatusEnum.PAID)
+    .filter((p) => p.status === PayrollStatusEnum.PAID)
     .reduce((acc, p) => acc + p.netPay, 0);
 
   if (loading && !employee) {
@@ -232,7 +242,7 @@ export default function EmployeePayrollPage() {
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-4">
           <div>
             <Label htmlFor="year">Año</Label>
@@ -263,7 +273,9 @@ export default function EmployeePayrollPage() {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Salario Base:</span>
-                <span className="font-medium">{formatCurrency(employee?.salary || 0)}</span>
+                <span className="font-medium">
+                  {formatCurrency(employee?.salary || 0)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Cargo:</span>
@@ -284,13 +296,18 @@ export default function EmployeePayrollPage() {
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Nóminas procesadas:</span>
+                <span className="text-sm text-gray-600">
+                  Nóminas procesadas:
+                </span>
                 <span className="font-medium">{payrolls.length}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Nóminas pagadas:</span>
                 <span className="font-medium">
-                  {payrolls.filter(p => p.status === PayrollStatusEnum.PAID).length}
+                  {
+                    payrolls.filter((p) => p.status === PayrollStatusEnum.PAID)
+                      .length
+                  }
                 </span>
               </div>
               <div className="flex justify-between">
@@ -316,11 +333,17 @@ export default function EmployeePayrollPage() {
                     <>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Período:</span>
-                        <span className="font-medium">{formatDate(lastPayroll.period.startDate)}</span>
+                        <span className="font-medium">
+                          {formatDate(lastPayroll.period.startDate)}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Pago neto:</span>
-                        <span className="font-medium">{formatCurrency(lastPayroll.netPay)}</span>
+                        <span className="text-sm text-gray-600">
+                          Pago neto:
+                        </span>
+                        <span className="font-medium">
+                          {formatCurrency(lastPayroll.netPay)}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Estado:</span>
@@ -354,7 +377,10 @@ export default function EmployeePayrollPage() {
               {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => {
                 const payroll = getPayrollForMonth(month);
                 return (
-                  <Card key={month} className="border-2 border-gray-200 hover:border-blue-300 transition-colors">
+                  <Card
+                    key={month}
+                    className="border-2 border-gray-200 hover:border-blue-300 transition-colors"
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="font-semibold">{getMonthName(month)}</h3>
@@ -371,26 +397,35 @@ export default function EmployeePayrollPage() {
                           </Button>
                         )}
                       </div>
-                      
+
                       {payroll ? (
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Bruto:</span>
-                            <span className="font-medium">{formatCurrency(payroll.grossPay)}</span>
+                            <span className="font-medium">
+                              {formatCurrency(payroll.grossPay)}
+                            </span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Deducciones:</span>
                             <span className="font-medium text-red-600">
-                              -{formatCurrency(payroll.grossPay - payroll.netPay)}
+                              -
+                              {formatCurrency(
+                                payroll.grossPay - payroll.netPay,
+                              )}
                             </span>
                           </div>
                           <div className="flex justify-between text-sm font-semibold border-t pt-2">
                             <span>Neto:</span>
-                            <span className="text-green-600">{formatCurrency(payroll.netPay)}</span>
+                            <span className="text-green-600">
+                              {formatCurrency(payroll.netPay)}
+                            </span>
                           </div>
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Horas:</span>
-                            <span className="font-medium">{payroll.hoursWorked}h</span>
+                            <span className="font-medium">
+                              {payroll.hoursWorked}h
+                            </span>
                           </div>
                         </div>
                       ) : (

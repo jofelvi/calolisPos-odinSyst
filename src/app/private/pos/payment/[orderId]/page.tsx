@@ -147,8 +147,8 @@ export default function PaymentPage({ params }: PageProps) {
         total: newTotal,
       };
       setOrder(updatedOrder);
-    } catch (error) {
-      console.error('Error updating order:', error);
+    } catch {
+      // Error updating order
     }
   };
 
@@ -256,14 +256,14 @@ export default function PaymentPage({ params }: PageProps) {
           return;
         }
         setOrder(orderData);
-      } catch (error) {
-        console.error('Error loading order:', error);
+      } catch {
+        // console.error('Error loading order:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadOrder();
+    void loadOrder();
   }, [orderId, router]);
 
   // Cargar tasa BCV al montar el componente
@@ -274,9 +274,7 @@ export default function PaymentPage({ params }: PageProps) {
         const response = await fetch('/api/bcv-rate');
         const data = await response.json();
         setBcvRate(data.rate);
-      } catch (error) {
-        console.error('Error loading BCV rate:', error);
-        // Tasa por defecto si falla
+      } catch {
         setBcvRate(36.5);
       } finally {
         setLoadingRate(false);
@@ -299,8 +297,7 @@ export default function PaymentPage({ params }: PageProps) {
         const receivables = await getCustomerReceivables(selectedCustomer.id);
         setCustomerReceivables(receivables);
         setShowReceivables(receivables.length > 0);
-      } catch (error) {
-        console.error('Error loading customer receivables:', error);
+      } catch {
         setCustomerReceivables([]);
         setShowReceivables(false);
       }
@@ -366,7 +363,7 @@ export default function PaymentPage({ params }: PageProps) {
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           total: item.quantity * item.unitPrice,
-          notes: item.notes,
+          notes: item.notes || undefined,
         })) || [];
 
       const invoiceData: Omit<Invoice, 'id'> = {
@@ -402,7 +399,7 @@ export default function PaymentPage({ params }: PageProps) {
       };
 
       await invoiceService.create(invoiceData);
-    } catch (error) {
+    } catch {
       // No lanzamos el error para no interrumpir el flujo de pago
     }
   };
@@ -527,7 +524,6 @@ export default function PaymentPage({ params }: PageProps) {
       }
 
       // Realizar verificación usando el scraper
-      console.log('🔍 Iniciando verificación de Pago Móvil...');
       toast.info(
         'Verificando transacción, esto puede tomar unos momentos...',
         'Verificando',
@@ -622,8 +618,7 @@ export default function PaymentPage({ params }: PageProps) {
           'Error en la verificación',
         );
       }
-    } catch (error) {
-      console.error('Error verificando Pago Móvil:', error);
+    } catch {
       toast.error(
         'Error al verificar el Pago Móvil. Intente nuevamente.',
         'Error del sistema',
@@ -678,8 +673,8 @@ export default function PaymentPage({ params }: PageProps) {
       await createInvoiceForOrder(order, PaymentStatusEnum.PENDING);
 
       router.push(`/private/pos/receipt/${order.id}`);
-    } catch (error) {
-      console.error('Error creating pending payment:', error);
+    } catch {
+      // console.error('Error creating pending payment:', error);
     } finally {
       setIsProcessing(false);
     }
@@ -718,8 +713,7 @@ export default function PaymentPage({ params }: PageProps) {
 
       toast.success('Orden cobrada exitosamente', 'Volviendo al POS...');
       router.push('/private/pos');
-    } catch (error) {
-      console.error('Error charging order:', error);
+    } catch {
       toast.error('Error al cobrar la orden', 'Error del sistema');
     } finally {
       setIsProcessing(false);
@@ -730,6 +724,10 @@ export default function PaymentPage({ params }: PageProps) {
     if (!order) return;
 
     const totalPaid = calculateTotalPaid();
+    const isPendingPayment =
+      selectedCustomer &&
+      selectedPaymentMethods.includes(PaymentMethodEnum.PENDING);
+
     if (totalPaid <= 0 && !isPendingPayment) {
       toast.error('Debe ingresar al menos un monto de pago', 'Monto requerido');
       return;
@@ -793,8 +791,7 @@ export default function PaymentPage({ params }: PageProps) {
         'Redirigiendo al recibo...',
       );
       router.push(`/private/pos/receipt/${order.id}`);
-    } catch (error) {
-      console.error('Error processing payment:', error);
+    } catch {
       toast.error(
         'Error al procesar el pago. Intente nuevamente.',
         'Error del sistema',

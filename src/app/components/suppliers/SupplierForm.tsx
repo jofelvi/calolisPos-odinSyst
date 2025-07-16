@@ -71,7 +71,8 @@ export default function SupplierForm({ initialData }: SupplierFormProps) {
 
       router.push('/suppliers');
     } catch (error) {
-      console.error('Error saving supplier:', error);
+      // Handle error appropriately - could show a toast notification here
+      throw error;
     } finally {
       setIsSubmitting(false);
     }

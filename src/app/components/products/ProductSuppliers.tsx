@@ -22,7 +22,8 @@ export default function ProductSuppliers({
       </label>
       {disabled && (
         <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3">
-          ⚠️ Los productos tipo "Mixto" no necesitan proveedores directos
+          ⚠️ Los productos tipo &quot;Mixto&quot; no necesitan proveedores
+          directos
         </p>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

@@ -7,7 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { PlusIcon, SearchIcon, EditIcon, EyeIcon, UserIcon } from 'lucide-react';
+import {
+  PlusIcon,
+  SearchIcon,
+  EditIcon,
+  EyeIcon,
+  UserIcon,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function EmployeesPage() {
@@ -46,12 +52,13 @@ export default function EmployeesPage() {
       return;
     }
 
-    const filtered = employees.filter(employee =>
-      employee.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.department.toLowerCase().includes(searchTerm.toLowerCase())
+    const filtered = employees.filter(
+      (employee) =>
+        employee.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.department.toLowerCase().includes(searchTerm.toLowerCase()),
     );
     setFilteredEmployees(filtered);
   };
@@ -91,7 +98,10 @@ export default function EmployeesPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Gestión de Empleados</h1>
-        <Button onClick={handleCreateEmployee} className="flex items-center gap-2">
+        <Button
+          onClick={handleCreateEmployee}
+          className="flex items-center gap-2"
+        >
           <PlusIcon className="h-4 w-4" />
           Nuevo Empleado
         </Button>
@@ -119,12 +129,17 @@ export default function EmployeesPage() {
 
           {filteredEmployees.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              {searchTerm ? 'No se encontraron empleados' : 'No hay empleados registrados'}
+              {searchTerm
+                ? 'No se encontraron empleados'
+                : 'No hay empleados registrados'}
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {filteredEmployees.map((employee) => (
-                <Card key={employee.id} className="hover:shadow-md transition-shadow">
+                <Card
+                  key={employee.id}
+                  className="hover:shadow-md transition-shadow"
+                >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
@@ -135,10 +150,14 @@ export default function EmployeesPage() {
                           <h3 className="font-semibold">
                             {employee.firstName} {employee.lastName}
                           </h3>
-                          <p className="text-sm text-gray-600">{employee.position}</p>
+                          <p className="text-sm text-gray-600">
+                            {employee.position}
+                          </p>
                         </div>
                       </div>
-                      <Badge variant={employee.isActive ? "default" : "secondary"}>
+                      <Badge
+                        variant={employee.isActive ? 'default' : 'secondary'}
+                      >
                         {employee.isActive ? 'Activo' : 'Inactivo'}
                       </Badge>
                     </div>
@@ -146,7 +165,9 @@ export default function EmployeesPage() {
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2 text-sm">
                         <span className="font-medium">Departamento:</span>
-                        <span className="text-gray-600">{employee.department}</span>
+                        <span className="text-gray-600">
+                          {employee.department}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <span className="font-medium">Email:</span>
@@ -158,7 +179,9 @@ export default function EmployeesPage() {
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <span className="font-medium">Salario:</span>
-                        <span className="text-gray-600">${employee.salary}</span>
+                        <span className="text-gray-600">
+                          ${employee.salary}
+                        </span>
                       </div>
                     </div>
 
