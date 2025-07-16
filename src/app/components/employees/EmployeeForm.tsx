@@ -48,6 +48,7 @@ export default function EmployeeForm({
           hireDate: initialData.hireDate,
           salary: initialData.salary,
           isActive: initialData.isActive,
+          pin: initialData.pin || null,
           emergencyContact: initialData.emergencyContact,
           bankAccount: initialData.bankAccount || {
             accountNumber: null,
@@ -66,6 +67,7 @@ export default function EmployeeForm({
           hireDate: new Date(),
           salary: 0,
           isActive: true,
+          pin: null,
           emergencyContact: {
             name: '',
             phone: '',
@@ -84,6 +86,7 @@ export default function EmployeeForm({
   const formatDateForInput = (date: Date | string | undefined): string => {
     if (!date) return '';
     const d = date instanceof Date ? date : new Date(date);
+    if (isNaN(d.getTime())) return '';
     return d.toISOString().split('T')[0];
   };
 
@@ -220,16 +223,30 @@ export default function EmployeeForm({
                 />
               </div>
 
-              {mode === 'edit' && (
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={isActive}
-                    onCheckedChange={(checked) => setValue('isActive', checked)}
-                    label="Empleado Activo"
-                  />
-                </div>
-              )}
+              <div>
+                <Input
+                  label="PIN de Asistencia"
+                  type="password"
+                  {...register('pin')}
+                  placeholder="4 dígitos (opcional)"
+                  maxLength={4}
+                  error={errors.pin}
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  PIN de 4 dígitos para registro de asistencia
+                </p>
+              </div>
             </div>
+
+            {mode === 'edit' && (
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={isActive}
+                  onCheckedChange={(checked) => setValue('isActive', checked)}
+                  label="Empleado Activo"
+                />
+              </div>
+            )}
 
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Contacto de Emergencia</h3>

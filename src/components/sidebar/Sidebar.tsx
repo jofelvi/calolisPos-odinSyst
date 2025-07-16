@@ -10,6 +10,8 @@ import { PRIVATE_ROUTES } from '@/constants/routes';
 import { useEffect } from 'react';
 
 import {
+  FiBarChart,
+  FiCalendar,
   FiClipboard,
   FiCreditCard,
   FiDollarSign,
@@ -17,11 +19,13 @@ import {
   FiFolder,
   FiGrid,
   FiLayout,
+  FiLogIn,
+  FiLogOut,
   FiPackage,
   FiShoppingCart,
   FiTruck,
-  FiUsers,
   FiUserCheck,
+  FiUsers,
 } from 'react-icons/fi';
 
 const menuItems = [
@@ -70,6 +74,16 @@ const menuItems = [
     label: 'Empleados',
     path: PRIVATE_ROUTES.EMPLOYEES,
     icon: <FiUserCheck size={20} />,
+  },
+  {
+    label: 'Nóminas',
+    path: '/private/payroll',
+    icon: <FiCalendar size={20} />,
+  },
+  {
+    label: 'Reportes',
+    path: '/private/reports',
+    icon: <FiBarChart size={20} />,
   },
   {
     label: 'Cuentas por Cobrar',
@@ -204,8 +218,52 @@ export function Sidebar() {
           })}
         </nav>
 
+        {/* Attendance Actions */}
+        <div className="p-4 border-t border-slate-700/50">
+          {!isCollapsed && (
+            <div className="space-y-2">
+              <Link
+                href="/private/attendance/checkin"
+                className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 transition-all duration-200"
+              >
+                <FiLogIn className="h-4 w-4 text-green-400" />
+                <span className="text-sm font-medium text-green-400">
+                  Registrar Entrada
+                </span>
+              </Link>
+              <Link
+                href="/private/attendance/checkout"
+                className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-orange-600/20 to-red-600/20 hover:from-orange-600/30 hover:to-red-600/30 border border-orange-500/30 transition-all duration-200"
+              >
+                <FiLogOut className="h-4 w-4 text-orange-400" />
+                <span className="text-sm font-medium text-orange-400">
+                  Registrar Salida
+                </span>
+              </Link>
+            </div>
+          )}
+          {isCollapsed && (
+            <div className="space-y-2">
+              <Link
+                href="/private/attendance/checkin"
+                className="flex items-center justify-center p-3 rounded-lg bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 transition-all duration-200"
+                title="Registrar Entrada"
+              >
+                <FiLogIn className="h-4 w-4 text-green-400" />
+              </Link>
+              <Link
+                href="/private/attendance/checkout"
+                className="flex items-center justify-center p-3 rounded-lg bg-gradient-to-r from-orange-600/20 to-red-600/20 hover:from-orange-600/30 hover:to-red-600/30 border border-orange-500/30 transition-all duration-200"
+                title="Registrar Salida"
+              >
+                <FiLogOut className="h-4 w-4 text-orange-400" />
+              </Link>
+            </div>
+          )}
+        </div>
+
         {/* Footer */}
-        <div className="mt-auto p-4 border-t border-slate-700/50">
+        <div className="p-4 border-t border-slate-700/50">
           {!isCollapsed && (
             <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
               <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-500 rounded-full animate-pulse"></div>

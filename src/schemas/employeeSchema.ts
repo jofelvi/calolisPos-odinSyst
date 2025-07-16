@@ -11,21 +11,32 @@ export const employeeSchema = yup.object().shape({
   hireDate: yup.date().required('La fecha de contratación es requerida'),
   salary: yup
     .number()
+    .typeError('Debe ser un número')
     .positive('El salario debe ser mayor a 0')
     .required('El salario es requerido'),
   isActive: yup.boolean().default(true),
-  emergencyContact: yup.object().shape({
-    name: yup
-      .string()
-      .required('El nombre del contacto de emergencia es requerido'),
-    phone: yup
-      .string()
-      .required('El teléfono del contacto de emergencia es requerido'),
-    relationship: yup.string().required('La relación es requerida'),
-  }),
+  pin: yup
+    .string()
+    .nullable()
+    .default(null)
+    .test(
+      'pin-validation',
+      'El PIN debe tener exactamente 4 dígitos',
+      (value) => !value || /^\d{4}$/.test(value),
+    ),
+  emergencyContact: yup
+    .object({
+      name: yup
+        .string()
+        .required('El nombre del contacto de emergencia es requerido'),
+      phone: yup
+        .string()
+        .required('El teléfono del contacto de emergencia es requerido'),
+      relationship: yup.string().required('La relación es requerida'),
+    })
+    .required(),
   bankAccount: yup
-    .object()
-    .shape({
+    .object({
       accountNumber: yup.string().nullable().default(null),
       bankName: yup.string().nullable().default(null),
       accountType: yup.string().nullable().default(null),

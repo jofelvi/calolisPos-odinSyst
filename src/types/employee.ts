@@ -11,6 +11,7 @@ export interface Employee {
   hireDate: Date;
   salary: number;
   isActive: boolean;
+  pin: string | null; // PIN de seguridad para registro de asistencia
   emergencyContact: {
     name: string;
     phone: string;
@@ -35,6 +36,7 @@ export interface CreateEmployeeData {
   department: string;
   hireDate: Date;
   salary: number;
+  pin: string | null; // PIN de seguridad para registro de asistencia
   emergencyContact: {
     name: string;
     phone: string;

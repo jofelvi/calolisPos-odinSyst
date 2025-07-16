@@ -19,6 +19,8 @@ import {
   DollarSignIcon,
   ContactIcon,
   CreditCardIcon,
+  ClockIcon,
+  CalculatorIcon,
 } from 'lucide-react';
 
 export default function EmployeeDetailPage() {
@@ -330,6 +332,7 @@ export default function EmployeeDetailPage() {
                   router.push(`/private/employees/${employee.id}/attendance`)
                 }
               >
+                <ClockIcon className="h-4 w-4 mr-2" />
                 Ver Asistencias
               </Button>
               <Button
@@ -339,6 +342,7 @@ export default function EmployeeDetailPage() {
                   router.push(`/private/employees/${employee.id}/payroll`)
                 }
               >
+                <CalculatorIcon className="h-4 w-4 mr-2" />
                 Ver Nómina
               </Button>
               <Button
