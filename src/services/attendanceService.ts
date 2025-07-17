@@ -8,6 +8,7 @@ import {
 import { Employee } from '@/types/employee';
 import { AttendanceStatusEnum } from '@/types/enumShared';
 import {
+  attendanceService,
   employeeService,
   getEmployeeAttendanceByPeriod,
 } from '@/services/firebase/genericServices';
@@ -23,6 +24,12 @@ const DEFAULT_ATTENDANCE_SETTINGS: AttendanceSettings = {
   standardCheckOut: '18:00',
   breakDurationMinutes: 60,
 };
+
+interface AttendanceCleanupResult {
+  isValid: boolean;
+  issues: string[];
+  shouldRemove: boolean;
+}
 
 export class AttendanceReportService {
   private settings: AttendanceSettings;
@@ -370,6 +377,107 @@ export class AttendanceReportService {
     }
 
     return workingDays;
+  }
+
+  static validateAttendanceRecord(
+    attendance: Attendance,
+  ): AttendanceCleanupResult {
+    const issues: string[] = [];
+    let shouldRemove = false;
+
+    // Validar campos requeridos
+    if (!attendance.id) {
+      issues.push('Registro sin ID');
+      shouldRemove = true;
+    }
+
+    if (!attendance.employeeId) {
+      issues.push('Registro sin ID de empleado');
+      shouldRemove = true;
+    }
+
+    if (!attendance.date) {
+      issues.push('Registro sin fecha');
+      shouldRemove = true;
+    }
+
+    // Validar coherencia de checkIn/checkOut
+    if (attendance.checkOut && !attendance.checkIn) {
+      issues.push('Checkout sin checkin correspondiente');
+      shouldRemove = true;
+    }
+
+    // Validar fechas
+    if (attendance.checkIn && attendance.checkOut) {
+      const checkInTime = new Date(attendance.checkIn);
+      const checkOutTime = new Date(attendance.checkOut);
+
+      if (checkOutTime <= checkInTime) {
+        issues.push('Checkout anterior al checkin');
+        shouldRemove = true;
+      }
+    }
+
+    return {
+      isValid: issues.length === 0,
+      issues,
+      shouldRemove,
+    };
+  }
+
+  /**
+   * Limpia registros corruptos de un empleado
+   */
+  static async cleanupEmployeeAttendances(employeeId: string): Promise<{
+    removedCount: number;
+    errors: string[];
+  }> {
+    try {
+      const today = new Date();
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+      // Obtener todos los registros del mes actual
+      const attendances = await getEmployeeAttendanceByPeriod(
+        employeeId,
+        startOfMonth,
+        endOfMonth,
+      );
+
+      const toRemove: string[] = [];
+      const errors: string[] = [];
+
+      for (const attendance of attendances) {
+        const validation = this.validateAttendanceRecord(attendance);
+
+        if (validation.shouldRemove) {
+          toRemove.push(attendance.id);
+          errors.push(
+            `Registro ${attendance.id}: ${validation.issues.join(', ')}`,
+          );
+        }
+      }
+
+      // Eliminar registros corruptos
+      for (const id of toRemove) {
+        try {
+          await attendanceService.delete(id);
+        } catch (error) {
+          console.error(`Error eliminando registro ${id}:`, error);
+        }
+      }
+
+      return {
+        removedCount: toRemove.length,
+        errors,
+      };
+    } catch (error) {
+      console.error('Error en cleanup:', error);
+      return {
+        removedCount: 0,
+        errors: ['Error durante la limpieza de registros'],
+      };
+    }
   }
 
   private minutesToTimeString(minutes: number): string {

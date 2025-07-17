@@ -385,17 +385,10 @@ export const getEmployeeAttendanceByDate = async (
   date: Date,
 ): Promise<Attendance | null> => {
   try {
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
-
+    // Alternativa temporal: obtener todas las asistencias del empleado y filtrar en cliente
     const q = query(
       collection(db, 'attendances'),
       where('employeeId', '==', employeeId),
-      where('date', '>=', startOfDay),
-      where('date', '<=', endOfDay),
     );
     const snapshot = await getDocs(q);
 
@@ -403,8 +396,22 @@ export const getEmployeeAttendanceByDate = async (
       return null;
     }
 
-    const doc = snapshot.docs[0];
-    return { id: doc.id, ...doc.data() } as Attendance;
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+
+    // Filtrar en el cliente por fecha
+    const attendances = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Attendance[];
+
+    const todayAttendance = attendances.find((attendance) => {
+      const attendanceDate = new Date(attendance.date);
+      attendanceDate.setHours(0, 0, 0, 0);
+      return attendanceDate.getTime() === targetDate.getTime();
+    });
+
+    return todayAttendance || null;
   } catch (error) {
     throw error;
   }
@@ -452,6 +459,41 @@ export const getEmployeePayrollByPeriod = async (
 
     const doc = snapshot.docs[0];
     return { id: doc.id, ...doc.data() } as Payroll;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const fetchAllAttendancesByUserId = async (
+  employeeId: string,
+): Promise<Attendance[]> => {
+  try {
+    const q = query(
+      collection(db, 'attendances'),
+      where('employeeId', '==', employeeId),
+    );
+    const snapshot = await getDocs(q);
+    const attendances = snapshot.docs.map((doc) => {
+      const data = doc.data();
+      console.log('data', data);
+      return {
+        id: doc.id,
+        ...data,
+        // Convert date fields manually
+        date: convertFirebaseDate(data.date),
+        checkIn: convertFirebaseDate(data.checkIn),
+        //checkOut: convertFirebaseDate(data.checkOut),
+        createdAt: convertFirebaseDate(data.createdAt),
+        updatedAt: convertFirebaseDate(data.updatedAt),
+      } as Attendance;
+    });
+
+    // Sort by date descending (most recent first)
+    return attendances.sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return dateB - dateA;
+    });
   } catch (error) {
     throw error;
   }

@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Employee } from '@/types/employee';
 import { Attendance } from '@/types/attendance';
 import { AttendanceStatusEnum } from '@/types/enumShared';
 import {
-  employeeService,
   attendanceService,
-  getEmployeeAttendanceByPeriod,
+  employeeService,
+  fetchAllAttendancesByUserId,
 } from '@/services/firebase/genericServices';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,17 +23,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  ArrowLeftIcon,
-  PlusIcon,
-  ClockIcon,
-  CalendarIcon,
-  CheckCircleIcon,
-  XCircleIcon,
   AlertCircleIcon,
-  EditIcon,
+  ArrowLeftIcon,
+  CalendarIcon,
   CameraIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  EditIcon,
   MapPinIcon,
+  PlusIcon,
   UserIcon,
+  XCircleIcon,
 } from 'lucide-react';
 import AttendanceForm from '@/app/components/attendance/AttendanceForm';
 
@@ -48,7 +48,9 @@ export default function EmployeeAttendancePage() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [showAttendanceForm, setShowAttendanceForm] = useState(false);
   const [showCheckInModal, setShowCheckInModal] = useState(false);
-  const [cameraStep, setCameraStep] = useState<'camera' | 'location' | 'confirm'>('camera');
+  const [cameraStep, setCameraStep] = useState<
+    'camera' | 'location' | 'confirm'
+  >('camera');
   const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
@@ -90,15 +92,20 @@ export default function EmployeeAttendancePage() {
 
     try {
       setLoading(true);
-      const startDate = new Date(selectedYear, selectedMonth - 1, 1);
-      const endDate = new Date(selectedYear, selectedMonth, 0);
 
-      const attendanceData = await getEmployeeAttendanceByPeriod(
-        employee.id,
-        startDate,
-        endDate,
-      );
-      setAttendances(attendanceData);
+      // Fetch all attendances for the employee
+      const allAttendances = await fetchAllAttendancesByUserId(employee.id);
+
+      // Filter by selected month and year
+      const filteredAttendances = allAttendances.filter((attendance) => {
+        const attendanceDate = new Date(attendance.date);
+        return (
+          attendanceDate.getMonth() === selectedMonth - 1 &&
+          attendanceDate.getFullYear() === selectedYear
+        );
+      });
+
+      setAttendances(filteredAttendances);
       setError(null);
     } catch {
       setError('Error al cargar asistencias');
@@ -123,10 +130,12 @@ export default function EmployeeAttendancePage() {
 
   const handleCheckInStart = () => {
     if (!employee) return;
-    
+
     // Validar que no hay un check-in activo sin check-out
     if (todayAttendance && !todayAttendance.checkOut) {
-      setError('Ya tienes una entrada registrada hoy. Debes registrar tu salida antes de hacer otra entrada.');
+      setError(
+        'Ya tienes una entrada registrada hoy. Debes registrar tu salida antes de hacer otra entrada.',
+      );
       return;
     }
 
@@ -149,11 +158,15 @@ export default function EmployeeAttendancePage() {
 
       setCameraStream(stream);
 
-      // Get video element and set stream
-      const video = document.getElementById('checkin-camera-video') as HTMLVideoElement;
-      if (video) {
-        video.srcObject = stream;
-      }
+      // Wait for video element to be available and set stream
+      setTimeout(() => {
+        const video = document.getElementById(
+          'checkin-camera-video',
+        ) as HTMLVideoElement;
+        if (video) {
+          video.srcObject = stream;
+        }
+      }, 100);
     } catch (error) {
       console.error('Error accessing camera:', error);
       setError('No se pudo acceder a la cámara. Verifica los permisos.');
@@ -164,12 +177,27 @@ export default function EmployeeAttendancePage() {
 
   const capturePhoto = async () => {
     try {
-      const video = document.getElementById('checkin-camera-video') as HTMLVideoElement;
+      const video = document.getElementById(
+        'checkin-camera-video',
+      ) as HTMLVideoElement;
+
+      if (!video) {
+        throw new Error('No se encontró el elemento de video');
+      }
+
+      if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+        throw new Error('El video no está listo para capturar');
+      }
+
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        throw new Error('Las dimensiones del video no son válidas');
+      }
+
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
 
-      if (!video || !context) {
-        throw new Error('No se pudo acceder al video o canvas');
+      if (!context) {
+        throw new Error('No se pudo crear el contexto del canvas');
       }
 
       canvas.width = video.videoWidth;
@@ -190,6 +218,8 @@ export default function EmployeeAttendancePage() {
             }
 
             setCameraStep('location');
+          } else {
+            setError('No se pudo generar la imagen. Intenta nuevamente.');
           }
         },
         'image/jpeg',
@@ -197,7 +227,9 @@ export default function EmployeeAttendancePage() {
       );
     } catch (error) {
       console.error('Error capturing photo:', error);
-      setError('No se pudo tomar la foto. Intenta nuevamente.');
+      setError(
+        `Error al capturar foto: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+      );
     }
   };
 
@@ -276,7 +308,7 @@ export default function EmployeeAttendancePage() {
 
       await attendanceService.create(attendanceData);
       await fetchAttendances();
-      
+
       // Reset modal state
       setShowCheckInModal(false);
       setCameraStep('camera');
@@ -287,12 +319,11 @@ export default function EmployeeAttendancePage() {
       }
       setLocation(null);
       setError(null);
-      
+
       // Success message
       setTimeout(() => {
         alert('¡Entrada registrada exitosamente!');
       }, 100);
-      
     } catch (err) {
       console.error('Error registering check-in:', err);
       setError('Error al registrar entrada. Intenta nuevamente.');
@@ -307,13 +338,13 @@ export default function EmployeeAttendancePage() {
       cameraStream.getTracks().forEach((track) => track.stop());
       setCameraStream(null);
     }
-    
+
     // Clean up photo
     if (photoUrl) {
       URL.revokeObjectURL(photoUrl);
       setPhotoUrl(null);
     }
-    
+
     // Reset state
     setShowCheckInModal(false);
     setCameraStep('camera');
@@ -415,10 +446,26 @@ export default function EmployeeAttendancePage() {
 
   const getTodayAttendance = () => {
     const today = new Date();
-    return attendances.find((a) => {
+    const todayString = today.toDateString();
+
+    const found = attendances.find((a) => {
       const attendanceDate = new Date(a.date);
-      return attendanceDate.toDateString() === today.toDateString();
+      return attendanceDate.toDateString() === todayString;
     });
+    console.log(attendances);
+    // Debug log
+    console.log('=== DEBUG getTodayAttendance ===');
+    console.log('Today string:', todayString);
+    console.log('All attendances:', attendances);
+    console.log('Found today attendance:', found);
+    if (found) {
+      console.log('Found checkIn:', found.checkIn);
+      console.log('Found checkOut:', found.checkOut);
+      console.log('Has checkOut?', !!found.checkOut);
+    }
+    console.log('================================');
+
+    return found;
   };
 
   const todayAttendance = getTodayAttendance();
@@ -468,7 +515,7 @@ export default function EmployeeAttendancePage() {
             <EditIcon className="h-4 w-4" />
             Registro Manual
           </Button>
-          
+
           {todayAttendance ? (
             todayAttendance.checkOut ? (
               <Badge className="bg-green-100 text-green-800">
@@ -486,7 +533,10 @@ export default function EmployeeAttendancePage() {
               </Button>
             )
           ) : (
-            <Button onClick={handleCheckInStart} className="flex items-center gap-2">
+            <Button
+              onClick={handleCheckInStart}
+              className="flex items-center gap-2"
+            >
               <PlusIcon className="h-4 w-4" />
               Registrar Entrada
             </Button>
@@ -684,7 +734,7 @@ export default function EmployeeAttendancePage() {
           )}
         </CardContent>
       </Card>
-      
+
       {/* Modal para Registro Manual */}
       {showAttendanceForm && employee && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -712,8 +762,12 @@ export default function EmployeeAttendancePage() {
                   <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CameraIcon className="h-8 w-8 text-purple-600" />
                   </div>
-                  <CardTitle className="text-xl">Verificación de Identidad</CardTitle>
-                  <p className="text-gray-600">Toma una foto para confirmar tu identidad</p>
+                  <CardTitle className="text-xl">
+                    Verificación de Identidad
+                  </CardTitle>
+                  <p className="text-gray-600">
+                    Toma una foto para confirmar tu identidad
+                  </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="text-center">
@@ -735,7 +789,9 @@ export default function EmployeeAttendancePage() {
                         disabled={checkInLoading}
                         className="w-full"
                       >
-                        {checkInLoading ? 'Iniciando cámara...' : 'Activar Cámara'}
+                        {checkInLoading
+                          ? 'Iniciando cámara...'
+                          : 'Activar Cámara'}
                       </Button>
                     </div>
                   )}
@@ -772,17 +828,23 @@ export default function EmployeeAttendancePage() {
                         />
                       </div>
                       <div className="flex gap-2">
-                        <Button onClick={() => setCameraStep('location')} className="flex-1">
+                        <Button
+                          onClick={() => setCameraStep('location')}
+                          className="flex-1"
+                        >
                           Continuar
                         </Button>
-                        <Button variant="outline" onClick={() => {
-                          if (photoUrl) {
-                            URL.revokeObjectURL(photoUrl);
-                            setPhotoUrl(null);
-                          }
-                          setPhotoBlob(null);
-                          startCamera();
-                        }}>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            if (photoUrl) {
+                              URL.revokeObjectURL(photoUrl);
+                              setPhotoUrl(null);
+                            }
+                            setPhotoBlob(null);
+                            startCamera();
+                          }}
+                        >
                           Repetir
                         </Button>
                       </div>
@@ -819,7 +881,9 @@ export default function EmployeeAttendancePage() {
                     disabled={checkInLoading}
                     className="w-full"
                   >
-                    {checkInLoading ? 'Obteniendo ubicación...' : 'Verificar Ubicación'}
+                    {checkInLoading
+                      ? 'Obteniendo ubicación...'
+                      : 'Verificar Ubicación'}
                   </Button>
 
                   <Button
@@ -840,36 +904,56 @@ export default function EmployeeAttendancePage() {
                     <CheckCircleIcon className="h-8 w-8 text-blue-600" />
                   </div>
                   <CardTitle className="text-xl">Confirmar Registro</CardTitle>
-                  <p className="text-gray-600">Revisa la información antes de confirmar</p>
+                  <p className="text-gray-600">
+                    Revisa la información antes de confirmar
+                  </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Empleado:</span>
+                      <span className="text-sm font-medium text-gray-600">
+                        Empleado:
+                      </span>
                       <span className="font-medium">
                         {employee.firstName} {employee.lastName}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Fecha:</span>
-                      <span className="font-medium">{formatDate(new Date())}</span>
+                      <span className="text-sm font-medium text-gray-600">
+                        Fecha:
+                      </span>
+                      <span className="font-medium">
+                        {formatDate(new Date())}
+                      </span>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Hora:</span>
-                      <span className="font-medium">{formatTime(new Date())}</span>
+                      <span className="text-sm font-medium text-gray-600">
+                        Hora:
+                      </span>
+                      <span className="font-medium">
+                        {formatTime(new Date())}
+                      </span>
                     </div>
 
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-600">Estado:</span>
-                      <Badge className="bg-green-100 text-green-800">Presente</Badge>
+                      <span className="text-sm font-medium text-gray-600">
+                        Estado:
+                      </span>
+                      <Badge className="bg-green-100 text-green-800">
+                        Presente
+                      </Badge>
                     </div>
 
                     {location && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-gray-600">Ubicación:</span>
-                        <span className="text-sm text-green-600">✓ Verificada</span>
+                        <span className="text-sm font-medium text-gray-600">
+                          Ubicación:
+                        </span>
+                        <span className="text-sm text-green-600">
+                          ✓ Verificada
+                        </span>
                       </div>
                     )}
                   </div>

@@ -17,11 +17,13 @@ import {
   employeeService,
   getEmployeeAttendanceByPeriod,
 } from '@/services/firebase/genericServices';
+import { uploadAttendancePhoto } from '@/services/firebase/uploadImage';
 import {
   AttendanceBusinessRules,
   AttendanceValidator,
 } from '@/utils/attendanceValidation';
 import {
+  CameraIcon,
   CheckCircleIcon,
   ClockArrowDownIcon,
   ClockIcon,
@@ -31,9 +33,9 @@ import {
 export default function CheckOutPage() {
   const router = useRouter();
   const toast = useToast();
-  const [step, setStep] = useState<'auth' | 'review' | 'confirm' | 'success'>(
-    'auth',
-  );
+  const [step, setStep] = useState<
+    'auth' | 'review' | 'camera' | 'preview' | 'confirm' | 'success'
+  >('auth');
   const [loading, setLoading] = useState(false);
 
   // Authentication data
@@ -46,6 +48,11 @@ export default function CheckOutPage() {
     null,
   );
   const [notes, setNotes] = useState('');
+
+  // Camera data
+  const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
 
   // Location data
   const [location, setLocation] = useState<{
@@ -172,21 +179,124 @@ export default function CheckOutPage() {
     }
   };
 
+  const proceedToCamera = () => {
+    setStep('camera');
+  };
+
+  // Camera functions
+  const startCamera = async () => {
+    try {
+      setLoading(true);
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'user',
+        },
+      });
+
+      setCameraStream(stream);
+
+      // Configurar video
+      setTimeout(() => {
+        const video = document.getElementById(
+          'camera-video',
+        ) as HTMLVideoElement;
+        if (video) {
+          video.srcObject = stream;
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Error accediendo a la cámara:', error);
+      toast.error({
+        title: 'Error de cámara',
+        description: 'No se pudo acceder a la cámara. Verifica los permisos',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const capturePhoto = () => {
+    try {
+      const video = document.getElementById('camera-video') as HTMLVideoElement;
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+
+      if (!video || !context) {
+        toast.error({
+          title: 'Error de captura',
+          description: 'Error al acceder al video',
+        });
+        return;
+      }
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0);
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            setPhotoBlob(blob);
+            setPhotoUrl(URL.createObjectURL(blob));
+
+            // Detener cámara
+            if (cameraStream) {
+              cameraStream.getTracks().forEach((track) => track.stop());
+              setCameraStream(null);
+            }
+
+            setStep('preview');
+          }
+        },
+        'image/jpeg',
+        0.8,
+      );
+    } catch (error) {
+      console.error('Error capturando foto:', error);
+      toast.error({
+        title: 'Error de captura',
+        description: 'Error al tomar la foto',
+      });
+    }
+  };
+
   const proceedToConfirm = () => {
     setStep('confirm');
   };
 
+  // Limpiar recursos
+  const cleanup = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((track) => track.stop());
+      setCameraStream(null);
+    }
+    if (photoUrl) {
+      URL.revokeObjectURL(photoUrl);
+      setPhotoUrl(null);
+    }
+  };
+
   const confirmCheckOut = async () => {
-    if (!employee || !todayAttendance) {
+    if (!employee || !todayAttendance || !photoBlob) {
       toast.error({
         title: 'Información incompleta',
-        description: 'Faltan datos para completar el registro',
+        description:
+          'Faltan datos para completar el registro (incluida la foto)',
       });
       return;
     }
 
     try {
       setLoading(true);
+
+      // Subir foto a Firebase Storage
+      const uploadedPhotoUrl = await uploadAttendancePhoto(
+        photoBlob,
+        employee.id,
+      );
 
       const now = new Date();
       const checkInTime = new Date(todayAttendance.checkIn!);
@@ -196,6 +306,10 @@ export default function CheckOutPage() {
         checkIn: checkInTime,
         checkOut: now,
         status: AttendanceStatusEnum.PRESENT,
+        totalHours: 0,
+        overtimeHours: 0,
+        createdAt: now,
+        updatedAt: now,
       });
 
       // Determine final status
@@ -213,6 +327,7 @@ export default function CheckOutPage() {
       const updatedAttendance = {
         ...todayAttendance,
         checkOut: now,
+        checkOutPhotoUrl: uploadedPhotoUrl, // Add checkout photo URL
         status: finalStatus,
         hoursWorked: hoursCalculation.totalHours,
         overtimeHours: hoursCalculation.overtimeHours,
@@ -227,6 +342,7 @@ export default function CheckOutPage() {
 
       await attendanceService.update(todayAttendance.id, updatedAttendance);
 
+      cleanup();
       setStep('success');
       toast.success({
         title: '¡Salida registrada!',
@@ -455,7 +571,7 @@ export default function CheckOutPage() {
                 />
               </div>
 
-              <Button onClick={proceedToConfirm} className="w-full">
+              <Button onClick={proceedToCamera} className="w-full">
                 Continuar
               </Button>
 
@@ -466,6 +582,122 @@ export default function CheckOutPage() {
               >
                 Volver
               </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Camera Step */}
+        {step === 'camera' && (
+          <Card className="shadow-lg">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CameraIcon className="h-8 w-8 text-purple-600" />
+              </div>
+              <CardTitle className="text-xl">Foto Obligatoria</CardTitle>
+              <p className="text-gray-600">
+                {employee?.firstName} {employee?.lastName}
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!cameraStream && (
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-4">
+                    Es obligatorio tomar una foto para registrar tu salida
+                  </p>
+                  <Button
+                    onClick={startCamera}
+                    disabled={loading}
+                    className="w-full"
+                  >
+                    {loading ? 'Iniciando cámara...' : 'Activar Cámara'}
+                  </Button>
+                </div>
+              )}
+
+              {cameraStream && (
+                <div className="text-center space-y-4">
+                  <div className="relative">
+                    <video
+                      id="camera-video"
+                      autoPlay
+                      playsInline
+                      className="w-full h-64 object-cover rounded-lg bg-gray-100"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={capturePhoto} className="flex-1">
+                      <CameraIcon className="h-4 w-4 mr-2" />
+                      Tomar Foto
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        cleanup();
+                        setStep('review');
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Preview Step */}
+        {step === 'preview' && photoUrl && (
+          <Card className="shadow-lg">
+            <CardHeader className="text-center">
+              <CardTitle className="text-xl">Confirmar Foto</CardTitle>
+              <p className="text-gray-600">
+                {employee?.firstName} {employee?.lastName}
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center">
+                <img
+                  src={photoUrl}
+                  alt="Foto capturada"
+                  className="w-full h-64 object-cover rounded-lg mb-4"
+                />
+
+                <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                  <div className="text-sm text-gray-600">
+                    <p>
+                      <strong>Empleado:</strong> {employee?.firstName}{' '}
+                      {employee?.lastName}
+                    </p>
+                    <p>
+                      <strong>Fecha:</strong>{' '}
+                      {new Date().toLocaleDateString('es-ES')}
+                    </p>
+                    <p>
+                      <strong>Hora:</strong>{' '}
+                      {new Date().toLocaleTimeString('es-ES')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={proceedToConfirm}
+                  disabled={loading}
+                  className="flex-1"
+                >
+                  Continuar
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    cleanup();
+                    setStep('camera');
+                  }}
+                >
+                  Repetir Foto
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -588,12 +820,14 @@ export default function CheckOutPage() {
                 <Button
                   variant="outline"
                   onClick={() => {
+                    cleanup();
                     setStep('auth');
                     setEmployeeId('');
                     setPin('');
                     setEmployee(null);
                     setTodayAttendance(null);
                     setNotes('');
+                    setPhotoBlob(null);
                   }}
                   className="w-full"
                 >
