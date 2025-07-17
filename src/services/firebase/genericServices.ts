@@ -5,9 +5,9 @@ import {
   doc,
   getDoc,
   getDocs,
+  query,
   setDoc,
   updateDoc,
-  query,
   where,
 } from 'firebase/firestore';
 import { convertFirebaseDate } from '@/utils/dateHelpers';
@@ -354,6 +354,26 @@ export const getActiveEmployees = async (): Promise<Employee[]> => {
     return snapshot.docs.map(
       (doc) => ({ id: doc.id, ...doc.data() }) as Employee,
     );
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getEmployeeByEmail = async (
+  email: string,
+): Promise<Employee | null> => {
+  try {
+    const q = query(
+      collection(db, 'employees'),
+      where('email', '==', email.toLowerCase().trim()),
+    );
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      return null;
+    }
+    const doc = snapshot.docs[0];
+    return { id: doc.id, ...doc.data() } as Employee;
   } catch (error) {
     throw error;
   }

@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -18,7 +17,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AttendanceStatusEnum } from '@/types/enumShared';
 import { CreateAttendanceData } from '@/types/attendance';
 import { attendanceService } from '@/services/firebase/genericServices';
-import { attendanceSchema, AttendanceFormValues } from '@/schemas/attendanceSchema';
+import {
+  AttendanceFormValues,
+  attendanceSchema,
+} from '@/schemas/attendanceSchema';
 
 interface AttendanceFormProps {
   employeeId: string;
@@ -51,7 +53,7 @@ export default function AttendanceForm({
       date: initialData?.date || new Date(),
       status: initialData?.status || AttendanceStatusEnum.PRESENT,
       notes: initialData?.notes || '',
-      location: initialData?.location || '',
+      location: initialData?.location || undefined,
     },
   });
 
@@ -69,13 +71,15 @@ export default function AttendanceForm({
       if (data.checkIn && data.checkOut) {
         const checkInTime = new Date(data.checkIn);
         const checkOutTime = new Date(data.checkOut);
-        totalHours = (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
-        
+        totalHours =
+          (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
+
         // Calculate break time if provided
         if (data.breakStart && data.breakEnd) {
           const breakStart = new Date(data.breakStart);
           const breakEnd = new Date(data.breakEnd);
-          const breakTime = (breakEnd.getTime() - breakStart.getTime()) / (1000 * 60 * 60);
+          const breakTime =
+            (breakEnd.getTime() - breakStart.getTime()) / (1000 * 60 * 60);
           totalHours -= breakTime;
         }
 
@@ -92,16 +96,13 @@ export default function AttendanceForm({
         breakEnd: data.breakEnd ? new Date(data.breakEnd) : undefined,
         status: data.status as AttendanceStatusEnum,
         notes: data.notes || undefined,
-        location: data.location || undefined,
-      };
-
-      await attendanceService.create({
-        ...attendanceData,
         totalHours,
         overtimeHours,
+        location: data.location || undefined,
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
+      };
+      await attendanceService.create(attendanceData);
 
       onSuccess?.();
     } catch (err) {
@@ -142,7 +143,9 @@ export default function AttendanceForm({
                 className={errors.date ? 'border-red-500' : ''}
               />
               {errors.date && (
-                <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.date.message}
+                </p>
               )}
             </div>
 
@@ -150,30 +153,46 @@ export default function AttendanceForm({
               <Label htmlFor="status">Estado *</Label>
               <Select
                 value={watchedStatus}
-                onValueChange={(value) => setValue('status', value as AttendanceStatusEnum)}
+                onValueChange={(value) =>
+                  setValue('status', value as AttendanceStatusEnum)
+                }
               >
-                <SelectTrigger className={errors.status ? 'border-red-500' : ''}>
+                <SelectTrigger
+                  className={errors.status ? 'border-red-500' : ''}
+                >
                   <SelectValue placeholder="Selecciona un estado" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={AttendanceStatusEnum.PRESENT}>Presente</SelectItem>
-                  <SelectItem value={AttendanceStatusEnum.ABSENT}>Ausente</SelectItem>
-                  <SelectItem value={AttendanceStatusEnum.LATE}>Tardanza</SelectItem>
+                  <SelectItem value={AttendanceStatusEnum.PRESENT}>
+                    Presente
+                  </SelectItem>
+                  <SelectItem value={AttendanceStatusEnum.ABSENT}>
+                    Ausente
+                  </SelectItem>
+                  <SelectItem value={AttendanceStatusEnum.LATE}>
+                    Tardanza
+                  </SelectItem>
                   <SelectItem value={AttendanceStatusEnum.EARLY_DEPARTURE}>
                     Salida Temprana
                   </SelectItem>
-                  <SelectItem value={AttendanceStatusEnum.HOLIDAY}>Feriado</SelectItem>
+                  <SelectItem value={AttendanceStatusEnum.HOLIDAY}>
+                    Feriado
+                  </SelectItem>
                   <SelectItem value={AttendanceStatusEnum.SICK_LEAVE}>
                     Permiso Médico
                   </SelectItem>
-                  <SelectItem value={AttendanceStatusEnum.VACATION}>Vacaciones</SelectItem>
+                  <SelectItem value={AttendanceStatusEnum.VACATION}>
+                    Vacaciones
+                  </SelectItem>
                   <SelectItem value={AttendanceStatusEnum.MEDICALREST}>
                     Reposo Médico
                   </SelectItem>
                 </SelectContent>
               </Select>
               {errors.status && (
-                <p className="text-red-500 text-sm mt-1">{errors.status.message}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.status.message}
+                </p>
               )}
             </div>
           </div>
@@ -192,7 +211,9 @@ export default function AttendanceForm({
                     className={errors.checkIn ? 'border-red-500' : ''}
                   />
                   {errors.checkIn && (
-                    <p className="text-red-500 text-sm mt-1">{errors.checkIn.message}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.checkIn.message}
+                    </p>
                   )}
                 </div>
 
@@ -204,7 +225,9 @@ export default function AttendanceForm({
                     className={errors.checkOut ? 'border-red-500' : ''}
                   />
                   {errors.checkOut && (
-                    <p className="text-red-500 text-sm mt-1">{errors.checkOut.message}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.checkOut.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -218,7 +241,9 @@ export default function AttendanceForm({
                     className={errors.breakStart ? 'border-red-500' : ''}
                   />
                   {errors.breakStart && (
-                    <p className="text-red-500 text-sm mt-1">{errors.breakStart.message}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.breakStart.message}
+                    </p>
                   )}
                 </div>
 
@@ -230,24 +255,14 @@ export default function AttendanceForm({
                     className={errors.breakEnd ? 'border-red-500' : ''}
                   />
                   {errors.breakEnd && (
-                    <p className="text-red-500 text-sm mt-1">{errors.breakEnd.message}</p>
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.breakEnd.message}
+                    </p>
                   )}
                 </div>
               </div>
             </div>
           )}
-
-          <div>
-            <Label htmlFor="location">Ubicación</Label>
-            <Input
-              {...register('location')}
-              placeholder="Ej: Oficina Principal, Sucursal Norte, etc."
-              className={errors.location ? 'border-red-500' : ''}
-            />
-            {errors.location && (
-              <p className="text-red-500 text-sm mt-1">{errors.location.message}</p>
-            )}
-          </div>
 
           <div>
             <Label htmlFor="notes">Notas</Label>
@@ -258,7 +273,9 @@ export default function AttendanceForm({
               className={errors.notes ? 'border-red-500' : ''}
             />
             {errors.notes && (
-              <p className="text-red-500 text-sm mt-1">{errors.notes.message}</p>
+              <p className="text-red-500 text-sm mt-1">
+                {errors.notes.message}
+              </p>
             )}
           </div>
 

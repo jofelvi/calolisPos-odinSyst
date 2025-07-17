@@ -149,8 +149,43 @@ export default function PayrollForm({
     setError(null);
 
     try {
-      const payrollId =
-        await payrollCalculationService.createPayroll(payrollCalculation);
+      // Actualizar el cálculo con los valores del formulario
+      const updatedPayrollCalculation = {
+        ...payrollCalculation,
+        salary: {
+          ...payrollCalculation.salary,
+          bonuses: data.bonuses || 0,
+          commissions: data.commissions || 0,
+        },
+        deductions: {
+          ...payrollCalculation.deductions,
+          other: data.additionalDeductions || 0,
+        },
+      };
+
+      // Recalcular gross pay y net pay con los nuevos valores
+      const newGrossPay =
+        updatedPayrollCalculation.salary.baseSalary +
+        updatedPayrollCalculation.salary.overtime +
+        updatedPayrollCalculation.salary.bonuses +
+        updatedPayrollCalculation.salary.commissions;
+
+      const newTotalDeductions =
+        updatedPayrollCalculation.deductions.taxes +
+        updatedPayrollCalculation.deductions.socialSecurity +
+        updatedPayrollCalculation.deductions.insurance +
+        updatedPayrollCalculation.deductions.other;
+
+      const finalPayrollCalculation = {
+        ...updatedPayrollCalculation,
+        grossPay: newGrossPay,
+        totalDeductions: newTotalDeductions,
+        netPay: newGrossPay - newTotalDeductions,
+      };
+
+      const payrollId = await payrollCalculationService.createPayroll(
+        finalPayrollCalculation,
+      );
       onSuccess?.(payrollId);
     } catch (err) {
       console.error('Error saving payroll:', err);

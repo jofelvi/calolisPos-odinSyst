@@ -1,43 +1,54 @@
 import * as yup from 'yup';
 import { AttendanceStatusEnum } from '@/types/enumShared';
 
-export const attendanceSchema = yup.object({
-  employeeId: yup.string().required('Empleado es requerido'),
-  date: yup.date().required('Fecha es requerida'),
-  checkIn: yup.date().nullable(),
-  checkOut: yup.date().nullable(),
-  breakStart: yup.date().nullable(),
-  breakEnd: yup.date().nullable(),
+export const attendanceSchema = yup.object().shape({
+  employeeId: yup.string().required('Empleado es requerido').defined(),
+  date: yup.date().required('Fecha es requerida').defined(),
+  checkIn: yup.date().nullable().defined(),
+  checkOut: yup.date().nullable().defined(),
+  breakStart: yup.date().nullable().defined(),
+  breakEnd: yup.date().nullable().defined(),
+  totalHours: yup.number().min(0, 'Total de horas debe ser positivo').required().defined(),
+  overtimeHours: yup.number().min(0, 'Horas extra debe ser positivo').required().defined(),
+  hoursWorked: yup.number().min(0, 'Horas trabajadas debe ser positivo').nullable().defined(),
   status: yup
     .string()
     .oneOf(Object.values(AttendanceStatusEnum))
-    .required('Estado es requerido'),
-  notes: yup.string(),
-  location: yup.string(),
-});
-
-export const attendanceEditSchema = yup.object({
-  checkIn: yup.date().nullable(),
-  checkOut: yup.date().nullable(),
-  breakStart: yup.date().nullable(),
-  breakEnd: yup.date().nullable(),
-  status: yup
-    .string()
-    .oneOf(Object.values(AttendanceStatusEnum))
-    .required('Estado es requerido'),
-  notes: yup.string(),
-  location: yup.string(),
-});
-
-export const attendanceReportSchema = yup.object({
-  employeeId: yup.string().required('Empleado es requerido'),
-  startDate: yup.date().required('Fecha de inicio es requerida'),
-  endDate: yup
-    .date()
-    .required('Fecha de fin es requerida')
-    .min(yup.ref('startDate'), 'La fecha de fin debe ser posterior a la fecha de inicio'),
+    .required('Estado es requerido')
+    .defined(),
+  notes: yup.string().nullable().defined(),
+  location: yup
+    .object({
+      latitude: yup.number().nullable().defined(),
+      longitude: yup.number().nullable().defined(),
+      accuracy: yup.number().nullable().defined(),
+      checkIn: yup
+        .object({
+          latitude: yup.number().required().defined(),
+          longitude: yup.number().required().defined(),
+          accuracy: yup.number().required().defined(),
+        })
+        .nullable()
+        .defined(),
+      checkOut: yup
+        .object({
+          latitude: yup.number().required().defined(),
+          longitude: yup.number().required().defined(),
+          accuracy: yup.number().required().defined(),
+        })
+        .nullable()
+        .defined(),
+    })
+    .nullable()
+    .defined(),
+  device: yup
+    .object({
+      userAgent: yup.string().nullable().defined(),
+      timestamp: yup.number().nullable().defined(),
+      ipAddress: yup.string().nullable().defined(),
+    })
+    .nullable()
+    .defined(),
 });
 
 export type AttendanceFormValues = yup.InferType<typeof attendanceSchema>;
-export type AttendanceEditFormValues = yup.InferType<typeof attendanceEditSchema>;
-export type AttendanceReportFormValues = yup.InferType<typeof attendanceReportSchema>;

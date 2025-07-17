@@ -106,9 +106,11 @@ export class AttendanceValidator {
   /**
    * Calculate automatic status based on times
    */
-  static calculateStatus(data: CreateAttendanceData): AttendanceStatusEnum {
+  static calculateStatus(
+    data: Partial<CreateAttendanceData>,
+  ): AttendanceStatusEnum {
     if (!data.checkIn) {
-      return data.status;
+      return <AttendanceStatusEnum>data.status;
     }
 
     const checkInTime = new Date(data.checkIn);

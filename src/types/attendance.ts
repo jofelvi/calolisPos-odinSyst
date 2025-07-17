@@ -15,19 +15,19 @@ export interface Attendance {
   status: AttendanceStatusEnum;
   notes?: string;
   location?: {
-    latitude?: number;
-    longitude?: number;
-    accuracy?: number;
+    latitude?: number | null;
+    longitude?: number | null;
+    accuracy?: number | null;
     checkIn?: {
       latitude: number;
       longitude: number;
       accuracy: number;
-    };
+    } | null;
     checkOut?: {
       latitude: number;
       longitude: number;
       accuracy: number;
-    };
+    } | null;
   };
   device?: {
     userAgent?: string;
@@ -48,25 +48,30 @@ export interface CreateAttendanceData {
   status: AttendanceStatusEnum;
   notes?: string;
   location?: {
-    latitude?: number;
-    longitude?: number;
-    accuracy?: number;
+    latitude?: number | null;
+    longitude?: number | null;
+    accuracy?: number | null;
     checkIn?: {
       latitude: number;
       longitude: number;
       accuracy: number;
-    };
+    } | null;
     checkOut?: {
       latitude: number;
       longitude: number;
       accuracy: number;
-    };
+    } | null;
   };
   device?: {
     userAgent?: string;
     timestamp?: number;
     ipAddress?: string;
   };
+  // Propiedades que se calculan y añaden antes de crear el registro
+  totalHours: number;
+  overtimeHours: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface AttendanceReport {

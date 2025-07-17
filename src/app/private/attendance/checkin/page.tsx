@@ -13,14 +13,16 @@ import { Attendance, CreateAttendanceData } from '@/types/attendance';
 import { AttendanceStatusEnum } from '@/types/enumShared';
 import {
   attendanceService,
-  employeeService,
+  getEmployeeAttendanceByDate,
   getEmployeeAttendanceByPeriod,
+  getEmployeeByEmail,
 } from '@/services/firebase/genericServices';
 import {
   AttendanceBusinessRules,
   AttendanceValidator,
 } from '@/utils/attendanceValidation';
 import {
+  CameraIcon,
   CheckCircleIcon,
   ClockIcon,
   MapPinIcon,
@@ -33,15 +35,20 @@ import {
 export default function CheckInPage() {
   const router = useRouter();
   const toast = useToast();
-  const [step, setStep] = useState<'auth' | 'location' | 'confirm' | 'success'>(
-    'auth',
-  );
+  const [step, setStep] = useState<
+    'auth' | 'camera' | 'location' | 'confirm' | 'success'
+  >('auth');
   const [loading, setLoading] = useState(false);
 
   // Authentication data
-  const [employeeId, setEmployeeId] = useState('');
+  const [email, setEmail] = useState('');
   const [pin, setPin] = useState('');
   const [employee, setEmployee] = useState<Employee | null>(null);
+
+  // Camera data
+  const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
 
   // Location data
   const [location, setLocation] = useState<{
@@ -71,11 +78,111 @@ export default function CheckInPage() {
     });
   }, []);
 
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [cameraStream]);
+
+  const startCamera = async () => {
+    try {
+      setLoading(true);
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'user',
+        },
+      });
+
+      setCameraStream(stream);
+
+      // Get video element and set stream
+      const video = document.getElementById('camera-video') as HTMLVideoElement;
+      if (video) {
+        video.srcObject = stream;
+      }
+
+      toast.success({
+        title: 'Cámara activada',
+        description: 'Presiona el botón para tomar tu foto',
+      });
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      toast.error({
+        title: 'Error de cámara',
+        description: 'No se pudo acceder a la cámara. Verifica los permisos.',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const capturePhoto = async () => {
+    try {
+      const video = document.getElementById('camera-video') as HTMLVideoElement;
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+
+      if (!video || !context) {
+        throw new Error('No se pudo acceder al video o canvas');
+      }
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0);
+
+      // Convert to blob
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            setPhotoBlob(blob);
+            setPhotoUrl(URL.createObjectURL(blob));
+
+            // Stop camera stream
+            if (cameraStream) {
+              cameraStream.getTracks().forEach((track) => track.stop());
+              setCameraStream(null);
+            }
+
+            setStep('location');
+            toast.success({
+              title: 'Foto capturada',
+              description: 'Foto tomada correctamente',
+            });
+          }
+        },
+        'image/jpeg',
+        0.8,
+      );
+    } catch (error) {
+      console.error('Error capturing photo:', error);
+      toast.error({
+        title: 'Error al capturar foto',
+        description: 'No se pudo tomar la foto. Intenta nuevamente.',
+      });
+    }
+  };
+
+  const retakePhoto = () => {
+    setPhotoBlob(null);
+    if (photoUrl) {
+      URL.revokeObjectURL(photoUrl);
+      setPhotoUrl(null);
+    }
+    setStep('camera');
+    startCamera();
+  };
+
   const handleAuthentication = async () => {
-    if (!employeeId || !pin) {
+    if (!email || !pin) {
       toast.error({
         title: 'Error de Validación',
-        description: 'Por favor ingresa tu ID de empleado y PIN',
+        description: 'Por favor ingresa tu email y PIN',
       });
       return;
     }
@@ -83,18 +190,17 @@ export default function CheckInPage() {
     try {
       setLoading(true);
 
-      // Verify employee exists and PIN is correct
-      const employeeData = await employeeService.getById(employeeId);
+      // Verify employee exists by email
+      const employeeData = await getEmployeeByEmail(email);
       if (!employeeData) {
         toast.error({
           title: 'Empleado no encontrado',
-          description: 'Verifica que el ID sea correcto',
+          description: 'Verifica que el email sea correcto',
         });
         return;
       }
 
-      // In a real implementation, you would hash and compare the PIN
-      // For this example, we'll assume the PIN is stored in the employee record
+      // Verify PIN
       if (employeeData.pin && employeeData.pin !== pin) {
         toast.error({
           title: 'PIN incorrecto',
@@ -112,13 +218,27 @@ export default function CheckInPage() {
         return;
       }
 
-      // Get existing attendances for validation (last 30 days)
+      // Check if already checked in today
       const today = new Date();
+      const todayAttendance = await getEmployeeAttendanceByDate(
+        employeeData.id,
+        today,
+      );
+
+      if (todayAttendance) {
+        toast.error({
+          title: 'Ya registraste tu entrada',
+          description: 'Solo puedes registrar una entrada por día',
+        });
+        return;
+      }
+
+      // Get existing attendances for validation (last 30 days)
       const startDate = new Date(today);
       startDate.setDate(today.getDate() - 30);
 
       const attendances = await getEmployeeAttendanceByPeriod(
-        employeeId,
+        employeeData.id,
         startDate,
         today,
       );
@@ -126,7 +246,7 @@ export default function CheckInPage() {
 
       // Check if can check in
       const canCheckIn = AttendanceBusinessRules.canCheckIn(
-        employeeId,
+        employeeData.id,
         attendances,
       );
       if (!canCheckIn.canCheckIn) {
@@ -139,12 +259,13 @@ export default function CheckInPage() {
       }
 
       setEmployee(employeeData);
-      setStep('location');
+      setStep('camera');
       toast.success({
         title: 'Identidad verificada',
         description: `Bienvenido ${employeeData.firstName}`,
       });
-    } catch {
+    } catch (error) {
+      console.error('Error during authentication:', error);
       toast.error({
         title: 'Error de conexión',
         description: 'Error al verificar credenciales',
@@ -228,6 +349,10 @@ export default function CheckInPage() {
           ipAddress: deviceInfo.ipAddress,
         },
         notes: 'Registro automático de entrada',
+        totalHours: 0,
+        overtimeHours: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       // Validate attendance data
@@ -367,13 +492,13 @@ export default function CheckInPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="employeeId">ID de Empleado</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="employeeId"
-                  type="text"
-                  placeholder="Ingresa tu ID"
-                  value={employeeId}
-                  onChange={(e) => setEmployeeId(e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder="tu-email@empresa.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="mt-1"
                 />
               </div>
@@ -407,6 +532,102 @@ export default function CheckInPage() {
                   Volver al Panel
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Camera Step */}
+        {step === 'camera' && (
+          <Card className="shadow-lg">
+            <CardHeader className="text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CameraIcon className="h-8 w-8 text-purple-600" />
+              </div>
+              <CardTitle className="text-2xl">Tomar Foto</CardTitle>
+              <p className="text-gray-600">
+                Captura tu foto para completar el registro
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <UserIcon className="h-5 w-5 text-gray-500" />
+                  <span className="font-medium">
+                    {employee?.firstName} {employee?.lastName}
+                  </span>
+                </div>
+              </div>
+
+              {!cameraStream && !photoUrl && (
+                <div className="text-center">
+                  <p className="text-sm text-gray-600 mb-4">
+                    Necesitamos tomar una foto tuya para verificar tu identidad
+                  </p>
+                  <Button
+                    onClick={startCamera}
+                    disabled={loading}
+                    className="w-full"
+                  >
+                    {loading ? 'Iniciando cámara...' : 'Activar Cámara'}
+                  </Button>
+                </div>
+              )}
+
+              {cameraStream && !photoUrl && (
+                <div className="text-center space-y-4">
+                  <div className="relative">
+                    <video
+                      id="camera-video"
+                      autoPlay
+                      playsInline
+                      className="w-full h-64 object-cover rounded-lg bg-gray-100"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={capturePhoto} className="flex-1">
+                      <CameraIcon className="h-4 w-4 mr-2" />
+                      Tomar Foto
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (cameraStream) {
+                          cameraStream
+                            .getTracks()
+                            .forEach((track) => track.stop());
+                          setCameraStream(null);
+                        }
+                        setStep('auth');
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {photoUrl && (
+                <div className="text-center space-y-4">
+                  <div className="relative">
+                    <img
+                      src={photoUrl}
+                      alt="Foto capturada"
+                      className="w-full h-64 object-cover rounded-lg"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => setStep('location')}
+                      className="flex-1"
+                    >
+                      Continuar
+                    </Button>
+                    <Button variant="outline" onClick={retakePhoto}>
+                      Repetir Foto
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
@@ -588,10 +809,19 @@ export default function CheckInPage() {
                   variant="outline"
                   onClick={() => {
                     setStep('auth');
-                    setEmployeeId('');
+                    setEmail('');
                     setPin('');
                     setEmployee(null);
                     setLocation(null);
+                    setPhotoBlob(null);
+                    if (photoUrl) {
+                      URL.revokeObjectURL(photoUrl);
+                      setPhotoUrl(null);
+                    }
+                    if (cameraStream) {
+                      cameraStream.getTracks().forEach((track) => track.stop());
+                      setCameraStream(null);
+                    }
                   }}
                   className="w-full"
                 >
