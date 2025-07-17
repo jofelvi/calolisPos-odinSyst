@@ -359,7 +359,11 @@ export default function CheckOutPage() {
   };
 
   const formatTime = (date: Date | string) => {
-    return new Date(date).toLocaleTimeString('es-ES', {
+    const dateObj = date instanceof Date ? date : new Date(date);
+    if (isNaN(dateObj.getTime())) {
+      return 'N/A';
+    }
+    return dateObj.toLocaleTimeString('es-ES', {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',

@@ -15,13 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import SelectCustom from '@/components/shared/selectCustom/SelectCustom';
 import {
   AlertCircleIcon,
   ArrowLeftIcon,
@@ -426,10 +420,25 @@ export default function EmployeeAttendancePage() {
     );
   };
 
-  const formatTime = (date: Date | string | undefined) => {
+  const formatTime = (date: Date | string | undefined | any) => {
     if (!date) return '-';
-    const d = new Date(date);
-    return d.toLocaleTimeString('es-ES', {
+    
+    let dateObj: Date;
+    
+    // Handle Firestore Timestamp objects
+    if (date && typeof date === 'object' && typeof date.toDate === 'function') {
+      dateObj = date.toDate();
+    } else if (date instanceof Date) {
+      dateObj = date;
+    } else {
+      dateObj = new Date(date);
+    }
+    
+    if (isNaN(dateObj.getTime())) {
+      return '-';
+    }
+    
+    return dateObj.toLocaleTimeString('es-ES', {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -452,18 +461,6 @@ export default function EmployeeAttendancePage() {
       const attendanceDate = new Date(a.date);
       return attendanceDate.toDateString() === todayString;
     });
-    console.log(attendances);
-    // Debug log
-    console.log('=== DEBUG getTodayAttendance ===');
-    console.log('Today string:', todayString);
-    console.log('All attendances:', attendances);
-    console.log('Found today attendance:', found);
-    if (found) {
-      console.log('Found checkIn:', found.checkIn);
-      console.log('Found checkOut:', found.checkOut);
-      console.log('Has checkOut?', !!found.checkOut);
-    }
-    console.log('================================');
 
     return found;
   };
@@ -557,24 +554,18 @@ export default function EmployeeAttendancePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="month">Mes</Label>
-              <Select
+              <SelectCustom
+                id="month"
+                label="Mes"
                 value={selectedMonth.toString()}
-                onValueChange={(value) => setSelectedMonth(parseInt(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <SelectItem key={i + 1} value={(i + 1).toString()}>
-                      {new Date(0, i).toLocaleDateString('es-ES', {
-                        month: 'long',
-                      })}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setSelectedMonth(parseInt(value))}
+                options={Array.from({ length: 12 }, (_, i) => ({
+                  value: (i + 1).toString(),
+                  label: new Date(0, i).toLocaleDateString('es-ES', {
+                    month: 'long',
+                  })
+                }))}
+              />
             </div>
 
             <div>
