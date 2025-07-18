@@ -8,9 +8,21 @@ export const attendanceSchema = yup.object().shape({
   checkOut: yup.date().nullable().defined(),
   breakStart: yup.date().nullable().defined(),
   breakEnd: yup.date().nullable().defined(),
-  totalHours: yup.number().min(0, 'Total de horas debe ser positivo').required().defined(),
-  overtimeHours: yup.number().min(0, 'Horas extra debe ser positivo').required().defined(),
-  hoursWorked: yup.number().min(0, 'Horas trabajadas debe ser positivo').nullable().defined(),
+  totalHours: yup
+    .number()
+    .min(0, 'Total de horas debe ser positivo')
+    .required()
+    .defined(),
+  overtimeHours: yup
+    .number()
+    .min(0, 'Horas extra debe ser positivo')
+    .required()
+    .defined(),
+  hoursWorked: yup
+    .number()
+    .min(0, 'Horas trabajadas debe ser positivo')
+    .nullable()
+    .defined(),
   status: yup
     .string()
     .oneOf(Object.values(AttendanceStatusEnum))

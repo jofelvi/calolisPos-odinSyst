@@ -4,14 +4,16 @@ import { getAuth } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyA9RlCTktrgCh-E_zex9CPJE1LfBbK6e4E',
-  authDomain: 'odinsysnext.firebaseapp.com',
-  projectId: 'odinsysnext',
-  storageBucket: 'odinsysnext.firebasestorage.app',
-  messagingSenderId: '480159663912',
-  appId: '1:480159663912:web:1a105ccf7dd364af54321d',
-  measurementId: 'G-PS3MTXSJFR',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY?.trim(),
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN?.trim(),
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID?.trim(),
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET?.trim(),
+  messagingSenderId:
+    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID?.trim(),
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID?.trim(),
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID?.trim(),
 };
+
 let firebaseApp;
 
 if (!getApps().length) {
@@ -19,6 +21,7 @@ if (!getApps().length) {
 } else {
   firebaseApp = getApps()[0]; // if already initialized, use that one
 }
+
 // Initialize Firestore and Auth
 const db = getFirestore(firebaseApp);
 const auth = getAuth(firebaseApp);

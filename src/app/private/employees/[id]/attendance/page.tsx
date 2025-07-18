@@ -45,7 +45,7 @@ export default function EmployeeAttendancePage() {
   const [cameraStep, setCameraStep] = useState<
     'camera' | 'location' | 'confirm'
   >('camera');
-  const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
+  const [_photoBlob, setPhotoBlob] = useState<Blob | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [location, setLocation] = useState<{
@@ -422,9 +422,9 @@ export default function EmployeeAttendancePage() {
 
   const formatTime = (date: Date | string | undefined | any) => {
     if (!date) return '-';
-    
+
     let dateObj: Date;
-    
+
     // Handle Firestore Timestamp objects
     if (date && typeof date === 'object' && typeof date.toDate === 'function') {
       dateObj = date.toDate();
@@ -433,11 +433,11 @@ export default function EmployeeAttendancePage() {
     } else {
       dateObj = new Date(date);
     }
-    
+
     if (isNaN(dateObj.getTime())) {
       return '-';
     }
-    
+
     return dateObj.toLocaleTimeString('es-ES', {
       hour: '2-digit',
       minute: '2-digit',
@@ -563,7 +563,7 @@ export default function EmployeeAttendancePage() {
                   value: (i + 1).toString(),
                   label: new Date(0, i).toLocaleDateString('es-ES', {
                     month: 'long',
-                  })
+                  }),
                 }))}
               />
             </div>

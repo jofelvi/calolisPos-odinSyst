@@ -165,7 +165,7 @@ export default function ReportsPage() {
                     {report.tabValue ? (
                       <Button
                         onClick={() => {
-                          const tabsList =
+                          const _tabsList =
                             document.querySelector('[data-tabs-list]');
                           const tabTrigger = document.querySelector(
                             `[data-tabs-trigger="${report.tabValue}"]`,

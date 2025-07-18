@@ -8,7 +8,10 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
   return getDownloadURL(snapshot.ref);
 };
 
-export const uploadAttendancePhoto = async (photoBlob: Blob, employeeId: string): Promise<string> => {
+export const uploadAttendancePhoto = async (
+  photoBlob: Blob,
+  employeeId: string,
+): Promise<string> => {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const fileName = `attendance_${employeeId}_${timestamp}.jpg`;
   const storageRef = ref(storage, `attendance/${fileName}`);
