@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Order } from '@/types/order';
+import { Order } from '@/modelTypes/order';
 import {
   getActiveOrdersWithTables,
   getActiveTakeawayOrders,
@@ -25,8 +25,8 @@ import {
   Utensils,
 } from 'lucide-react';
 import Loader from '@/components/shared/Loader/Loader';
-import { Table } from '@/types/table';
-import { formatTime } from '@/utils/dateHelpers';
+import { Table } from '@/modelTypes/table';
+import { formatTime } from '@/shared/utils/dateHelpers';
 
 interface TableWithOrder extends Table {
   currentOrder?: Order | null;

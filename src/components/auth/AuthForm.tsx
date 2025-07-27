@@ -1,4 +1,4 @@
-// components/auth/AuthForm.tsx
+// features/auth/AuthForm.tsx
 
 'use client';
 
@@ -8,7 +8,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { signUpWithEmail } from '@/services/firebase/auth';
 import { useRouter } from 'next/navigation';
 import * as yup from 'yup';
-import { loginSchema, registerSchema } from '@/schemas/userSchema';
+import { loginSchema, registerSchema } from '@/shared/schemas/userSchema';
 import { Input } from '../shared/input/input';
 import odinsys from '../../../public/odinLogin.jpeg';
 import Image from 'next/image';

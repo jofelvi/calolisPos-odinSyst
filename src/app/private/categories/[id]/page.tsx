@@ -1,4 +1,4 @@
-import { CategoryForm } from '@/app/components/categories/CategoryForm';
+import { CategoryForm } from '@/features/categories/CategoryForm';
 import { categoryService } from '@/services/firebase/genericServices';
 import { notFound } from 'next/navigation';
 import BackIcon from '@/components/shared/BackButton/BackButton';

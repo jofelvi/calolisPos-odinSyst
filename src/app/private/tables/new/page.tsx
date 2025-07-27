@@ -1,4 +1,4 @@
-import TableForm from '@/app/components/tables/TableForm';
+import TableForm from '@/features/tables/TableForm';
 
 export default function NewTablePage() {
   return (

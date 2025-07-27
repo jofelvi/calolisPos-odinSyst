@@ -20,6 +20,7 @@ import {
   Truck,
   Users,
 } from 'lucide-react';
+import WeeklySalesChart from '@/app/components/dashboard/WeeklySalesChart';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 import {
   customerService,
@@ -27,15 +28,15 @@ import {
   productService,
   supplierService,
 } from '@/services/firebase/genericServices';
-import { Product } from '@/types/product';
-import { Customer } from '@/types/customer';
-import { Order } from '@/types/order';
-import { Supplier } from '@/types/supplier';
+import { Product } from '@/modelTypes/product';
+import { Customer } from '@/modelTypes/customer';
+import { Order } from '@/modelTypes/order';
+import { Supplier } from '@/modelTypes/supplier';
 import {
+  convertFirebaseDate,
   getRelativeTime,
   getTimeValue,
-  convertFirebaseDate,
-} from '@/utils/dateHelpers';
+} from '@/shared/utils/dateHelpers';
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -311,13 +312,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-64 flex items-center justify-center bg-gradient-to-br from-cyan-50 to-teal-50 rounded-xl border border-cyan-100">
-              <div className="text-center">
-                <BarChart3 className="h-12 w-12 text-cyan-400 mx-auto mb-4" />
-                <p className="text-cyan-600 font-medium">Gráfico de ventas</p>
-                <p className="text-cyan-500 text-sm">Próximamente disponible</p>
-              </div>
-            </div>
+            <WeeklySalesChart />
           </CardContent>
         </Card>
 

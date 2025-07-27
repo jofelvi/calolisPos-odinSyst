@@ -7,15 +7,15 @@ import {
   categoryService,
   productService,
 } from '@/services/firebase/genericServices';
-import { Product } from '@/types/product';
-import { DeleteConfirmationModal } from '@/app/components/categories/DeleteConfirmationModal';
+import { Product } from '@/modelTypes/product';
+import { DeleteConfirmationModal } from '@/features/categories/DeleteConfirmationModal';
 import { Button } from '@/components/shared/button/Button';
 import { EntityGrid } from '@/components/shared/EntityGrid/EntityGrid';
 import { EmptyState } from '@/components/shared/EmptyState/EmptyState';
-import { Category } from '@/types/category';
-import '../../components/products/producs.css';
+import { Category } from '@/modelTypes/category';
+import '@/features/products/producs.css';
 import { Check } from 'lucide-react';
-import { OrderGridSkeleton } from '@/app/components/purchaseOrders/order-skeleton';
+import { OrderGridSkeleton } from '@/features/purchaseOrders/order-skeleton';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 
 export default function ProductsPage() {
@@ -41,7 +41,7 @@ export default function ProductsPage() {
         setProducts(prods);
         setCategories(cats);
       } catch {
-        // Error loading data - components will show empty state
+        // Error loading data - features will show empty state
         // Consider implementing a retry mechanism or user notification
       } finally {
         setLoading(false);

@@ -1,4 +1,4 @@
-// Re-export card components from shared
+// Re-export card features from shared
 export {
   Card,
   CardHeader,

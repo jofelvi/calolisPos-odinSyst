@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Employee } from '@/types/employee';
-import { Payroll } from '@/types/payroll';
-import { PayrollStatusEnum } from '@/types/enumShared';
+import { Employee } from '@/modelTypes/employee';
+import { Payroll } from '@/modelTypes/payroll';
+import { PayrollStatusEnum } from '@/modelTypes/enumShared';
 import {
   employeeService,
   payrollService,

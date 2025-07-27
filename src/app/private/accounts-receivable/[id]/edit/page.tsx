@@ -1,5 +1,5 @@
 import { accountReceivableService } from '@/services/firebase/genericServices';
-import AccountReceivableForm from '@/app/components/accountsReceivable/AccountReceivableForm';
+import AccountReceivableForm from '@/features/accountsReceivable/AccountReceivableForm';
 import { notFound } from 'next/navigation';
 
 interface EditAccountReceivablePageProps {

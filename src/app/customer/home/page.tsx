@@ -1,12 +1,12 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useUserStore } from '@/store/useUserStore';
-import { useCustomerCartStore } from '@/store/useCustomerCartStore';
+import { useUserStore } from '@/shared/store/useUserStore';
+import { useCustomerCartStore } from '@/shared/store/useCustomerCartStore';
 import { CheckCircle, Clock, ShoppingBag, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { CUSTOMER_ROUTES } from '@/constants/routes';
 import { orderService } from '@/services/firebase/genericServices';
-import { Order } from '@/types/order';
+import { Order } from '@/modelTypes/order';
 
 export default function CustomerDashboard() {
   const { user } = useUserStore();

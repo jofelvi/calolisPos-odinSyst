@@ -9,9 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/hooks/useToast';
 import { Textarea } from '@/components/ui/textarea';
-import { Employee } from '@/types/employee';
-import { Attendance } from '@/types/attendance';
-import { AttendanceStatusEnum } from '@/types/enumShared';
+import { Employee } from '@/modelTypes/employee';
+import { Attendance } from '@/modelTypes/attendance';
+import { AttendanceStatusEnum } from '@/modelTypes/enumShared';
 import {
   attendanceService,
   employeeService,
@@ -21,7 +21,7 @@ import { uploadAttendancePhoto } from '@/services/firebase/uploadImage';
 import {
   AttendanceBusinessRules,
   AttendanceValidator,
-} from '@/utils/attendanceValidation';
+} from '@/shared/utils/attendanceValidation';
 import {
   CameraIcon,
   CheckCircleIcon,

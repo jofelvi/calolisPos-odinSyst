@@ -1,4 +1,4 @@
-import { UserRoleEnum } from '@/types/enumShared';
+import { UserRoleEnum } from '@/modelTypes/enumShared';
 
 // Rutas públicas (accesibles sin autenticación)
 export const PUBLIC_ROUTES = {

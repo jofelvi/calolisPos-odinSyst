@@ -6,11 +6,11 @@ import {
   UserCredential,
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { loginSchema, registerSchema } from '@/schemas/userSchema';
+import { loginSchema, registerSchema } from '@/shared/schemas/userSchema';
 import * as yup from 'yup';
 import { auth, db } from '@/services/firebase/firebase';
-import { User } from '@/types/user';
-import { UserRoleEnum } from '@/types/enumShared';
+import { User } from '@/modelTypes/user';
+import { UserRoleEnum } from '@/modelTypes/enumShared';
 
 // Tipos inferidos de los esquemas para los argumentos de las funciones
 export type LoginInput = yup.InferType<typeof loginSchema>;

@@ -1,4 +1,4 @@
-// components/shared/EmptyState.tsx
+// features/shared/EmptyState.tsx
 import { FiPackage } from 'react-icons/fi';
 import Link from 'next/link';
 import { Button } from '@/components/shared/button/Button';

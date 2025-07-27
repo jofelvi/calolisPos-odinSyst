@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Order } from '@/types/order';
-import { useUserStore } from '@/store/useUserStore';
+import { Order } from '@/modelTypes/order';
+import { useUserStore } from '@/shared/store/useUserStore';
 import {
   collection,
   getDocs,
@@ -12,7 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/services/firebase/firebase';
 import { CheckCircle, ChefHat, Coffee, Package, XCircle } from 'lucide-react';
-import { OrderStatusEnum } from '@/types/enumShared';
+import { OrderStatusEnum } from '@/modelTypes/enumShared';
 import { CUSTOMER_ROUTES } from '@/constants/routes';
 
 const statusSteps = [

@@ -1,5 +1,5 @@
 'use client';
-import { OrderList } from '@/app/components/purchaseOrders/order-list';
+import { OrderList } from '@/features/purchaseOrders/order-list';
 import { Input } from '@/components/shared/input/input';
 import { PlusCircle, Search } from 'lucide-react';
 import Link from 'next/link';

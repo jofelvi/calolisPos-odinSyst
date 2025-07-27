@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { employeeService } from '@/services/firebase/genericServices';
-import { EmployeeFormValues } from '@/schemas/employeeSchema';
-import { Employee } from '@/types/employee';
-import EmployeeForm from '@/app/components/employees/EmployeeForm';
+import { EmployeeFormValues } from '@/shared/schemas/employeeSchema';
+import { Employee } from '@/modelTypes/employee';
+import EmployeeForm from '@/features/employees/EmployeeForm';
 
 export default function NewEmployeePage() {
   const [loading, setLoading] = useState(false);

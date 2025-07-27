@@ -1,13 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useUserStore } from '@/store/useUserStore';
-import { useSidebarStore } from '@/store/useSidebarStore';
+import { useUserStore } from '@/shared/store/useUserStore';
+import { useSidebarStore } from '@/shared/store/useSidebarStore';
 import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { Bell, ChevronDown, LogOut, Menu, Settings, X } from 'lucide-react';
 import { useState } from 'react';
 import { PRIVATE_ROUTES, PUBLIC_ROUTES } from '@/constants/routes';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils/utils';
 
 // Header.jsx
 export function Header() {

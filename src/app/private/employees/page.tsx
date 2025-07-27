@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Employee } from '@/types/employee';
+import { Employee } from '@/modelTypes/employee';
 import { employeeService } from '@/services/firebase/genericServices';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

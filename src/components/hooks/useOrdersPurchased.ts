@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { PurchaseOrder } from '@/types/purchaseOrder';
+import { PurchaseOrder } from '@/modelTypes/purchaseOrder';
 import { purchaseOrderService } from '@/services/firebase/genericServices';
 
 export function useOrdersPurchased() {

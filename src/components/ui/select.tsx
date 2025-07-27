@@ -1,4 +1,4 @@
-// Re-export select components from shared
+// Re-export select features from shared
 export {
   Select,
   SelectGroup,

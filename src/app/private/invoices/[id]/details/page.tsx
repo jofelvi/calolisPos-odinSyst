@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from '@/components/shared/card/card';
 import { Badge } from '@/components/shared/badge/badge';
-import { formatDate, formatDateTime } from '@/utils/dateHelpers';
+import { formatDate, formatDateTime } from '@/shared/utils/dateHelpers';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 import { Button } from '@/components/shared/button/Button';
 import {
@@ -27,12 +27,12 @@ import {
   ShoppingCart,
   User,
 } from 'lucide-react';
-import { InvoiceStatusEnum } from '@/types/enumShared';
+import { InvoiceStatusEnum } from '@/modelTypes/enumShared';
 import {
   InvoiceDetailData,
   invoiceDetailService,
 } from '@/services/firebase/invoiceDetailService';
-import PDFDownloadButton from '@/app/components/invoices/PDFDownloadButton';
+import PDFDownloadButton from '@/features/invoices/PDFDownloadButton';
 import Loader from '@/components/shared/Loader/Loader';
 
 export default function InvoiceDetailPage({

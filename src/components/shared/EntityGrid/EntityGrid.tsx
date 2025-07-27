@@ -1,8 +1,8 @@
-// components/shared/EntityGrid.tsx
+// features/shared/EntityGrid.tsx
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiPackage, FiTrash2 } from 'react-icons/fi';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils/utils';
 import {
   Card,
   CardContent,

@@ -5,9 +5,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon } from 'lucide-react';
 import { employeeService } from '@/services/firebase/genericServices';
-import { Employee } from '@/types/employee';
-import { EmployeeFormValues } from '@/schemas/employeeSchema';
-import EmployeeForm from '@/app/components/employees/EmployeeForm';
+import { Employee } from '@/modelTypes/employee';
+import { EmployeeFormValues } from '@/shared/schemas/employeeSchema';
+import EmployeeForm from '@/features/employees/EmployeeForm';
 
 export default function EditEmployeePage() {
   const params = useParams();

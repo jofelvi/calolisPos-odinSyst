@@ -14,9 +14,9 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Payroll } from '@/types/payroll';
-import { Employee } from '@/types/employee';
-import { PayrollStatusEnum } from '@/types/enumShared';
+import { Payroll } from '@/modelTypes/payroll';
+import { Employee } from '@/modelTypes/employee';
+import { PayrollStatusEnum } from '@/modelTypes/enumShared';
 import {
   employeeService,
   payrollService,

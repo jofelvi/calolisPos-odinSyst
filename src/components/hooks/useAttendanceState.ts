@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Attendance } from '@/types/attendance';
+import { Attendance } from '@/modelTypes/attendance';
 import { getEmployeeAttendanceByPeriod } from '@/services/firebase/genericServices';
 
 interface UseAttendanceStateProps {

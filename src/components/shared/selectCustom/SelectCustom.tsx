@@ -1,13 +1,13 @@
 import React, { forwardRef } from 'react';
 import {
-  FieldValues,
-  UseFormRegister,
-  Path,
   FieldError,
+  FieldValues,
+  Path,
+  UseFormRegister,
 } from 'react-hook-form';
 import FormFieldError from '@/components/shared/formFieldError/FormFieldError';
 import { AlertCircle, ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils/utils';
 
 export interface SelectOption {
   value: string | number;

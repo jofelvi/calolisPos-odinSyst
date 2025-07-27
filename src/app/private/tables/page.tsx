@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from '@/components/shared/card/card';
 import { Badge } from '@/components/shared/badge/badge';
-import { getStatusVariant } from '@/utils/getStatusTableOrder';
+import { getStatusVariant } from '@/shared/utils/getStatusTableOrder';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 import { Button } from '@/components/shared/button/Button';
 

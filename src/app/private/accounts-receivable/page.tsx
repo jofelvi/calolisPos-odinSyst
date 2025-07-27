@@ -8,8 +8,8 @@ import {
   CardTitle,
 } from '@/components/shared/card/card';
 import { Badge } from '@/components/shared/badge/badge';
-import AccountsReceivableFilters from '@/app/components/accountsReceivable/AccountsReceivableFilters';
-import { InvoiceStatusEnum } from '@/types/enumShared';
+import AccountsReceivableFilters from '@/features/accountsReceivable/AccountsReceivableFilters';
+import { InvoiceStatusEnum } from '@/modelTypes/enumShared';
 
 export default async function AccountsReceivablePage({
   searchParams,

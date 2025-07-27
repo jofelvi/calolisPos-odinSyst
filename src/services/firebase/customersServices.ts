@@ -1,4 +1,4 @@
-import { Customer } from '@/types/customer';
+import { Customer } from '@/modelTypes/customer';
 import { customerService } from '@/services/firebase/genericServices';
 
 export const searchCustomers = async (

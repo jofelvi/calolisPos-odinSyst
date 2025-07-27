@@ -10,23 +10,23 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
-import { convertFirebaseDate } from '@/utils/dateHelpers';
+import { convertFirebaseDate } from '@/shared/utils/dateHelpers';
 import { db } from '@/services/firebase/firebase';
-import { User } from '@/types/user';
-import { Supplier } from '@/types/supplier';
-import { Product } from '@/types/product';
-import { Category } from '@/types/category';
-import { Table } from '@/types/table';
-import { PurchaseOrder } from '@/types/purchaseOrder';
-import { Order } from '@/types/order';
-import { Customer } from '@/types/customer';
-import { Payment } from '@/types/payment';
-import { AccountReceivable } from '@/types/accountReceivable';
-import { PagoMovil } from '@/types/pagoMovil';
-import { Invoice } from '@/types/invoice';
-import { Employee } from '@/types/employee';
-import { Payroll } from '@/types/payroll';
-import { Attendance } from '@/types/attendance';
+import { User } from '@/modelTypes/user';
+import { Supplier } from '@/modelTypes/supplier';
+import { Product } from '@/modelTypes/product';
+import { Category } from '@/modelTypes/category';
+import { Table } from '@/modelTypes/table';
+import { PurchaseOrder } from '@/modelTypes/purchaseOrder';
+import { Order } from '@/modelTypes/order';
+import { Customer } from '@/modelTypes/customer';
+import { Payment } from '@/modelTypes/payment';
+import { AccountReceivable } from '@/modelTypes/accountReceivable';
+import { PagoMovil } from '@/modelTypes/pagoMovil';
+import { Invoice } from '@/modelTypes/invoice';
+import { Employee } from '@/modelTypes/employee';
+import { Payroll } from '@/modelTypes/payroll';
+import { Attendance } from '@/modelTypes/attendance';
 
 class FirestoreService<T extends { id: string }> {
   constructor(private collectionName: string) {}

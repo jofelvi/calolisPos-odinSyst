@@ -7,13 +7,13 @@ import {
   productService,
   userService,
 } from './genericServices';
-import { Invoice } from '@/types/invoice';
-import { Order } from '@/types/order';
-import { Customer } from '@/types/customer';
-import { User } from '@/types/user';
-import { Product } from '@/types/product';
-import { Payment } from '@/types/payment';
-import { OrderItem } from '@/types/orderItem';
+import { Invoice } from '@/modelTypes/invoice';
+import { Order } from '@/modelTypes/order';
+import { Customer } from '@/modelTypes/customer';
+import { User } from '@/modelTypes/user';
+import { Product } from '@/modelTypes/product';
+import { Payment } from '@/modelTypes/payment';
+import { OrderItem } from '@/modelTypes/orderItem';
 
 export interface EnrichedOrderItem extends OrderItem {
   product?: Product;

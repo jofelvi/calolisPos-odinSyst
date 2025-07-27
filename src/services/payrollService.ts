@@ -4,8 +4,8 @@ import {
   PayrollReport,
   PayrollSettings,
   PayrollSummary,
-} from '@/types/payroll';
-import { PayrollStatusEnum } from '@/types/enumShared';
+} from '@/modelTypes/payroll';
+import { PayrollStatusEnum } from '@/modelTypes/enumShared';
 import {
   employeeService,
   getEmployeePayrollByPeriod,
@@ -73,7 +73,7 @@ export class PayrollCalculationService {
       const regularHours = attendanceSummary.regularHours;
       const overtimeHours = attendanceSummary.overtimeHours;
 
-      // Calculate salary components
+      // Calculate salary features
       const baseSalaryAmount = this.calculateBaseSalary(
         employee.salary,
         attendanceSummary.presentDays,

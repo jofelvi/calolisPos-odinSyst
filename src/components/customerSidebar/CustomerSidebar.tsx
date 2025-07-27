@@ -1,11 +1,11 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingBag, ClipboardList, Home, Clock } from 'lucide-react';
+import { ClipboardList, Clock, Home, ShoppingBag } from 'lucide-react';
 import { CUSTOMER_ROUTES } from '@/constants/routes';
-import { useSidebarStore } from '@/store/useSidebarStore';
+import { useSidebarStore } from '@/shared/store/useSidebarStore';
 import { useEffect } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/utils/utils';
 
 const customerMenuItems = [
   {

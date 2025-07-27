@@ -1,7 +1,7 @@
 // services/attendanceHelpers.ts
 // Principio SRP: Separación de responsabilidades para la gestión de asistencias
 
-import { Attendance } from '@/types/attendance';
+import { Attendance } from '@/modelTypes/attendance';
 
 export interface AttendanceState {
   readonly canCheckIn: boolean;

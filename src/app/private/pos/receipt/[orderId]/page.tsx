@@ -3,15 +3,15 @@
 
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Payment } from '@/types/payment';
+import { Payment } from '@/modelTypes/payment';
 import {
   orderService,
   paymentService,
 } from '@/services/firebase/genericServices';
-import { Order } from '@/types/order';
+import { Order } from '@/modelTypes/order';
 import { Button } from '@/components/shared/button/Button';
-import Receipt from '@/app/components/pos/Receipt';
-import { formatDateForDisplay } from '@/utils/serializeTimestamp';
+import Receipt from '@/features/pos/Receipt';
+import { formatDateForDisplay } from '@/shared/utils/serializeTimestamp';
 
 interface PageProps {
   params: Promise<{ orderId: string }>;

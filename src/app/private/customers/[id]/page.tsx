@@ -12,9 +12,9 @@ import {
 import { Badge } from '@/components/shared/badge/badge';
 import { Button } from '@/components/shared/button/Button';
 import Link from 'next/link';
-import { InvoiceStatusEnum } from '@/types/enumShared';
+import { InvoiceStatusEnum } from '@/modelTypes/enumShared';
 import { notFound } from 'next/navigation';
-import { OrderItem } from '@/types/orderItem';
+import { OrderItem } from '@/modelTypes/orderItem';
 
 interface CustomerProfilePageProps {
   params: Promise<{ id: string }>;

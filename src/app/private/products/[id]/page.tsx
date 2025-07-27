@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import ProductForm from '@/app/components/products/ProductForm';
+import ProductForm from '@/features/products/ProductForm';
 import { productService } from '@/services/firebase/genericServices';
 import BackIcon from '@/components/shared/BackButton/BackButton';
 

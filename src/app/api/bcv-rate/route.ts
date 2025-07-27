@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getPriceBcv } from '@/utils/getPriceDolar';
+import { getPriceBcv } from '@/shared/utils/getPriceDolar';
 
 export async function GET() {
   try {

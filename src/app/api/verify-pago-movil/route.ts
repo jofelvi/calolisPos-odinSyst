@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { pagoMovilVerifier } from '@/utils/pagoMovilVerifier';
-import { PagoMovilVerificationRequest } from '@/types/pagoMovil';
+import { pagoMovilVerifier } from '@/shared/utils/pagoMovilVerifier';
+import { PagoMovilVerificationRequest } from '@/modelTypes/pagoMovil';
 
 export async function POST(request: NextRequest) {
   try {

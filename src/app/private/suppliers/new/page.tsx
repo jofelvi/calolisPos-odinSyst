@@ -1,4 +1,4 @@
-import SupplierForm from '@/app/components/suppliers/SupplierForm';
+import SupplierForm from '@/features/suppliers/SupplierForm';
 
 export default function NewSupplierPage() {
   return (

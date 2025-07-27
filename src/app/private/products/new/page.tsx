@@ -1,4 +1,4 @@
-import ProductForm from '@/app/components/products/ProductForm';
+import ProductForm from '@/features/products/ProductForm';
 import BackIcon from '@/components/shared/BackButton/BackButton';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 

@@ -4,7 +4,7 @@ import {
   productService,
   supplierService,
 } from '@/services/firebase/genericServices';
-import { Supplier } from '@/types/supplier';
+import { Supplier } from '@/modelTypes/supplier';
 import BackIcon from '@/components/shared/BackButton/BackButton';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 import {

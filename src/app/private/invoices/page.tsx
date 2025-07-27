@@ -17,10 +17,10 @@ import Loader from '@/components/shared/Loader/Loader';
 import { Calendar, DollarSign, Eye, FileText, Filter } from 'lucide-react';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 import { invoiceService } from '@/services/firebase/genericServices';
-import { Invoice } from '@/types/invoice';
-import { InvoiceStatusEnum } from '@/types/enumShared';
-import { formatDate } from '@/utils/dateHelpers';
-import PDFDownloadButton from '@/app/components/invoices/PDFDownloadButton';
+import { Invoice } from '@/modelTypes/invoice';
+import { InvoiceStatusEnum } from '@/modelTypes/enumShared';
+import { formatDate } from '@/shared/utils/dateHelpers';
+import PDFDownloadButton from '@/features/invoices/PDFDownloadButton';
 
 export default function InvoicesPage() {
   const { status } = useSession();

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { tableService } from '@/services/firebase/genericServices';
-import TableForm from '@/app/components/tables/TableForm';
+import TableForm from '@/features/tables/TableForm';
 
 interface PageProps {
   params: Promise<{ id: string }>;

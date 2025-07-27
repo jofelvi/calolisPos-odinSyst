@@ -1,5 +1,5 @@
 import { supplierService } from '@/services/firebase/genericServices';
-import SupplierForm from '@/app/components/suppliers/SupplierForm';
+import SupplierForm from '@/features/suppliers/SupplierForm';
 
 export default async function SupplierEditPage({
   params,

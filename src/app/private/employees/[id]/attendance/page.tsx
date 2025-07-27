@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Employee } from '@/types/employee';
-import { Attendance } from '@/types/attendance';
-import { AttendanceStatusEnum } from '@/types/enumShared';
+import { Employee } from '@/modelTypes/employee';
+import { Attendance } from '@/modelTypes/attendance';
+import { AttendanceStatusEnum } from '@/modelTypes/enumShared';
 import {
   attendanceService,
   employeeService,
@@ -29,7 +29,7 @@ import {
   UserIcon,
   XCircleIcon,
 } from 'lucide-react';
-import AttendanceForm from '@/app/components/attendance/AttendanceForm';
+import AttendanceForm from '@/features/attendance/AttendanceForm';
 
 export default function EmployeeAttendancePage() {
   const params = useParams();
@@ -419,7 +419,7 @@ export default function EmployeeAttendancePage() {
       </Badge>
     );
   };
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const formatTime = (date: Date | string | undefined | any) => {
     if (!date) return '-';
 

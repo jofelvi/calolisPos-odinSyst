@@ -1,18 +1,18 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { Order } from '@/types/order';
-import { useUserStore } from '@/store/useUserStore';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { Order } from '@/modelTypes/order';
+import { useUserStore } from '@/shared/store/useUserStore';
+import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
 import { db } from '@/services/firebase/firebase';
 import {
-  Clock,
-  CheckCircle,
-  XCircle,
-  Package,
   Calendar,
+  CheckCircle,
+  Clock,
   DollarSign,
+  Package,
+  XCircle,
 } from 'lucide-react';
-import { OrderStatusEnum, PaymentStatusEnum } from '@/types/enumShared';
+import { OrderStatusEnum, PaymentStatusEnum } from '@/modelTypes/enumShared';
 import { CUSTOMER_ROUTES } from '@/constants/routes';
 import Link from 'next/link';
 
@@ -65,6 +65,10 @@ const paymentStatusConfig = {
   [PaymentStatusEnum.REFUNDED]: {
     color: 'bg-gray-100 text-gray-800',
     label: 'Reembolsado',
+  },
+  [PaymentStatusEnum.CANCELLED]: {
+    color: 'bg-red-100 text-red-800',
+    label: 'Cancelado',
   },
 };
 

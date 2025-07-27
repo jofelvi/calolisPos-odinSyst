@@ -1,6 +1,6 @@
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/services/firebase/firebase';
-import { PurchaseOrder } from '@/types/purchaseOrder';
+import { PurchaseOrder } from '@/modelTypes/purchaseOrder';
 
 export const getPurchaseOrdersBySupplier = async (
   supplierId: string,

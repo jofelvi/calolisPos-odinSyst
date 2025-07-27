@@ -1,5 +1,5 @@
 'use client';
-import { useUserStore } from '@/store/useUserStore';
+import { useUserStore } from '@/shared/store/useUserStore';
 import { Sidebar } from '@/components/sidebar/Sidebar';
 import { Header } from '@/components/header/Header';
 import { useSession } from 'next-auth/react';

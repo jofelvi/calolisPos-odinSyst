@@ -1,14 +1,14 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { Product } from '@/types/product';
-import { Category } from '@/types/category';
+import { useEffect, useState } from 'react';
+import { Product } from '@/modelTypes/product';
+import { Category } from '@/modelTypes/category';
 import { categoryService } from '@/services/firebase/genericServices';
 import {
   getActiveProducts,
   getProductsByCategory,
 } from '@/services/firebase/productServices';
-import { useCustomerCartStore } from '@/store/useCustomerCartStore';
-import { ShoppingCart, Plus, Minus, Filter, Search } from 'lucide-react';
+import { useCustomerCartStore } from '@/shared/store/useCustomerCartStore';
+import { Filter, Minus, Plus, Search, ShoppingCart } from 'lucide-react';
 
 export default function CustomerProducts() {
   const [products, setProducts] = useState<Product[]>([]);

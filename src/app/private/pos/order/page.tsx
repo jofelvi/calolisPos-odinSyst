@@ -5,25 +5,25 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Product } from '@/types/product';
-import { Customer } from '@/types/customer';
-import { OrderFormValues, orderSchema } from '@/schemas/orderSchema';
+import { Product } from '@/modelTypes/product';
+import { Customer } from '@/modelTypes/customer';
+import { OrderFormValues, orderSchema } from '@/shared/schemas/orderSchema';
 import {
   OrderStatusEnum,
   PaymentStatusEnum,
   TableStatusEnum,
-} from '@/types/enumShared';
+} from '@/modelTypes/enumShared';
 import {
   getActiveOrderByTable,
   orderService,
   productService,
   tableService,
 } from '@/services/firebase/genericServices';
-import { Order } from '@/types/order';
+import { Order } from '@/modelTypes/order';
 import { Card } from '@/components/shared/card/card';
 import { Button } from '@/components/shared/button/Button';
-import ProductSelector from '@/app/components/pos/ProductSelector';
-import OrderSummary from '@/app/components/pos/OrderSummary';
+import ProductSelector from '@/features/pos/ProductSelector';
+import OrderSummary from '@/features/pos/OrderSummary';
 import Loader from '@/components/shared/Loader/Loader';
 import { useSession } from 'next-auth/react'; // Constantes para las tasas de impuestos y servicios para mejor legibilidad y mantenimiento
 

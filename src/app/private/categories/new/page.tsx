@@ -1,4 +1,4 @@
-import { CategoryForm } from '@/app/components/categories/CategoryForm';
+import { CategoryForm } from '@/features/categories/CategoryForm';
 import BackIcon from '@/components/shared/BackButton/BackButton';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 

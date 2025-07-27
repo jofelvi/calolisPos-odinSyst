@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from '@/components/shared/card/card';
 import { Badge } from '@/components/shared/badge/badge';
-import { getStatusVariant } from '@/utils/getStatusTableOrder';
+import { getStatusVariant } from '@/shared/utils/getStatusTableOrder';
 import { tableService } from '@/services/firebase/genericServices';
 
 export default async function TableDetailPage({

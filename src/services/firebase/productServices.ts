@@ -6,7 +6,7 @@ import {
   where,
   writeBatch,
 } from 'firebase/firestore';
-import { Product } from '@/types/product';
+import { Product } from '@/modelTypes/product';
 import { db } from '@/services/firebase/firebase';
 import { supplierService } from '@/services/firebase/genericServices';
 import { getSuppliersByProduct } from '@/services/firebase/supplierServices';

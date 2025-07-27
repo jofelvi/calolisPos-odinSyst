@@ -3,7 +3,7 @@
 
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Order } from '@/types/order';
+import { Order } from '@/modelTypes/order';
 import {
   CurrencyEnum,
   InvoiceStatusEnum,
@@ -12,7 +12,7 @@ import {
   PaymentStatusEnum,
   PaymentTypeEnum,
   TableStatusEnum,
-} from '@/types/enumShared';
+} from '@/modelTypes/enumShared';
 import {
   accountReceivableService,
   getCustomerReceivables,
@@ -23,11 +23,11 @@ import {
   paymentService,
   tableService,
 } from '@/services/firebase/genericServices';
-import { Payment } from '@/types/payment';
-import { Customer } from '@/types/customer';
-import { AccountReceivable } from '@/types/accountReceivable';
-import { PagoMovil } from '@/types/pagoMovil';
-import { Invoice } from '@/types/invoice';
+import { Payment } from '@/modelTypes/payment';
+import { Customer } from '@/modelTypes/customer';
+import { AccountReceivable } from '@/modelTypes/accountReceivable';
+import { PagoMovil } from '@/modelTypes/pagoMovil';
+import { Invoice } from '@/modelTypes/invoice';
 // BCV rate will be fetched from API route
 import { Input } from '@/components/shared/input/input';
 import { Card } from '@/components/shared/card/card';
@@ -44,13 +44,12 @@ import {
   X,
 } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
-import { OrderItem } from '@/types/orderItem';
+import { OrderItem } from '@/modelTypes/orderItem';
 import Table from '@/components/shared/Table';
-import CustomerSearch from '@/app/components/pos/CustomerSearch';
+import CustomerSearch from '@/features/pos/CustomerSearch';
 import Modal from '@/components/shared/modal';
-import { ToastContainer } from '@/components/shared/toast';
-import { useToast } from '@/hooks/useToast';
-import { useUserStore } from '@/store/useUserStore';
+import { useToast } from '@/components/hooks/useToast';
+import { useUserStore } from '@/shared/store/useUserStore';
 
 interface PageProps {
   params: Promise<{ orderId: string }>;
@@ -454,23 +453,26 @@ export default function PaymentPage({ params }: PageProps) {
 
     // Validaciones
     if (!amount || parseFloat(amount) <= 0) {
-      toast.error('Debe ingresar un monto válido', 'Error de validación');
+      toast.error({
+        title: 'Error de validación',
+        description: 'Debe ingresar un monto válido',
+      });
       return;
     }
 
     if (!reference || reference.length !== 6) {
-      toast.error(
-        'La referencia debe tener exactamente 6 dígitos',
-        'Error de validación',
-      );
+      toast.error({
+        title: 'Error de validación',
+        description: 'La referencia debe tener exactamente 6 dígitos',
+      });
       return;
     }
 
     if (!phone || phone.length < 10) {
-      toast.error(
-        'Debe ingresar un número de teléfono válido',
-        'Error de validación',
-      );
+      toast.error({
+        title: 'Error de validación',
+        description: 'Debe ingresar un número de teléfono válido',
+      });
       return;
     }
 
@@ -483,10 +485,10 @@ export default function PaymentPage({ params }: PageProps) {
 
       if (existingPagoMovil) {
         if (existingPagoMovil.status === 'verified') {
-          toast.warning(
-            'Esta referencia ya fue verificada y utilizada',
-            'Referencia duplicada',
-          );
+          toast.warning({
+            title: 'Referencia duplicada',
+            description: 'Esta referencia ya fue verificada y utilizada',
+          });
           return;
         }
 
@@ -514,21 +516,21 @@ export default function PaymentPage({ params }: PageProps) {
 
             setShowPagoMovilModal(false);
             setPagoMovilData({ amount: '', reference: '', phone: '' });
-            toast.success(
-              'Pago Móvil verificado correctamente',
-              'Verificación exitosa',
-            );
+            toast.success({
+              title: 'Verificación exitosa',
+              description: 'Pago Móvil verificado correctamente',
+            });
             return;
           }
         }
       }
 
       // Realizar verificación usando el scraper
-      toast.info(
-        'Verificando transacción, esto puede tomar unos momentos...',
-        'Verificando',
-        10000,
-      );
+      toast.info({
+        title: 'Verificando',
+        description:
+          'Verificando transacción, esto puede tomar unos momentos...',
+      });
 
       const verificationResponse = await fetch('/api/verify-pago-movil', {
         method: 'POST',
@@ -591,38 +593,38 @@ export default function PaymentPage({ params }: PageProps) {
 
         setShowPagoMovilModal(false);
         setPagoMovilData({ amount: '', reference: '', phone: '' });
-        toast.success(
-          '¡Pago Móvil verificado exitosamente!',
-          'Verificación exitosa',
-        );
+        toast.success({
+          title: 'Verificación exitosa',
+          description: '¡Pago Móvil verificado exitosamente!',
+        });
       } else if (
         verificationResult.found &&
         !verificationResult.amountMatches
       ) {
         // Transacción encontrada pero monto no coincide
-        toast.warning(
-          `Transacción encontrada pero el monto no coincide. Esperado: $${amount}, Encontrado: $${verificationResult.actualAmount || 'N/A'}. El registro se guardó para futuras verificaciones.`,
-          'Monto no coincide',
-          8000,
-        );
+        toast.warning({
+          title: 'Monto no coincide',
+          description: `Transacción encontrada pero el monto no coincide. Esperado: $${amount}, Encontrado: $${verificationResult.actualAmount || 'N/A'}. El registro se guardó para futuras verificaciones.`,
+        });
       } else if (!verificationResult.found) {
         // Transacción no encontrada
-        toast.error(
-          'No se encontró una transacción con esa referencia. Verifique los datos e intente nuevamente.',
-          'Transacción no encontrada',
-        );
+        toast.error({
+          title: 'Transacción no encontrada',
+          description:
+            'No se encontró una transacción con esa referencia. Verifique los datos e intente nuevamente.',
+        });
       } else {
         // Error en la verificación
-        toast.error(
-          verificationResult.errorMessage || 'Error desconocido',
-          'Error en la verificación',
-        );
+        toast.error({
+          title: 'Error en la verificación',
+          description: verificationResult.errorMessage || 'Error desconocido',
+        });
       }
     } catch {
-      toast.error(
-        'Error al verificar el Pago Móvil. Intente nuevamente.',
-        'Error del sistema',
-      );
+      toast.error({
+        title: 'Error del sistema',
+        description: 'Error al verificar el Pago Móvil. Intente nuevamente.',
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -682,7 +684,7 @@ export default function PaymentPage({ params }: PageProps) {
 
   // Función para cancelar y volver a la página anterior
   const handleCancelPayment = () => {
-    toast.info('Pago cancelado', 'Volviendo...');
+    toast.info({ title: 'Volviendo...', description: 'Pago cancelado' });
     router.back();
   };
 
@@ -711,10 +713,16 @@ export default function PaymentPage({ params }: PageProps) {
       // Crear factura automáticamente
       await createInvoiceForOrder(order, PaymentStatusEnum.PAID);
 
-      toast.success('Orden cobrada exitosamente', 'Volviendo al POS...');
+      toast.success({
+        title: 'Volviendo al POS...',
+        description: 'Orden cobrada exitosamente',
+      });
       router.push('/private/pos');
     } catch {
-      toast.error('Error al cobrar la orden', 'Error del sistema');
+      toast.error({
+        title: 'Error del sistema',
+        description: 'Error al cobrar la orden',
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -729,13 +737,19 @@ export default function PaymentPage({ params }: PageProps) {
       selectedPaymentMethods.includes(PaymentMethodEnum.PENDING);
 
     if (totalPaid <= 0 && !isPendingPayment) {
-      toast.error('Debe ingresar al menos un monto de pago', 'Monto requerido');
+      toast.error({
+        title: 'Monto requerido',
+        description: 'Debe ingresar al menos un monto de pago',
+      });
       return;
     }
 
     setIsProcessing(true);
     try {
-      toast.info('Procesando pago...', 'Por favor espere');
+      toast.info({
+        title: 'Por favor espere',
+        description: 'Procesando pago...',
+      });
 
       // Crear pagos por cada método usado
       const paymentPromises = selectedPaymentMethods
@@ -786,16 +800,16 @@ export default function PaymentPage({ params }: PageProps) {
       // Crear factura automáticamente
       await createInvoiceForOrder(order, newStatus);
 
-      toast.success(
-        '¡Pago procesado exitosamente!',
-        'Redirigiendo al recibo...',
-      );
+      toast.success({
+        title: 'Redirigiendo al recibo...',
+        description: '¡Pago procesado exitosamente!',
+      });
       router.push(`/private/pos/receipt/${order.id}`);
     } catch {
-      toast.error(
-        'Error al procesar el pago. Intente nuevamente.',
-        'Error del sistema',
-      );
+      toast.error({
+        title: 'Error del sistema',
+        description: 'Error al procesar el pago. Intente nuevamente.',
+      });
     } finally {
       setIsProcessing(false);
     }
@@ -1367,8 +1381,7 @@ export default function PaymentPage({ params }: PageProps) {
         </div>
       </Modal>
 
-      {/* Toast Container para mostrar notificaciones */}
-      <ToastContainer toasts={toast.toasts} onRemove={toast.removeToast} />
+      {/* Toast Container para mostrar notificaciones - se renderiza automáticamente */}
     </div>
   );
 }

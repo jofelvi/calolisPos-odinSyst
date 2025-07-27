@@ -1,4 +1,4 @@
-import PurchaseOrderForm from '@/app/components/purchaseOrders/PurchaseOrderForm';
+import PurchaseOrderForm from '@/features/purchaseOrders/PurchaseOrderForm';
 import BackIcon from '@/components/shared/BackButton/BackButton';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 

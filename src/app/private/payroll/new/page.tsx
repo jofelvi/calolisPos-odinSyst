@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeftIcon } from 'lucide-react';
-import PayrollForm from '@/app/components/payroll/PayrollForm';
+import PayrollForm from '@/features/payroll/PayrollForm';
 
 export default function NewPayrollPage() {
   const router = useRouter();

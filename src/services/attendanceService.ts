@@ -4,9 +4,9 @@ import {
   AttendanceSettings,
   AttendanceSummary,
   DailyAttendance,
-} from '@/types/attendance';
-import { Employee } from '@/types/employee';
-import { AttendanceStatusEnum } from '@/types/enumShared';
+} from '@/modelTypes/attendance';
+import { Employee } from '@/modelTypes/employee';
+import { AttendanceStatusEnum } from '@/modelTypes/enumShared';
 import {
   attendanceService,
   employeeService,

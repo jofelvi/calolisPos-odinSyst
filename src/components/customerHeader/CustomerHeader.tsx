@@ -1,9 +1,9 @@
 'use client';
-import { useUserStore } from '@/store/useUserStore';
-import { useSidebarStore } from '@/store/useSidebarStore';
+import { useUserStore } from '@/shared/store/useUserStore';
+import { useSidebarStore } from '@/shared/store/useSidebarStore';
 import { signOut } from 'next-auth/react';
-import { User, LogOut, ShoppingCart, Menu, X } from 'lucide-react';
-import { useCustomerCartStore } from '@/store/useCustomerCartStore';
+import { LogOut, Menu, ShoppingCart, User, X } from 'lucide-react';
+import { useCustomerCartStore } from '@/shared/store/useCustomerCartStore';
 import { AUTH_ROUTES } from '@/constants/routes';
 
 export function CustomerHeader() {

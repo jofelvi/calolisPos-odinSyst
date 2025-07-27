@@ -1,4 +1,4 @@
-import AccountReceivableForm from '@/app/components/accountsReceivable/AccountReceivableForm';
+import AccountReceivableForm from '@/features/accountsReceivable/AccountReceivableForm';
 
 export default function NewAccountReceivablePage() {
   return (

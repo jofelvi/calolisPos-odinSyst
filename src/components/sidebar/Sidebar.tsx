@@ -2,8 +2,8 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
-import { useSidebarStore } from '@/store/useSidebarStore';
+import { cn } from '@/shared/utils/utils';
+import { useSidebarStore } from '@/shared/store/useSidebarStore';
 import Image from 'next/image';
 import logo from '../../../public/odinsys.webp';
 import { PRIVATE_ROUTES } from '@/constants/routes';
