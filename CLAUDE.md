@@ -142,6 +142,15 @@ The codebase emphasizes **SOLID**, **DRY**, **KISS** principles and "thinking Re
 - **Component Reusability**: Extract similar logic into shared components
 - **Type Safety**: Strict TypeScript throughout with proper interfaces
 
+### Token Optimization Strategy
+
+To maximize development efficiency and minimize token usage:
+
+- **Delayed Formatting**: Write functional code first, fix formatting at the end of the session
+- **Batch Formatting**: Run `npm run format` once after completing all code changes
+- **Focus on Logic**: Prioritize implementing features and fixing bugs over formatting during development
+- **End-of-Session Cleanup**: Always run linting and formatting before finalizing work
+
 ### Route Management
 
 All routes are centralized in `src/shared/constantsRoutes/routes.ts`:
@@ -154,6 +163,36 @@ All routes are centralized in `src/shared/constantsRoutes/routes.ts`:
 Use these constants instead of hardcoded strings throughout the application.
 
 ## Important Implementation Notes
+
+### Understanding the Domain Models (CRITICAL)
+
+**Before working with any feature, you MUST read and understand the domain models and enums:**
+
+#### Core Domain Types (`src/modelTypes/`)
+
+- **REQUIRED READING**: Examine all TypeScript interfaces in this directory to understand data structures
+- Key models include: `order.ts`, `product.ts`, `customer.ts`, `employee.ts`, `supplier.ts`, `attendance.ts`, `payroll.ts`
+- Each model defines the shape of data used throughout the application
+- Understanding these types is essential for proper TypeScript implementation
+
+#### Business Enums (`src/modelTypes/enumShared.ts` and `src/shared/types/enumShared.ts`)
+
+- **CRITICAL**: These enums define all business logic constants and status values
+- Key enums include:
+  - `UserRoleEnum`: ADMIN, MANAGER, CASHIER, WAITER, KITCHEN, CUSTOMER
+  - `OrderStatusEnum`: PENDING, IN_PROGRESS, READY, DELIVERED, CANCELLED, PAID
+  - `PaymentStatusEnum`: PENDING, PARTIAL, PAID, REFUNDED, CANCELLED
+  - `PaymentMethodEnum`: CASH_BS, CASH_USD, CARD, TRANSFER, PAGO_MOVIL, MIXED
+  - `TableStatusEnum`: PREPARING, ISAVAILABLE, OCCUPIED, RESERVED, CLEANING
+  - `AttendanceStatusEnum`: PRESENT, ABSENT, LATE, EARLY_DEPARTURE, HOLIDAY, SICK_LEAVE, VACATION
+  - `PurchaseOrderStatusEnum`: PENDING, APPROVED, RECEIVED, CANCELED, PARTIALLY_RECEIVED
+
+**Why This Matters:**
+
+- Ensures consistent use of status values across components
+- Prevents hardcoded strings that can cause bugs
+- Maintains business logic integrity
+- Required for proper form validation and UI state management
 
 ### POS Module Known Issues
 
@@ -169,6 +208,27 @@ The POS system has specific behavior requirements:
 - Create feature-specific services (like `orderServices.ts`) for complex business logic
 - All services handle Firebase Timestamp conversion automatically
 - Error handling should be graceful with user-friendly messages
+
+#### Firebase Query Optimization (CRITICAL)
+
+**Avoid Compound Index Requirements:**
+
+- **Never combine multiple `where` clauses with date ranges** - this requires Firebase compound indexes
+- **Use simple queries + memory filtering instead:**
+
+  ```typescript
+  // ❌ Avoid - requires compound index
+  (where('createdAt', '>=', startDate),
+    where('createdAt', '<=', endDate),
+    where('paymentStatus', '==', 'PAID'));
+
+  // ✅ Prefer - single condition + memory filter
+  where('paymentStatus', '==', 'PAID');
+  // Then filter by date in memory using convertFirebaseDate()
+  ```
+
+- **Always use `convertFirebaseDate()` from `@/shared/utils/dateHelpers`** for date conversions
+- **Filter arrays in memory** rather than complex Firebase queries
 
 ### Chart and Analytics
 

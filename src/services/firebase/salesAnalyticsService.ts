@@ -1,18 +1,25 @@
-import {
-  collection,
-  getDocs,
-  query,
-  Timestamp,
-  where,
-} from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from './firebase';
 import { convertFirebaseDate } from '@/shared/utils/dateHelpers';
 import { Order } from '@/modelTypes/order';
+import { PaymentStatusEnum } from '@/modelTypes/enumShared';
 
 export interface WeeklySalesData {
   day: string;
   sales: number;
   orders: number;
+}
+
+export interface SalesInterval {
+  total: number;
+  orders: number;
+  period: string;
+}
+
+export enum SalesIntervalEnum {
+  TODAY = 'today',
+  CURRENT_MONTH = 'currentMonth',
+  PREVIOUS_MONTH = 'previousMonth',
 }
 
 class SalesAnalyticsService {
@@ -32,23 +39,46 @@ class SalesAnalyticsService {
       sunday.setDate(monday.getDate() + 6);
       sunday.setHours(23, 59, 59, 999);
 
-      // Query orders for the current week
+      console.log('📅 Weekly Sales Debug:', {
+        currentDate: now.toISOString(),
+        monday: monday.toISOString(),
+        sunday: sunday.toISOString(),
+        paymentStatus: PaymentStatusEnum.PAID,
+      });
+
+      // Query paid orders only (avoid compound index requirement)
       const ordersRef = collection(db, this.collectionName);
       const weekQuery = query(
         ordersRef,
-        where('createdAt', '>=', Timestamp.fromDate(monday)),
-        where('createdAt', '<=', Timestamp.fromDate(sunday)),
-        where('paymentStatus', '==', 'paid'),
+        where('paymentStatus', '==', PaymentStatusEnum.PAID),
       );
 
       const snapshot = await getDocs(weekQuery);
-      const orders: Order[] = snapshot.docs.map(
+
+      // Filter by date range in memory to avoid Firebase index requirements
+      const allOrders: Order[] = snapshot.docs.map(
         (doc) =>
           ({
             id: doc.id,
             ...doc.data(),
           }) as Order,
       );
+
+      // Filter orders within the current week
+      const orders = allOrders.filter((order) => {
+        if (!order.createdAt) return false;
+        const orderDate = convertFirebaseDate(order.createdAt);
+        return orderDate >= monday && orderDate <= sunday;
+      });
+
+      console.log('📈 Weekly Query Results:', {
+        totalDocs: snapshot.size,
+        filteredOrders: orders.length,
+        dateRange: {
+          monday: monday.toISOString(),
+          sunday: sunday.toISOString(),
+        },
+      });
 
       // Initialize data for all days of the week
       const daysOfWeek = [
@@ -80,9 +110,123 @@ class SalesAnalyticsService {
         }
       });
 
+      console.log('📊 Final Weekly Data:', weeklySalesData);
+
       return weeklySalesData;
-    } catch {
+    } catch (error) {
+      console.error('❌ Error in getWeeklySalesData:', error);
       return [];
+    }
+  }
+
+  async getSalesDataByInterval(
+    interval: SalesIntervalEnum,
+  ): Promise<SalesInterval> {
+    try {
+      let startDate: Date;
+      let endDate: Date;
+      let period: string;
+
+      const now = new Date();
+
+      switch (interval) {
+        case SalesIntervalEnum.TODAY:
+          startDate = new Date(now);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date(now);
+          endDate.setHours(23, 59, 59, 999);
+          period = 'Hoy';
+          break;
+
+        case SalesIntervalEnum.CURRENT_MONTH:
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+          endDate.setHours(23, 59, 59, 999);
+          period = now.toLocaleDateString('es-ES', {
+            month: 'long',
+            year: 'numeric',
+          });
+          break;
+
+        case SalesIntervalEnum.PREVIOUS_MONTH:
+          startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+          endDate.setHours(23, 59, 59, 999);
+          const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          period = prevMonth.toLocaleDateString('es-ES', {
+            month: 'long',
+            year: 'numeric',
+          });
+          break;
+
+        default:
+          throw new Error('Invalid interval');
+      }
+
+      console.log('🔍 Sales Analytics Debug:', {
+        interval,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        period,
+        paymentStatus: PaymentStatusEnum.PAID,
+      });
+
+      // Query paid orders only (avoid compound index requirement)
+      const ordersRef = collection(db, this.collectionName);
+      const intervalQuery = query(
+        ordersRef,
+        where('paymentStatus', '==', PaymentStatusEnum.PAID),
+      );
+
+      const snapshot = await getDocs(intervalQuery);
+
+      // Filter by date range in memory to avoid Firebase index requirements
+      const allOrders: Order[] = snapshot.docs.map(
+        (doc) =>
+          ({
+            id: doc.id,
+            ...doc.data(),
+          }) as Order,
+      );
+
+      // Filter orders within the specified interval
+      const orders = allOrders.filter((order) => {
+        if (!order.createdAt) return false;
+        const orderDate = convertFirebaseDate(order.createdAt);
+        return orderDate >= startDate && orderDate <= endDate;
+      });
+
+      console.log('📊 Query Results:', {
+        totalDocs: snapshot.size,
+        filteredOrders: orders.length,
+        dateRange: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+        },
+      });
+
+      // Calculate totals
+      const total = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+      const orderCount = orders.length;
+
+      console.log('💰 Calculated Totals:', {
+        total,
+        orderCount,
+        orders: orders.length,
+      });
+
+      return {
+        total,
+        orders: orderCount,
+        period,
+      };
+    } catch (error) {
+      console.error('❌ Error in getSalesDataByInterval:', error);
+      return {
+        total: 0,
+        orders: 0,
+        period: 'Error',
+      };
     }
   }
 }

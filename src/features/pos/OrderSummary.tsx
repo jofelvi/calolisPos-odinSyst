@@ -7,7 +7,7 @@ import { Card } from '@/components/shared/card/card';
 import { Input } from '@/components/shared/input/input';
 import { Minus, Plus, X, Package, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 interface OrderSummaryProps {
   items: OrderItem[];
@@ -62,8 +62,8 @@ export default function OrderSummary({
     onItemNotesChange(index, notes);
   };
 
-  // Generar número de orden único basado en timestamp
-  const orderNumber = Date.now().toString().slice(-8);
+  // Generar número de orden único basado en timestamp - solo una vez
+  const orderNumber = useMemo(() => Date.now().toString().slice(-8), []);
   const totalGuests = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -153,6 +153,7 @@ export default function OrderSummary({
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <Button
+                          type="button"
                           variant="outline"
                           size="sm"
                           className="w-8 h-8 p-0 border-cyan-300 text-cyan-600 hover:bg-cyan-50"
@@ -167,6 +168,7 @@ export default function OrderSummary({
                           {item.quantity}
                         </span>
                         <Button
+                          type="button"
                           variant="outline"
                           size="sm"
                           className="w-8 h-8 p-0 border-cyan-300 text-cyan-600 hover:bg-cyan-50"
@@ -181,6 +183,7 @@ export default function OrderSummary({
 
                     {/* Notes button */}
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
                       className={`w-8 h-8 p-0 transition-colors ${
@@ -196,6 +199,7 @@ export default function OrderSummary({
 
                     {/* Remove button */}
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
                       className="w-8 h-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"

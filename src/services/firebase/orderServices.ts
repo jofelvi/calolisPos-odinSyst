@@ -1,7 +1,18 @@
-import { doc, getDoc, Timestamp, updateDoc } from 'firebase/firestore';
+import {
+  doc,
+  getDoc,
+  Timestamp,
+  updateDoc,
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
+} from 'firebase/firestore';
 import { db } from './firebase';
 import { OrderStatusEnum } from '@/shared/types/enumShared';
 import { Order } from '@/modelTypes/order';
+import { convertFirebaseDate } from '@/shared/utils/dateHelpers';
 
 /**
  * Service específico para operaciones de órdenes que no están en el servicio genérico
@@ -49,8 +60,8 @@ export class OrderService {
       return {
         id: orderSnap.id,
         ...data,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
+        createdAt: convertFirebaseDate(data.createdAt),
+        updatedAt: convertFirebaseDate(data.updatedAt),
       } as Order;
     } catch (error) {
       console.error('Error getting order:', error);

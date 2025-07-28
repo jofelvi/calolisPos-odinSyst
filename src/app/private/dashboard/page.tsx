@@ -21,6 +21,7 @@ import {
   Users,
 } from 'lucide-react';
 import WeeklySalesChart from '@/app/components/dashboard/WeeklySalesChart';
+import SalesTotalsCard from '@/app/components/dashboard/SalesTotalsCard';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 import {
   customerService,
@@ -66,6 +67,51 @@ export default function DashboardPage() {
             supplierService.getAll(),
           ]);
 
+          // Debug para ver qué órdenes tenemos
+          console.log('🛒 Debug Dashboard - Total Orders:', orders.length);
+          console.log(
+            '📋 Orders Sample:',
+            orders.slice(0, 3).map((order) => ({
+              id: order.id,
+              paymentStatus: order.paymentStatus,
+              total: order.total,
+              createdAt: order.createdAt,
+              createdAtType: typeof order.createdAt,
+              createdAtISO:
+                order.createdAt instanceof Date
+                  ? order.createdAt.toISOString()
+                  : 'Not a Date',
+              status: order.status,
+            })),
+          );
+
+          // Ver distribución de payment status
+          const paymentStatusCounts = orders.reduce(
+            (acc, order) => {
+              const status = order.paymentStatus || 'undefined';
+              acc[status] = (acc[status] || 0) + 1;
+              return acc;
+            },
+            {} as Record<string, number>,
+          );
+          console.log('💳 Payment Status Distribution:', paymentStatusCounts);
+
+          // Ver órdenes pagadas
+          const paidOrders = orders.filter(
+            (order) => order.paymentStatus === 'paid',
+          );
+          console.log('✅ Paid Orders:', paidOrders.length);
+          if (paidOrders.length > 0) {
+            console.log(
+              '💰 Paid Orders Sample:',
+              paidOrders.slice(0, 3).map((order) => ({
+                id: order.id,
+                total: order.total,
+                createdAt: order.createdAt,
+              })),
+            );
+          }
+
           setDashboardData({
             products,
             customers,
@@ -73,7 +119,8 @@ export default function DashboardPage() {
             suppliers,
             isLoading: false,
           });
-        } catch {
+        } catch (error) {
+          console.error('❌ Error loading dashboard data:', error);
           // Error loading dashboard data - silently handle and stop loading state
           setDashboardData((prev) => ({ ...prev, isLoading: false }));
         }
@@ -201,28 +248,8 @@ export default function DashboardPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Revenue Card */}
-        <Card
-          className="hover:scale-105 transition-transform duration-300 cursor-pointer"
-          onClick={() => router.push(PRIVATE_ROUTES.ORDERS)}
-        >
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-cyan-600">
-                Ventas Totales
-              </CardTitle>
-              <TrendingUp className="h-5 w-5 text-emerald-500" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-cyan-900">
-              ${todayRevenue.toFixed(2)}
-            </div>
-            <Badge variant="success" className="mt-2">
-              {totalOrders} órdenes
-            </Badge>
-          </CardContent>
-        </Card>
+        {/* Revenue Card with Interval Selector */}
+        <SalesTotalsCard />
 
         {/* Orders Card */}
         <Card

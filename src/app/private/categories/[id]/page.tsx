@@ -2,6 +2,7 @@ import { CategoryForm } from '@/features/categories/CategoryForm';
 import { categoryService } from '@/services/firebase/genericServices';
 import { notFound } from 'next/navigation';
 import BackIcon from '@/components/shared/BackButton/BackButton';
+import { PRIVATE_ROUTES } from '@/shared';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -19,7 +20,7 @@ export default async function CategoryEditPage({ params }: PageProps) {
   };
   return (
     <div className="container mx-auto p-4">
-      <BackIcon href="/categories" />
+      <BackIcon href={PRIVATE_ROUTES.CATEGORIES} />
       <h1 className="text-2xl font-bold mb-6">Editar Categoría</h1>
       <CategoryForm initialData={categoryData} />
     </div>

@@ -25,7 +25,18 @@ const WeeklySalesChart = () => {
       try {
         const data = await salesAnalyticsService.getWeeklySalesData();
         setSalesData(data);
-      } catch {
+
+        // Debug logging for development (will show as warning in production)
+        if (data.length === 0) {
+          console.warn('No weekly sales data received');
+        } else {
+          const hasData = data.some((item) => item.sales > 0);
+          if (!hasData) {
+            console.warn('Weekly sales data received but no sales recorded');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading weekly sales data:', error);
         setSalesData([]);
       } finally {
         setLoading(false);

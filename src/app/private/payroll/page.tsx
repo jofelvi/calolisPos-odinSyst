@@ -180,7 +180,7 @@ export default function PayrollPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-10">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

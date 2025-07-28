@@ -254,6 +254,19 @@ export default function OrderPage() {
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-blue-50">
       <form
         onSubmit={handleSubmit(onSubmit)}
+        onKeyDown={(e) => {
+          // Prevenir que cualquier tecla envíe el formulario accidentalmente
+          // Solo permitir el envío mediante el botón explícito
+          if (e.key === 'Enter') {
+            const target = e.target as HTMLElement;
+            if (
+              target.tagName !== 'BUTTON' ||
+              target.getAttribute('type') !== 'submit'
+            ) {
+              e.preventDefault();
+            }
+          }
+        }}
         className="w-full h-screen flex flex-col"
       >
         <div className="flex-1 flex flex-col xl:flex-row gap-6 p-6 overflow-hidden">

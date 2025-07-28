@@ -17,5 +17,3 @@ el modulo de pos para hacer los pedidos quiero mirarlo a detalle ya que tengo un
 es importante siempre respetar el eslint y prettier para mantener la calidad del codigo
 
 tengo un sistema de rutas que quiera terminar de implementar en toda la app es importante que cada archivo tenga bien implementado y si no hay que crearle su ruta en este archivo para que sea mas facild e mantener routes.ts
-
-es importante que leer todos los modelos del modelTypes para tener un mejor contexto al igual que los enum shared enumShared.ts

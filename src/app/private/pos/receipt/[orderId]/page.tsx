@@ -12,6 +12,7 @@ import { Order } from '@/modelTypes/order';
 import { Button } from '@/components/shared/button/Button';
 import Receipt from '@/features/pos/Receipt';
 import { formatDateForDisplay } from '@/shared/utils/serializeTimestamp';
+import { PRIVATE_ROUTES } from '@/shared';
 
 interface PageProps {
   params: Promise<{ orderId: string }>;
@@ -58,7 +59,7 @@ export default function ReceiptPage({ params }: PageProps) {
   };
 
   const handleNewOrder = () => {
-    router.push('/pos');
+    router.push(PRIVATE_ROUTES.POS);
   };
 
   if (loading || !orderState) {

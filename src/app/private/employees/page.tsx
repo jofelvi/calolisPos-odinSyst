@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Employee } from '@/modelTypes/employee';
 import { employeeService } from '@/services/firebase/genericServices';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
-  PlusIcon,
-  SearchIcon,
   EditIcon,
   EyeIcon,
+  PlusIcon,
+  SearchIcon,
   UserIcon,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -95,7 +95,7 @@ export default function EmployeesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-10">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Gestión de Empleados</h1>
         <Button

@@ -4,6 +4,7 @@
 import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Order } from '@/modelTypes/order';
+import { PRIVATE_ROUTES } from '@/shared/constantsRoutes/routes';
 import {
   CurrencyEnum,
   InvoiceStatusEnum,
@@ -685,7 +686,13 @@ export default function PaymentPage({ params }: PageProps) {
   // Función para cancelar y volver a la página anterior
   const handleCancelPayment = () => {
     toast.info({ title: 'Volviendo...', description: 'Pago cancelado' });
-    router.back();
+    if (order?.tableId) {
+      router.push(
+        `${PRIVATE_ROUTES.POS_ORDER}?tableId=${order.tableId}&orderId=${order.id}`,
+      );
+    } else {
+      router.push(`${PRIVATE_ROUTES.POS_ORDER}?orderId=${order?.id}`);
+    }
   };
 
   // Función para cobrar directamente (marcar como pagado y volver al POS)

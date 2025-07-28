@@ -11,18 +11,13 @@ export enum CurrencyEnum {
   USD = 'USD',
   EUR = 'EUR',
   VES = 'VES',
+  CLP = 'CLP',
+  COP = 'COP',
 }
 
 export enum ProductTypeEnum {
   BASE = 'BASE',
   MIXED = 'COMPUESTO',
-}
-
-export enum PaymentTypeEnum {
-  CASH = 'cash',
-  CARD = 'card',
-  TRANSFER = 'transfer',
-  PAYMOBIL = 'payMobil',
 }
 
 export enum OrderStatusEnum {
@@ -44,38 +39,12 @@ export enum PaymentMethodEnum {
   PENDING = 'PENDING',
 }
 
-export enum SupplierPaymentTermEnum {
-  IMMEDIATE = 'immediate', // Pago inmediato
-  CASH_ON_DELIVERY = 'cash_on_delivery', // Contra entrega
-  NET_15 = 'net_15', // 15 días
-  NET_30 = 'net_30', // 30 días
-  NET_45 = 'net_45', // 45 días
-  NET_60 = 'net_60', // 60 días
-  NET_90 = 'net_90', // 90 días
-}
-
-export enum DocumentTypeEnum {
-  INVOICE = 'invoice', // Factura
-  DELIVERY_NOTE = 'delivery_note', // Guía de entrega
-  RECEIPT = 'receipt', // Recibo
-  CONTRACT = 'contract', // Contrato
-  OTHER = 'other', // Otro
-}
-
 export enum PaymentStatusEnum {
   PENDING = 'pending',
   PARTIAL = 'partial',
   PAID = 'paid',
   REFUNDED = 'refunded',
   CANCELLED = 'cancelled',
-}
-
-export enum TableStatusEnum {
-  PREPARING = 'preparing',
-  ISAVAILABLE = 'isAvailable',
-  OCCUPIED = 'occupied',
-  RESERVED = 'reserved',
-  CLEANING = 'cleaning',
 }
 
 export enum AttendanceStatusEnum {
@@ -95,14 +64,6 @@ export enum PurchaseOrderStatusEnum {
   RECEIVED = 'received',
   CANCELED = 'canceled',
   PARTIALLY_RECEIVED = 'partially_received',
-}
-
-// Tipos de unidades
-export enum UnitType {
-  WEIGHT = 'WEIGHT',
-  VOLUME = 'VOLUME',
-  UNIT = 'UNIT',
-  UNKNOWN = 'UNKNOWN',
 }
 
 export enum ProductPresentationEnum {
@@ -152,4 +113,28 @@ export enum PayrollStatusEnum {
   APPROVED = 'approved',
   PAID = 'paid',
   CANCELLED = 'cancelled',
+}
+
+export enum SubscriptionPlanEnum {
+  FREE = 'free',
+  BASIC = 'basic',
+  PROFESSIONAL = 'professional',
+  ENTERPRISE = 'enterprise',
+  CUSTOM = 'custom',
+}
+
+export enum PaymentTypeEnum {
+  CASH = 'cash',
+  CARD = 'card',
+  TRANSFER = 'transfer',
+  PAYMOBIL = 'paymobil',
+  MIXED = 'mixed',
+}
+
+export enum TableStatusEnum {
+  PREPARING = 'PREPARING',
+  ISAVAILABLE = 'ISAVAILABLE',
+  OCCUPIED = 'OCCUPIED',
+  RESERVED = 'RESERVED',
+  CLEANING = 'CLEANING',
 }

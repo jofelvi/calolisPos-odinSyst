@@ -4,9 +4,11 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/shared/utils/utils';
 import { useSidebarStore } from '@/shared/store/useSidebarStore';
+import { BranchSelector } from '@/shared/ui/BranchSelector';
 import Image from 'next/image';
 import logo from '../../../public/odinsys.webp';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 import {
   FiBarChart,
@@ -21,6 +23,7 @@ import {
   FiLogIn,
   FiLogOut,
   FiPackage,
+  FiSettings,
   FiShoppingCart,
   FiTruck,
   FiUserCheck,
@@ -95,10 +98,16 @@ const menuItems = [
     path: PRIVATE_ROUTES.POS,
     icon: <FiCreditCard size={20} />,
   },
+  {
+    label: 'Configuración',
+    path: PRIVATE_ROUTES.SETTINGS,
+    icon: <FiSettings size={20} />,
+  },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isCollapsed, isMobileOpen, setMobileOpen } = useSidebarStore();
 
   // Close mobile sidebar when clicking outside or changing route
@@ -173,6 +182,18 @@ export function Sidebar() {
             )}
           </div>
         </div>
+
+        {/* Branch Selector */}
+        {!isCollapsed && (
+          <div className="px-4 mt-4">
+            <BranchSelector
+              showCreateButton={true}
+              onCreateBranch={() => {
+                router.push(PRIVATE_ROUTES.SETTINGS_BRANCHES_NEW);
+              }}
+            />
+          </div>
+        )}
 
         {/* Navigation */}
         <nav className="flex flex-col gap-2 mt-6 px-4 flex-grow">

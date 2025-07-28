@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Employee } from '@/modelTypes/employee';
 import { Attendance } from '@/modelTypes/attendance';
@@ -54,6 +54,7 @@ export default function EmployeeAttendancePage() {
     accuracy: number;
   } | null>(null);
   const [checkInLoading, setCheckInLoading] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     if (params.id) {
@@ -66,6 +67,13 @@ export default function EmployeeAttendancePage() {
       fetchAttendances();
     }
   }, [employee, selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    // Asigna el stream de la cámara al elemento de video cuando el stream esté disponible
+    if (cameraStream && videoRef.current) {
+      videoRef.current.srcObject = cameraStream;
+    }
+  }, [cameraStream]);
 
   const fetchEmployee = async (employeeId: string) => {
     try {
@@ -151,16 +159,6 @@ export default function EmployeeAttendancePage() {
       });
 
       setCameraStream(stream);
-
-      // Wait for video element to be available and set stream
-      setTimeout(() => {
-        const video = document.getElementById(
-          'checkin-camera-video',
-        ) as HTMLVideoElement;
-        if (video) {
-          video.srcObject = stream;
-        }
-      }, 100);
     } catch (error) {
       console.error('Error accessing camera:', error);
       setError('No se pudo acceder a la cámara. Verifica los permisos.');
@@ -171,9 +169,7 @@ export default function EmployeeAttendancePage() {
 
   const capturePhoto = async () => {
     try {
-      const video = document.getElementById(
-        'checkin-camera-video',
-      ) as HTMLVideoElement;
+      const video = videoRef.current;
 
       if (!video) {
         throw new Error('No se encontró el elemento de video');

@@ -87,6 +87,10 @@ export const PRIVATE_ROUTES = {
 
   // Configuración
   SETTINGS: '/private/settings',
+  SETTINGS_GENERAL: '/private/settings/general',
+  SETTINGS_BRANCHES: '/private/settings/branches',
+  SETTINGS_BRANCHES_NEW: '/private/settings/branches/new',
+  SETTINGS_BRANCHES_EDIT: (id: string) => `/private/settings/branches/${id}`,
 } as const;
 
 // Rutas de autenticación

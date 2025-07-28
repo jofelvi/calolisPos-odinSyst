@@ -28,6 +28,7 @@ export { EntityGrid } from '@/shared/ui/EntityGrid/EntityGrid';
 export { default as BackButton } from '@/shared/ui/BackButton/BackButton';
 export { default as Modal } from '@/shared/ui/modal';
 export { default as Table } from '@/shared/ui/Table';
+export { BranchSelector } from '@/shared/ui/BranchSelector';
 
 // Layout Components
 export { default as ProtectedLayout } from '@/shared/ui/ProtectedLayout';
