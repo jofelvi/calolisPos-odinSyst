@@ -1,5 +1,5 @@
 // hooks/useBranch.ts
-import { useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useBranchStore } from '@/shared/store/useBranchStore';
 import {
@@ -9,7 +9,7 @@ import {
   userBranchService,
 } from '@/services/firebase/branchServices';
 import { Branch, BranchSettings } from '@/modelTypes/branch';
-import { Organization } from '@/modelTypes/organization';
+import { UserRoleEnum, SubscriptionPlanEnum } from '@/shared';
 
 export const useBranch = () => {
   const { data: session } = useSession();
@@ -41,24 +41,201 @@ export const useBranch = () => {
     getTipSuggestions,
   } = useBranchStore();
 
+  // Track if we're currently creating default branch to prevent duplicates
+  const isCreatingDefaultBranch = React.useRef(false);
+
+  // Create default organization and branch for new users
+  const createDefaultBranchForUser = useCallback(async (userId: string) => {
+    // Prevent concurrent creation of default branches
+    if (isCreatingDefaultBranch.current) {
+      console.log('Already creating default branch, skipping...');
+      return;
+    }
+
+    // Double-check that user still has no branches before creating
+    const existingUserBranches = await userBranchService.getByUserId(userId);
+    if (existingUserBranches.length > 0) {
+      console.log('User already has branches, skipping default creation');
+      return;
+    }
+
+    // Check if user already has an organization
+    const existingOrganizations = await organizationService.getByOwner(userId);
+    if (existingOrganizations.length > 0) {
+      console.log('User already has organization, checking for branches...');
+      // If user has organization but no branches, create a branch for the existing org
+      const existingOrg = existingOrganizations[0];
+      
+      const orgBranches = await branchService.getByOrganization(existingOrg.id);
+      if (orgBranches.length === 0) {
+        console.log('Creating branch for existing organization');
+        isCreatingDefaultBranch.current = true;
+        
+        try {
+          const defaultBranch = await branchService.create({
+            organizationId: existingOrg.id,
+            name: 'Sucursal Principal',
+            description: 'Sucursal principal por defecto',
+            email: '',
+            phone: '',
+            country: 'Venezuela',
+            city: 'Caracas',
+            location: {
+              address: 'Dirección por defecto',
+            },
+            businessRegistration: '',
+            taxId: '',
+            isActive: true,
+            isDefault: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            createdBy: userId,
+          });
+
+          await branchSettingsService.createDefault(defaultBranch.id, userId);
+          
+          await userBranchService.addUserToBranch({
+            userId: userId,
+            branchId: defaultBranch.id,
+            organizationId: existingOrg.id,
+            role: 'admin' as UserRoleEnum,
+            permissions: {
+              canManageSettings: true,
+              canViewReports: true,
+              canManageInventory: true,
+              canManageUsers: true,
+              canProcessOrders: true,
+              canProcessPayments: true,
+              canManageCustomers: true,
+              canManageSuppliers: true,
+            },
+            isActive: true,
+            isDefault: true,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            invitedBy: userId,
+            acceptedAt: new Date(),
+          });
+
+          console.log('Branch created for existing organization');
+          return defaultBranch;
+        } finally {
+          isCreatingDefaultBranch.current = false;
+        }
+      }
+      return;
+    }
+
+    console.log('Creating default organization and branch for user:', userId);
+    isCreatingDefaultBranch.current = true;
+    
+    try {
+      // Create default organization
+      const defaultOrganization = await organizationService.create({
+        name: 'Mi Organización',
+        description: 'Organización por defecto',
+        ownerId: userId,
+        subscriptionPlan: SubscriptionPlanEnum.BASIC,
+        subscriptionStatus: 'active',
+        subscriptionStartDate: new Date(),
+        maxBranches: 10,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      console.log('Default organization created:', defaultOrganization);
+
+      // Create default branch
+      const defaultBranch = await branchService.create({
+        organizationId: defaultOrganization.id,
+        name: 'Sucursal Principal',
+        description: 'Sucursal principal por defecto',
+        email: '',
+        phone: '',
+        country: 'Venezuela',
+        city: 'Caracas',
+        location: {
+          address: 'Dirección por defecto',
+        },
+        businessRegistration: '',
+        taxId: '',
+        isActive: true,
+        isDefault: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: userId,
+      });
+
+      console.log('Default branch created:', defaultBranch);
+
+      // Create default settings for the branch
+      await branchSettingsService.createDefault(defaultBranch.id, userId);
+
+      // Add user to branch with admin permissions
+      await userBranchService.addUserToBranch({
+        userId: userId,
+        branchId: defaultBranch.id,
+        organizationId: defaultOrganization.id,
+        role: 'admin' as UserRoleEnum,
+        permissions: {
+          canManageSettings: true,
+          canViewReports: true,
+          canManageInventory: true,
+          canManageUsers: true,
+          canProcessOrders: true,
+          canProcessPayments: true,
+          canManageCustomers: true,
+          canManageSuppliers: true,
+        },
+        isActive: true,
+        isDefault: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        invitedBy: userId,
+        acceptedAt: new Date(),
+      });
+
+      console.log('User added to default branch');
+      return defaultBranch;
+    } catch (error) {
+      console.error('Error creating default branch for user:', error);
+      throw error;
+    } finally {
+      isCreatingDefaultBranch.current = false;
+    }
+  }, []);
+
   // Initialize branches when user logs in
   const initializeBranches = useCallback(async () => {
-    if (!session?.user?.id) return;
+    console.log('=== INITIALIZING BRANCHES ===');
+    console.log('Session user ID:', session?.user?.id);
+    
+    if (!session?.user?.id) {
+      console.log('No session user ID, skipping initialization');
+      return;
+    }
 
     setLoading(true);
     try {
+      console.log('Getting user branches...');
       // Get user's branches
       const userBranchesData = await userBranchService.getByUserId(
         session.user.id,
       );
+      console.log('User branches data:', userBranchesData);
       setUserBranches(userBranchesData);
 
       if (userBranchesData.length === 0) {
-        // User has no branches - might need to create default organization/branch
+        console.log('User has no branches, creating default organization and branch');
+        await createDefaultBranchForUser(session.user.id);
+        // Retry initialization after creating default branch
+        setTimeout(() => initializeBranches(), 1000);
         setLoading(false);
         return;
       }
 
+      console.log('Getting available branches...');
       // Get available branches
       const branchPromises = userBranchesData.map((ub) =>
         branchService.getById(ub.branchId),
@@ -66,6 +243,7 @@ export const useBranch = () => {
       const branches = (await Promise.all(branchPromises)).filter(
         Boolean,
       ) as Branch[];
+      console.log('Available branches:', branches);
       setAvailableBranches(branches);
 
       // Set current branch (default or first available)
@@ -74,26 +252,34 @@ export const useBranch = () => {
         defaultUserBranch?.branchId || userBranchesData[0]?.branchId;
       const targetBranch = branches.find((b) => b.id === targetBranchId);
 
+      console.log('Target branch ID:', targetBranchId);
+      console.log('Target branch:', targetBranch);
+
       if (targetBranch) {
+        console.log('Setting current branch:', targetBranch);
         setCurrentBranch(targetBranch);
 
         // Load organization
+        console.log('Loading organization...');
         const organization = await organizationService.getById(
           targetBranch.organizationId,
         );
+        console.log('Organization:', organization);
         if (organization) {
           setCurrentOrganization(organization);
         }
 
         // Load branch settings
+        console.log('Loading branch settings...');
         await loadBranchSettings(targetBranch.id);
       }
     } catch (error) {
       console.error('Error initializing branches:', error);
     } finally {
       setLoading(false);
+      console.log('=== BRANCH INITIALIZATION COMPLETE ===');
     }
-  }, [session?.user?.id]);
+  }, [session?.user?.id, createDefaultBranchForUser]);
 
   // Load branch settings
   const loadBranchSettings = useCallback(
@@ -174,17 +360,28 @@ export const useBranch = () => {
   // Update branch settings
   const updateBranchSettings = useCallback(
     async (updates: Partial<BranchSettings>) => {
-      if (!currentBranch?.id || !session?.user?.id) return;
+      console.log('=== UPDATE BRANCH SETTINGS HOOK ===');
+      console.log('Current branch ID:', currentBranch?.id);
+      console.log('Current user ID:', session?.user?.id);
+      console.log('Updates to apply:', updates);
+
+      if (!currentBranch?.id || !session?.user?.id) {
+        console.log('Missing currentBranch.id or session.user.id');
+        return;
+      }
 
       try {
+        console.log('Calling branchSettingsService.update...');
         await branchSettingsService.update(
           currentBranch.id,
           updates,
           session.user.id,
         );
 
+        console.log('branchSettingsService.update completed, reloading settings...');
         // Reload settings
         await loadBranchSettings(currentBranch.id);
+        console.log('Settings reloaded successfully');
       } catch (error) {
         console.error('Error updating branch settings:', error);
         throw error;
@@ -215,7 +412,7 @@ export const useBranch = () => {
           userId: session.user.id,
           branchId: newBranch.id,
           organizationId: currentOrganization.id,
-          role: 'admin' as any,
+          role: 'admin' as UserRoleEnum,
           permissions: {
             canManageSettings: true,
             canViewReports: true,

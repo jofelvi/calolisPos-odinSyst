@@ -7,7 +7,6 @@ import {
   DocumentData,
   getDoc,
   getDocs,
-  orderBy,
   query,
   QueryDocumentSnapshot,
   serverTimestamp,
@@ -56,35 +55,43 @@ const convertBranchSettingsFromFirestore = (
   doc: QueryDocumentSnapshot<DocumentData>,
 ): BranchSettings => {
   const data = doc.data();
+
+  // Convert Firebase structure to domain model structure
   return {
-    id: doc.id,
-    branchId: data.branchId,
-    currency: data.currency,
-    locale: data.locale,
-    timezone: data.timezone,
-    taxRate: data.taxRate,
-    taxName: data.taxName,
-    taxIncluded: data.taxIncluded,
-    serviceChargeEnabled: data.serviceChargeEnabled,
-    serviceChargeRate: data.serviceChargeRate,
-    serviceChargeName: data.serviceChargeName,
-    tipEnabled: data.tipEnabled,
-    tipSuggestions: data.tipSuggestions,
-    tipPercentageSuggestions: data.tipPercentageSuggestions,
-    receiptFooterMessage: data.receiptFooterMessage,
-    receiptShowTaxId: data.receiptShowTaxId,
-    receiptShowLocation: data.receiptShowLocation,
-    allowNegativeInventory: data.allowNegativeInventory,
-    requireCustomerForOrders: data.requireCustomerForOrders,
-    autoGenerateOrderNumbers: data.autoGenerateOrderNumbers,
-    orderNumberPrefix: data.orderNumberPrefix,
-    businessHours: data.businessHours,
-    enabledPaymentMethods: data.enabledPaymentMethods,
-    emailNotifications: data.emailNotifications,
-    integrations: data.integrations,
-    createdAt: convertFirebaseDate(data.createdAt),
-    updatedAt: convertFirebaseDate(data.updatedAt),
-    updatedBy: data.updatedBy,
+    currency: data.currency || 'USD',
+    language: data.locale?.split('-')[0] || 'es', // Extract language from locale
+    timezone: data.timezone || 'America/Caracas',
+    dateFormat: 'DD/MM/YYYY', // Default format
+    taxRate: (data.taxRate || 0) * 100, // Convert from decimal to percentage
+    enableTips: data.tipEnabled ?? false,
+    defaultTipPercentage: data.tipPercentageSuggestions?.[0] || 0,
+    businessHours: data.businessHours || {
+      monday: { isOpen: true, openTime: '08:00', closeTime: '22:00' },
+      tuesday: { isOpen: true, openTime: '08:00', closeTime: '22:00' },
+      wednesday: { isOpen: true, openTime: '08:00', closeTime: '22:00' },
+      thursday: { isOpen: true, openTime: '08:00', closeTime: '22:00' },
+      friday: { isOpen: true, openTime: '08:00', closeTime: '22:00' },
+      saturday: { isOpen: true, openTime: '08:00', closeTime: '22:00' },
+      sunday: { isOpen: true, openTime: '10:00', closeTime: '20:00' },
+    },
+    paymentMethods: data.enabledPaymentMethods || {
+      cash: true,
+      card: true,
+      digitalWallet: true,
+      bankTransfer: true,
+    },
+    receiptSettings: {
+      showLogo: true,
+      showTaxNumber: data.receiptShowTaxId ?? true,
+      footerMessage: data.receiptFooterMessage || 'Gracias por su compra',
+      autoprint: false,
+    },
+    notifications: data.emailNotifications || {
+      lowStock: true,
+      newOrders: true,
+      dailyReports: false,
+      systemAlerts: true,
+    },
   };
 };
 
@@ -139,13 +146,21 @@ export const branchService = {
     const q = query(
       collection(db, BRANCHES_COLLECTION),
       where('organizationId', '==', organizationId),
-      where('isActive', '==', true),
-      orderBy('isDefault', 'desc'),
-      orderBy('name', 'asc'),
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(convertBranchFromFirestore);
+    const branches = snapshot.docs.map(convertBranchFromFirestore);
+
+    // Filter active branches and sort in memory
+    return branches
+      .filter((branch) => branch.isActive)
+      .sort((a, b) => {
+        // Sort by isDefault first (true first), then by name
+        if (a.isDefault !== b.isDefault) {
+          return a.isDefault ? -1 : 1;
+        }
+        return a.name.localeCompare(b.name);
+      });
   },
 
   // Get branch by ID
@@ -163,15 +178,26 @@ export const branchService = {
 
   // Create new branch
   async create(branchData: Omit<Branch, 'id'>): Promise<Branch> {
-    const docRef = await addDoc(collection(db, BRANCHES_COLLECTION), {
-      ...branchData,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+    console.log('Creating new branch:', branchData);
 
-    const newBranch = await this.getById(docRef.id);
-    if (!newBranch) throw new Error('Failed to create branch');
-    return newBranch;
+    try {
+      const docRef = await addDoc(collection(db, BRANCHES_COLLECTION), {
+        ...branchData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      console.log('Branch created with ID:', docRef.id);
+
+      const newBranch = await this.getById(docRef.id);
+      if (!newBranch) throw new Error('Failed to create branch');
+
+      console.log('New branch retrieved:', newBranch);
+      return newBranch;
+    } catch (error) {
+      console.error('Error creating branch:', error);
+      throw error;
+    }
   },
 
   // Update branch
@@ -226,12 +252,13 @@ export const branchSettingsService = {
     branchId: string,
     userId: string,
   ): Promise<BranchSettings> {
-    const defaultSettings: Omit<BranchSettings, 'id'> = {
+    // Create Firebase structure
+    const firebaseSettings = {
       branchId,
       currency: CurrencyEnum.USD,
       locale: 'es-VE',
       timezone: 'America/Caracas',
-      taxRate: 0.17,
+      taxRate: 0.17, // stored as decimal in Firebase
       taxName: 'IVA',
       taxIncluded: false,
       serviceChargeEnabled: true,
@@ -240,6 +267,7 @@ export const branchSettingsService = {
       tipEnabled: true,
       tipSuggestions: [1, 2, 3, 5],
       tipPercentageSuggestions: [10, 15, 20],
+      receiptFooterMessage: 'Gracias por su compra',
       receiptShowTaxId: true,
       receiptShowLocation: true,
       allowNegativeInventory: false,
@@ -267,13 +295,11 @@ export const branchSettingsService = {
         dailyReports: false,
       },
       integrations: {},
-      createdAt: new Date(),
-      updatedAt: new Date(),
       updatedBy: userId,
     };
 
     const docRef = await addDoc(collection(db, BRANCH_SETTINGS_COLLECTION), {
-      ...defaultSettings,
+      ...firebaseSettings,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
@@ -302,6 +328,8 @@ export const branchSettingsService = {
     updates: Partial<BranchSettings>,
     userId: string,
   ): Promise<void> {
+    console.log('Updating branch settings:', { branchId, updates, userId });
+
     const q = query(
       collection(db, BRANCH_SETTINGS_COLLECTION),
       where('branchId', '==', branchId),
@@ -309,15 +337,42 @@ export const branchSettingsService = {
 
     const snapshot = await getDocs(q);
     if (snapshot.empty) {
+      console.error('Branch settings not found for branchId:', branchId);
       throw new Error('Branch settings not found');
     }
 
+    console.log('Found branch settings document:', snapshot.docs[0].id);
+
+    // Convert domain model updates to Firebase structure
+    const firebaseUpdates: Record<string, unknown> = {};
+
+    if (updates.currency) firebaseUpdates.currency = updates.currency;
+    if (updates.language) firebaseUpdates.locale = `${updates.language}-VE`;
+    if (updates.timezone) firebaseUpdates.timezone = updates.timezone;
+    if (updates.dateFormat) firebaseUpdates.dateFormat = updates.dateFormat;
+    if (updates.taxRate !== undefined)
+      firebaseUpdates.taxRate = updates.taxRate / 100; // Convert from percentage to decimal
+    if (updates.enableTips !== undefined)
+      firebaseUpdates.tipEnabled = updates.enableTips;
+    if (updates.defaultTipPercentage !== undefined) {
+      firebaseUpdates.tipPercentageSuggestions = [updates.defaultTipPercentage];
+    }
+
+    console.log('Firebase updates to apply:', firebaseUpdates);
+
     const docRef = doc(db, BRANCH_SETTINGS_COLLECTION, snapshot.docs[0].id);
-    await updateDoc(docRef, {
-      ...updates,
-      updatedAt: serverTimestamp(),
-      updatedBy: userId,
-    });
+
+    try {
+      await updateDoc(docRef, {
+        ...firebaseUpdates,
+        updatedAt: serverTimestamp(),
+        updatedBy: userId,
+      });
+      console.log('Branch settings updated successfully');
+    } catch (error) {
+      console.error('Error updating branch settings:', error);
+      throw error;
+    }
   },
 };
 
@@ -341,12 +396,15 @@ export const organizationService = {
     const q = query(
       collection(db, ORGANIZATIONS_COLLECTION),
       where('ownerId', '==', ownerId),
-      where('isActive', '==', true),
-      orderBy('name', 'asc'),
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(convertOrganizationFromFirestore);
+    const organizations = snapshot.docs.map(convertOrganizationFromFirestore);
+
+    // Filter active organizations and sort in memory
+    return organizations
+      .filter((org) => org.isActive)
+      .sort((a, b) => a.name.localeCompare(b.name));
   },
 
   // Create organization
@@ -379,13 +437,21 @@ export const userBranchService = {
     const q = query(
       collection(db, USER_BRANCHES_COLLECTION),
       where('userId', '==', userId),
-      where('isActive', '==', true),
-      orderBy('isDefault', 'desc'),
-      orderBy('createdAt', 'asc'),
     );
 
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(convertUserBranchFromFirestore);
+    const userBranches = snapshot.docs.map(convertUserBranchFromFirestore);
+
+    // Filter active branches and sort in memory
+    return userBranches
+      .filter((ub) => ub.isActive)
+      .sort((a, b) => {
+        // Sort by isDefault first (true first), then by createdAt
+        if (a.isDefault !== b.isDefault) {
+          return a.isDefault ? -1 : 1;
+        }
+        return a.createdAt.getTime() - b.createdAt.getTime();
+      });
   },
 
   // Add user to branch

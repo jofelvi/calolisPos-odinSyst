@@ -11,8 +11,11 @@ import {
   SelectCustom,
   Textarea,
 } from '@/shared';
-import { BranchFormData, NewBranchFormData } from '../../schemas/branchSchemas';
-import { countryOptions } from '../../utils/settingsConstants';
+import {
+  BranchFormData,
+  countryOptions,
+  NewBranchFormData,
+} from '@/features/settings';
 
 // Extract branch fields from NewBranchFormData using Pick utility type
 type BranchFields = Pick<NewBranchFormData, keyof BranchFormData>;

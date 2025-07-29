@@ -1,5 +1,5 @@
 import React from 'react';
-import { UseFormRegister, FieldErrors, UseFormWatch } from 'react-hook-form';
+import { FieldErrors, UseFormRegister, UseFormWatch } from 'react-hook-form';
 import { DollarSign, Globe } from 'lucide-react';
 import {
   Card,
@@ -10,18 +10,28 @@ import {
   Label,
   SelectCustom,
 } from '@/shared';
-import { GeneralSettingsFormData, NewBranchFormData } from '../../schemas/branchSchemas';
 import {
   currencyOptions,
+  dateFormatOptions,
+  GeneralSettingsFormData,
   languageOptions,
   timezoneOptions,
-  dateFormatOptions,
-} from '../../utils/settingsConstants';
+} from '@/features/settings';
 
-// Extract general settings fields from NewBranchFormData using Pick utility type
-type GeneralSettingsFields = Pick<NewBranchFormData, keyof GeneralSettingsFormData>;
+// Create a type that represents the common settings fields
+type GeneralSettingsFields = {
+  currency: string;
+  language: string;
+  timezone: string;
+  dateFormat: string;
+  taxRate: number;
+  enableTips?: boolean;
+  defaultTipPercentage?: number;
+};
 
-interface GeneralSettingsFormProps<T extends GeneralSettingsFields = GeneralSettingsFormData> {
+interface GeneralSettingsFormProps<
+  T extends GeneralSettingsFields = GeneralSettingsFormData,
+> {
   register: UseFormRegister<T>;
   errors: FieldErrors<T>;
   watch: UseFormWatch<T>;
