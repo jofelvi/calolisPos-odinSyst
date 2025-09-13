@@ -1,7 +1,7 @@
 import { FieldErrors, UseFormRegister } from 'react-hook-form';
 import { Category } from '@/modelTypes/category';
 import { ProductFormData } from '@/features/types/schemaYup/productSchema';
-import { ProductTypeEnum } from '@/modelTypes/enumShared';
+import { ProductTypeEnum } from '@/shared';
 import { Input } from '@/components/shared/input/input';
 import {
   arrayToSelectOptions,

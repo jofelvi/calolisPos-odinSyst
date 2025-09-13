@@ -66,5 +66,7 @@ export const newBranchSchema = branchFormSchema.concat(
 
 // Infer types from schemas
 export type BranchFormData = yup.InferType<typeof branchFormSchema>;
-export type GeneralSettingsFormData = yup.InferType<typeof generalSettingsSchema>;
+export type GeneralSettingsFormData = yup.InferType<
+  typeof generalSettingsSchema
+>;
 export type NewBranchFormData = yup.InferType<typeof newBranchSchema>;

@@ -1,4 +1,4 @@
-import { InvoiceStatusEnum } from '@/modelTypes/enumShared';
+import { InvoiceStatusEnum } from '@/shared';
 
 export interface AccountReceivable {
   id: string;

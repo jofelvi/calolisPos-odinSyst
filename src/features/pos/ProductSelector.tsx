@@ -1,20 +1,20 @@
 'use client';
 import { Product } from '@/modelTypes/product';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Input } from '@/components/shared/input/input';
 import { categoryService } from '@/services/firebase/genericServices';
 import Image from 'next/image';
 import { Category } from '@/modelTypes/category';
-import { ChevronLeft, ChevronRight, Search, Package } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Package, Search } from 'lucide-react';
 
 interface ProductSelectorProps {
   products: Product[];
-  onAddProduct: (product: Product) => void;
+  onAddProductAction: (product: Product) => void;
 }
 
 export default function ProductSelector({
   products,
-  onAddProduct,
+  onAddProductAction,
 }: ProductSelectorProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
@@ -234,7 +234,7 @@ export default function ProductSelector({
             <button
               key={product.id}
               type="button"
-              onClick={() => onAddProduct(product)}
+              onClick={() => onAddProductAction(product)}
               className="rounded-2xl overflow-hidden shadow-sm bg-white/90 backdrop-blur-sm hover:shadow-xl transition-all duration-200 flex flex-col items-center p-4 border border-cyan-100 hover:border-cyan-300 transform hover:scale-105 hover:-translate-y-1"
             >
               <div className="w-20 h-20 bg-gradient-to-r from-cyan-100 to-teal-100 rounded-xl mb-3 overflow-hidden">

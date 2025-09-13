@@ -5,9 +5,9 @@ import { Product } from '@/modelTypes/product';
 import { Button } from '@/components/shared/button/Button';
 import { Card } from '@/components/shared/card/card';
 import { Input } from '@/components/shared/input/input';
-import { Minus, Plus, X, Package, MessageSquare } from 'lucide-react';
+import { MessageSquare, Minus, Package, Plus, X } from 'lucide-react';
 import Image from 'next/image';
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 interface OrderSummaryProps {
   items: OrderItem[];
@@ -16,9 +16,9 @@ interface OrderSummaryProps {
   tax?: number;
   total: number;
   tableId?: string | null;
-  onRemoveItem: (e: React.MouseEvent, index: number) => void;
-  onQuantityChange: (index: number, quantity: number) => void;
-  onItemNotesChange: (index: number, notes: string) => void;
+  onRemoveItemAction: (e: React.MouseEvent, index: number) => void;
+  onQuantityChangeAction: (index: number, quantity: number) => void;
+  onItemNotesChangeAction: (index: number, notes: string) => void;
 }
 
 export default function OrderSummary({
@@ -27,9 +27,9 @@ export default function OrderSummary({
   subtotal,
   total,
   tableId,
-  onRemoveItem,
-  onQuantityChange,
-  onItemNotesChange,
+  onRemoveItemAction,
+  onQuantityChangeAction,
+  onItemNotesChangeAction,
 }: OrderSummaryProps) {
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
   const handleQuantityDecrease = (e: React.MouseEvent, index: number) => {
@@ -37,7 +37,7 @@ export default function OrderSummary({
     e.stopPropagation();
     const currentQuantity = items[index].quantity;
     if (currentQuantity > 1) {
-      onQuantityChange(index, currentQuantity - 1);
+      onQuantityChangeAction(index, currentQuantity - 1);
     }
   };
 
@@ -45,7 +45,7 @@ export default function OrderSummary({
     e.preventDefault();
     e.stopPropagation();
     const currentQuantity = items[index].quantity;
-    onQuantityChange(index, currentQuantity + 1);
+    onQuantityChangeAction(index, currentQuantity + 1);
   };
 
   const toggleItemExpansion = (index: number) => {
@@ -59,7 +59,7 @@ export default function OrderSummary({
   };
 
   const handleNotesChange = (index: number, notes: string) => {
-    onItemNotesChange(index, notes);
+    onItemNotesChangeAction(index, notes);
   };
 
   // Generar número de orden único basado en timestamp - solo una vez
@@ -203,7 +203,9 @@ export default function OrderSummary({
                       variant="ghost"
                       size="sm"
                       className="w-8 h-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={(e: React.MouseEvent) => onRemoveItem(e, index)}
+                      onClick={(e: React.MouseEvent) =>
+                        onRemoveItemAction(e, index)
+                      }
                     >
                       <X size={16} />
                     </Button>

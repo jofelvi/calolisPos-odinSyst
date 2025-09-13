@@ -9,7 +9,7 @@ import { Category } from '@/modelTypes/category';
 import {
   CategoryFormValues,
   categorySchema,
-} from '../types/schemaYup/categorySchema';
+} from '@/features/types/schemaYup/categorySchema';
 import { uploadFile } from '@/services/firebase/uploadImage';
 import { categoryService } from '@/services/firebase/genericServices';
 import Image from 'next/image';

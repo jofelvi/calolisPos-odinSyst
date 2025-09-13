@@ -1,14 +1,4 @@
-import {
-  doc,
-  getDoc,
-  Timestamp,
-  updateDoc,
-  collection,
-  getDocs,
-  query,
-  where,
-  orderBy,
-} from 'firebase/firestore';
+import { doc, getDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { OrderStatusEnum } from '@/shared/types/enumShared';
 import { Order } from '@/modelTypes/order';
@@ -36,8 +26,7 @@ export class OrderService {
         status: newStatus,
         updatedAt: Timestamp.now(),
       });
-    } catch (error) {
-      console.error('Error updating order status:', error);
+    } catch {
       throw new Error('Failed to update order status');
     }
   }
@@ -63,8 +52,7 @@ export class OrderService {
         createdAt: convertFirebaseDate(data.createdAt),
         updatedAt: convertFirebaseDate(data.updatedAt),
       } as Order;
-    } catch (error) {
-      console.error('Error getting order:', error);
+    } catch {
       throw new Error('Failed to get order');
     }
   }
@@ -91,8 +79,7 @@ export class OrderService {
         ...updates,
         updatedAt: Timestamp.now(),
       });
-    } catch (error) {
-      console.error('Error updating order fields:', error);
+    } catch {
       throw new Error('Failed to update order fields');
     }
   }

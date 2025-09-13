@@ -8,11 +8,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { Product } from '@/modelTypes/product';
 import { Customer } from '@/modelTypes/customer';
 import { OrderFormValues, orderSchema } from '@/shared/schemas/orderSchema';
-import {
-  OrderStatusEnum,
-  PaymentStatusEnum,
-  TableStatusEnum,
-} from '@/modelTypes/enumShared';
+import { OrderStatusEnum, PaymentStatusEnum, TableStatusEnum } from '@/shared';
 import {
   getActiveOrderByTable,
   orderService,
@@ -273,7 +269,7 @@ export default function OrderPage() {
           <div className="flex-1 space-y-6 overflow-auto">
             <ProductSelector
               products={products}
-              onAddProduct={handleAddProduct}
+              onAddProductAction={handleAddProduct}
             />
           </div>
           <div className="w-full xl:w-[400px] space-y-6 flex flex-col">
@@ -284,9 +280,9 @@ export default function OrderPage() {
               tax={tax}
               total={total}
               tableId={tableId}
-              onRemoveItem={handleRemoveItem}
-              onQuantityChange={handleQuantityChange}
-              onItemNotesChange={handleItemNotesChange}
+              onRemoveItemAction={handleRemoveItem}
+              onQuantityChangeAction={handleQuantityChange}
+              onItemNotesChangeAction={handleItemNotesChange}
             />
             {/* Botones de Acción */}
             <Card className="bg-white/90 backdrop-blur-sm shadow-xl border border-cyan-100/50 p-6">

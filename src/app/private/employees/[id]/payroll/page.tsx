@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Employee } from '@/modelTypes/employee';
 import { Payroll } from '@/modelTypes/payroll';
-import { PayrollStatusEnum } from '@/modelTypes/enumShared';
+import { PayrollStatusEnum } from '@/shared';
 import {
   employeeService,
   payrollService,
@@ -16,11 +16,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   ArrowLeftIcon,
-  PlusIcon,
-  DollarSignIcon,
-  FileTextIcon,
   CheckCircleIcon,
   ClockIcon,
+  DollarSignIcon,
+  FileTextIcon,
+  PlusIcon,
   XCircleIcon,
 } from 'lucide-react';
 

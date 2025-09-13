@@ -1,4 +1,4 @@
-import { IdentificationType } from '@/modelTypes/enumShared';
+import { IdentificationType } from '@/shared';
 
 export interface Customer {
   id: string;

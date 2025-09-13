@@ -1,8 +1,8 @@
-import { PurchaseOrderItem } from '@/modelTypes/purchaseOrderItem';
+import { PurchaseOrderItem } from '../../../modelTypes/purchaseOrderItem';
 import {
   CurrencyEnum,
   PurchaseOrderStatusEnum,
-} from '@/shared/types/enumShared';
+} from '../../../shared/types/enumShared';
 
 export interface PurchaseOrder {
   id: string;

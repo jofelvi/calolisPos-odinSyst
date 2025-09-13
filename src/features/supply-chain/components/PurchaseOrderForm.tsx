@@ -11,17 +11,13 @@ import { PurchaseOrder } from '@/modelTypes/purchaseOrder';
 import { Supplier } from '@/modelTypes/supplier';
 import { Product } from '@/modelTypes/product';
 import {
-  CurrencyEnum,
-  PurchaseOrderStatusEnum,
-} from '@/shared/types/enumShared';
-import {
   productService,
   purchaseOrderService,
   supplierService,
 } from '@/services/firebase/genericServices';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared/constantsRoutes/routes';
 import { Button } from '@/shared/ui/button/Button';
-import { useToast } from '@/components/hooks/useToast';
+import { useToast } from '@/shared/hooks/useToast';
 import { Toaster } from 'react-hot-toast';
 import { useUserStore } from '@/shared/store/useUserStore';
 import {
@@ -29,6 +25,7 @@ import {
   PurchaseOrderItemFormValues,
   purchaseOrderSchema,
 } from '@/shared/schemas/purchaseOrderSchema';
+import { CurrencyEnum, PurchaseOrderStatusEnum } from '@/shared';
 
 interface PurchaseOrderFormProps {
   initialData?: PurchaseOrder | null;
@@ -45,6 +42,7 @@ export default function PurchaseOrderForm({
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedSupplier, setSelectedSupplier] = useState<string | null>(null);
+  const toast = useToast();
 
   const {
     register,
@@ -55,7 +53,7 @@ export default function PurchaseOrderForm({
     setValue,
     formState: { errors },
   } = useForm<PurchaseOrderFormValues>({
-    resolver: yupResolver(purchaseOrderSchema),
+    resolver: yupResolver(purchaseOrderSchema) as any,
     mode: 'onChange', // Validar en tiempo real
     defaultValues: {
       supplierId: '',
@@ -92,18 +90,10 @@ export default function PurchaseOrderForm({
       setProducts(productsData);
 
       if (initialData) {
-        const itemsWithNames = initialData.items.map((item) => {
-          const product = productsData.find((p) => p.id === item.productId);
-          return {
-            ...item,
-            productName: product?.name || 'Producto no encontrado',
-          };
-        });
-
         // Reset the form with initial data
         reset({
           ...initialData,
-          items: itemsWithNames,
+          items: initialData.items,
           expectedDeliveryDate: initialData.expectedDeliveryDate
             ? new Date(initialData.expectedDeliveryDate)
             : null,
@@ -147,7 +137,7 @@ export default function PurchaseOrderForm({
       quantity: 1,
       unitCost: 0,
       subtotal: 0,
-    } as PurchaseOrderItemFormValues);
+    });
 
     toast.success({
       title: 'Producto Agregado',
@@ -166,15 +156,16 @@ export default function PurchaseOrderForm({
   const handleItemChange = (
     index: number,
     field: keyof PurchaseOrderItemFormValues,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    value: any,
+    value: string | number,
   ) => {
-    const items = watch('items');
+    const items = watch('items') || [];
     const newItems = [...items];
 
     if (field === 'quantity' || field === 'unitCost') {
-      const quantity = field === 'quantity' ? value : newItems[index].quantity;
-      const unitCost = field === 'unitCost' ? value : newItems[index].unitCost;
+      const quantity =
+        field === 'quantity' ? Number(value) : newItems[index]?.quantity || 0;
+      const unitCost =
+        field === 'unitCost' ? Number(value) : newItems[index]?.unitCost || 0;
       newItems[index] = {
         ...newItems[index],
         [field]: value,
@@ -190,8 +181,6 @@ export default function PurchaseOrderForm({
     setValue('items', newItems);
   };
 
-  const toast = useToast();
-
   // Función para determinar si el formulario puede ser enviado
   const canSubmit = () => {
     const hasErrors = Object.keys(errors).length > 0;
@@ -201,7 +190,14 @@ export default function PurchaseOrderForm({
     return !hasErrors && hasItems && hasSupplier && !isSubmitting;
   };
 
-  const onSubmit = async (data: PurchaseOrderFormValues) => {
+  const onSubmit = async (data: {
+    supplierId: string;
+    items: PurchaseOrderItemFormValues[];
+    totalAmount: number;
+    currency: string;
+    status: string;
+    expectedDeliveryDate: Date | null;
+  }) => {
     setIsSubmitting(true);
 
     // Validaciones adicionales antes de enviar
@@ -235,13 +231,25 @@ export default function PurchaseOrderForm({
       );
 
       if (isNew) {
-        const orderData: Omit<PurchaseOrder, 'id'> = {
+        const orderData: {
+          supplierId: string;
+          items: PurchaseOrderItemFormValues[];
+          totalAmount: number;
+          currency: string;
+          status: string;
+          expectedDeliveryDate: Date | null;
+          userId: string;
+          createdAt: Date;
+          supplierName: string;
+        } = {
           ...data,
           userId: user?.id || 'unknown-user',
           createdAt: new Date(),
           supplierName: filteredSuppliers?.name || '',
         };
-        const newOrder = await purchaseOrderService.create(orderData);
+        const newOrder = await purchaseOrderService.create(
+          orderData as PurchaseOrder,
+        );
 
         toast.success({
           title: '¡Órden Creada!',
@@ -251,14 +259,28 @@ export default function PurchaseOrderForm({
         // Redirigir a la página de detalles de la nueva orden
         router.push(PRIVATE_ROUTES.PURCHASE_ORDERS_DETAILS(newOrder.id));
       } else if (initialData?.id) {
-        const orderData: PurchaseOrder = {
+        const orderData: {
+          supplierId: string;
+          items: PurchaseOrderItemFormValues[];
+          totalAmount: number;
+          currency: string;
+          status: string;
+          expectedDeliveryDate: Date | null;
+          id: string;
+          userId: string;
+          createdAt: Date | null | undefined;
+          supplierName: string;
+        } = {
           ...data,
           id: initialData.id,
           userId: user?.id || 'unknown-user',
           createdAt: initialData.createdAt,
           supplierName: filteredSuppliers?.name || '',
         };
-        await purchaseOrderService.update(initialData.id, orderData);
+        await purchaseOrderService.update(
+          initialData.id,
+          orderData as PurchaseOrder,
+        );
 
         toast.success({
           title: '¡Órden Actualizada!',
@@ -415,15 +437,11 @@ export default function PurchaseOrderForm({
                 errors.status ? 'border-red-500' : 'border-gray-300'
               } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
             >
-              <option value={PurchaseOrderStatusEnum.PENDING}>Pendiente</option>
-              <option value={PurchaseOrderStatusEnum.APPROVED}>Aprobada</option>
-              <option value={PurchaseOrderStatusEnum.RECEIVED}>Recibida</option>
-              <option value={PurchaseOrderStatusEnum.CANCELED}>
-                Cancelada
-              </option>
-              <option value={PurchaseOrderStatusEnum.PARTIALLY_RECEIVED}>
-                Parcialmente Recibida
-              </option>
+              <option value="PENDING">Pendiente</option>
+              <option value="APPROVED">Aprobada</option>
+              <option value="RECEIVED">Recibida</option>
+              <option value="CANCELED">Cancelada</option>
+              <option value="PARTIALLY_RECEIVED">Parcialmente Recibida</option>
             </select>
             {errors.status && (
               <p className="mt-1 text-sm text-red-600">
@@ -525,8 +543,10 @@ export default function PurchaseOrderForm({
             // Obtener errores específicos para este item
             const itemErrors = errors.items?.[index];
             const hasProductError = !item.productId;
-            const hasQuantityError = !item.quantity || item.quantity <= 0;
-            const hasUnitCostError = !item.unitCost || item.unitCost <= 0;
+            const hasQuantityError =
+              !item.quantity || Number(item.quantity) <= 0;
+            const hasUnitCostError =
+              !item.unitCost || Number(item.unitCost) <= 0;
 
             return (
               <div
@@ -546,7 +566,7 @@ export default function PurchaseOrderForm({
                     Producto *
                   </label>
                   <select
-                    value={item.productId}
+                    value={item.productId || ''}
                     onChange={(e) =>
                       handleItemChange(index, 'productId', e.target.value)
                     }
@@ -585,7 +605,7 @@ export default function PurchaseOrderForm({
                   <input
                     type="number"
                     min="1"
-                    value={item.quantity}
+                    value={item.quantity || 1}
                     onChange={(e) =>
                       handleItemChange(
                         index,
@@ -616,7 +636,7 @@ export default function PurchaseOrderForm({
                     type="number"
                     min="0"
                     step="0.01"
-                    value={item.unitCost}
+                    value={item.unitCost || 0}
                     onChange={(e) =>
                       handleItemChange(
                         index,
@@ -645,7 +665,7 @@ export default function PurchaseOrderForm({
                   </label>
                   <input
                     type="number"
-                    value={item.subtotal}
+                    value={item.subtotal || 0}
                     disabled
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-100 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />

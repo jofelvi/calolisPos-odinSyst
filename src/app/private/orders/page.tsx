@@ -21,18 +21,13 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/services/firebase/firebase';
 import { orderService } from '@/services/firebase/genericServices';
-import { convertFirebaseDate } from '@/shared/utils/dateHelpers';
+import { convertFirebaseDate, formatDate } from '@/shared/utils/dateHelpers';
 import { Order } from '@/modelTypes/order';
-import {
-  OrderStatusEnum,
-  PaymentStatusEnum,
-  UserRoleEnum,
-} from '@/modelTypes/enumShared';
+import { OrderStatusEnum, PaymentStatusEnum, UserRoleEnum } from '@/shared';
 import { Button } from '@/components/shared/button/Button';
 import { useUserStore } from '@/shared/store/useUserStore';
 import { PRIVATE_ROUTES } from '@/shared/constantsRoutes/routes';
 import { formatCurrency } from '@/shared/utils/currencyHelpers';
-import { formatDate } from '@/shared/utils/dateHelpers';
 import { Badge } from '@/shared/ui/badge/badge';
 import Modal from '@/shared/ui/modal';
 
@@ -612,7 +607,7 @@ export default function OrdersPage() {
                     >
                       <div className="flex-1">
                         <h5 className="font-medium text-gray-900">
-                          {item.productName}
+                          {item.name}
                         </h5>
                         <p className="text-sm text-gray-600">
                           Cantidad: {item.quantity} x{' '}
@@ -626,7 +621,7 @@ export default function OrdersPage() {
                       </div>
                       <div className="text-right">
                         <p className="font-medium text-gray-900">
-                          {formatCurrency(item.subtotal)}
+                          {formatCurrency(item.total)}
                         </p>
                       </div>
                     </div>

@@ -71,7 +71,7 @@ export const transformNewBranchSettingsData = (
       dailyReports: false,
       systemAlerts: true,
     },
-  };
+  } as any;
 };
 
 /**

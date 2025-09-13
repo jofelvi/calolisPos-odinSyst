@@ -3,7 +3,7 @@ import {
   OrderTypeEnum,
   PaymentMethodEnum,
   PaymentStatusEnum,
-} from '@/modelTypes/enumShared';
+} from '@/shared';
 import { OrderItem } from '@/modelTypes/orderItem';
 
 export interface Order {

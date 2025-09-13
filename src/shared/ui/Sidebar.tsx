@@ -80,12 +80,12 @@ const menuItems = [
   },
   {
     label: 'Nóminas',
-    path: '/private/payroll',
+    path: PRIVATE_ROUTES.PAYROLL,
     icon: <FiCalendar size={20} />,
   },
   {
     label: 'Reportes',
-    path: '/private/reports',
+    path: PRIVATE_ROUTES.REPORTS,
     icon: <FiBarChart size={20} />,
   },
   {
@@ -244,7 +244,7 @@ export function Sidebar() {
           {!isCollapsed && (
             <div className="space-y-2">
               <Link
-                href="/private/attendance/checkin"
+                href={PRIVATE_ROUTES.ATTENDANCE_CHECKIN}
                 className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 transition-all duration-200"
               >
                 <FiLogIn className="h-4 w-4 text-green-400" />
@@ -253,7 +253,7 @@ export function Sidebar() {
                 </span>
               </Link>
               <Link
-                href="/private/attendance/checkout"
+                href={PRIVATE_ROUTES.ATTENDANCE_CHECKOUT}
                 className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-orange-600/20 to-red-600/20 hover:from-orange-600/30 hover:to-red-600/30 border border-orange-500/30 transition-all duration-200"
               >
                 <FiLogOut className="h-4 w-4 text-orange-400" />
@@ -266,14 +266,14 @@ export function Sidebar() {
           {isCollapsed && (
             <div className="space-y-2">
               <Link
-                href="/private/attendance/checkin"
+                href={PRIVATE_ROUTES.ATTENDANCE_CHECKIN}
                 className="flex items-center justify-center p-3 rounded-lg bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 transition-all duration-200"
                 title="Registrar Entrada"
               >
                 <FiLogIn className="h-4 w-4 text-green-400" />
               </Link>
               <Link
-                href="/private/attendance/checkout"
+                href={PRIVATE_ROUTES.ATTENDANCE_CHECKOUT}
                 className="flex items-center justify-center p-3 rounded-lg bg-gradient-to-r from-orange-600/20 to-red-600/20 hover:from-orange-600/30 hover:to-red-600/30 border border-orange-500/30 transition-all duration-200"
                 title="Registrar Salida"
               >

@@ -7,7 +7,7 @@ import {
   UseFormWatch,
 } from 'react-hook-form';
 import { ProductFormData } from '../types/schemaYup/productSchema';
-import { ProductPresentationEnum } from '@/modelTypes/enumShared';
+import { ProductPresentationEnum } from '@/shared';
 import SelectCustom from '@/components/shared/selectCustom/SelectCustom';
 import {
   defaultQuantities,

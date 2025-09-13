@@ -15,7 +15,7 @@ import {
   PurchaseOrderItemFormValues,
   purchaseOrderSchema,
 } from '@/shared/schemas/purchaseOrderSchema';
-import { CurrencyEnum, PurchaseOrderStatusEnum } from '@/modelTypes/enumShared';
+import { CurrencyEnum, PurchaseOrderStatusEnum } from '@/shared';
 import {
   productService,
   purchaseOrderService,

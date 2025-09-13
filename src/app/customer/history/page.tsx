@@ -12,7 +12,7 @@ import {
   Package,
   XCircle,
 } from 'lucide-react';
-import { OrderStatusEnum, PaymentStatusEnum } from '@/modelTypes/enumShared';
+import { OrderStatusEnum, PaymentStatusEnum } from '@/shared';
 import { CUSTOMER_ROUTES } from '@/constants/routes';
 import Link from 'next/link';
 

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Employee } from '@/modelTypes/employee';
-import { AttendanceStatusEnum } from '@/modelTypes/enumShared';
+import { AttendanceStatusEnum } from '@/shared';
 import {
   attendanceService,
   getEmployeeByEmail,

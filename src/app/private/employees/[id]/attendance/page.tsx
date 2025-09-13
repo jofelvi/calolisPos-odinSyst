@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Employee } from '@/modelTypes/employee';
 import { Attendance } from '@/modelTypes/attendance';
-import { AttendanceStatusEnum } from '@/modelTypes/enumShared';
+import { AttendanceStatusEnum } from '@/shared';
 import {
   attendanceService,
   employeeService,

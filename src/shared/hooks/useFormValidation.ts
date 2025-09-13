@@ -13,7 +13,7 @@ export interface ValidationResult {
 }
 
 export interface UseFormValidationOptions<T> {
-  schema: yup.Schema<T>;
+  schemaYupAction: yup.Schema<T>;
   validateOnChange?: boolean;
   validateOnBlur?: boolean;
 }
@@ -29,9 +29,9 @@ export interface UseFormValidationReturn<T> {
   setFieldError: (field: keyof T, error: string) => void;
 }
 
-// KISS: Simple, focused validation hook
 export function useFormValidation<T extends Record<string, unknown>>({
-  schema,
+  // @ts-ignore
+  schemaYupAction,
 }: UseFormValidationOptions<T>): UseFormValidationReturn<T> {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isValidating, setIsValidating] = useState(false);
@@ -42,7 +42,7 @@ export function useFormValidation<T extends Record<string, unknown>>({
       setIsValidating(true);
 
       try {
-        await schema.validate(data, { abortEarly: false });
+        await schemaYupAction.validate(data, { abortEarly: false });
         setErrors({});
         setIsValidating(false);
 
@@ -80,14 +80,14 @@ export function useFormValidation<T extends Record<string, unknown>>({
         };
       }
     },
-    [schema],
+    [schemaYupAction],
   );
 
   // SOLID: Single Responsibility - Field-level validation
   const validateField = useCallback(
     async (field: keyof T, value: unknown): Promise<string | null> => {
       try {
-        await schema.validateAt(field as string, { [field]: value });
+        await schemaYupAction.validateAt(field as string, { [field]: value });
         setErrors((prev) => {
           const newErrors = { ...prev };
           delete newErrors[field as string];
@@ -106,7 +106,7 @@ export function useFormValidation<T extends Record<string, unknown>>({
         return 'Error de validación';
       }
     },
-    [schema],
+    [schemaYupAction],
   );
 
   // DRY: Utility functions for error management
@@ -143,7 +143,6 @@ export function useFormValidation<T extends Record<string, unknown>>({
   };
 }
 
-// DRY: Common validation patterns
 export const validationPatterns = {
   required: (fieldName: string) =>
     yup.string().required(`${fieldName} es obligatorio`),

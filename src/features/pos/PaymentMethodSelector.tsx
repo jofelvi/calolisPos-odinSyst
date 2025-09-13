@@ -1,13 +1,13 @@
 // features/pos/PaymentMethodSelector.tsx
 'use client';
-import { PaymentMethodEnum } from '@/modelTypes/enumShared';
+import { PaymentMethodEnum } from '@/shared';
 import SelectCustom, {
   SelectOption,
 } from '@/components/shared/selectCustom/SelectCustom';
 
 interface PaymentMethodSelectorProps {
   selectedMethod: PaymentMethodEnum;
-  onSelectMethod: (method: PaymentMethodEnum) => void;
+  onSelectMethodAction: (method: PaymentMethodEnum) => void;
 }
 
 const paymentMethodLabels = {
@@ -20,7 +20,7 @@ const paymentMethodLabels = {
 
 export default function PaymentMethodSelector({
   selectedMethod,
-  onSelectMethod,
+  onSelectMethodAction,
 }: PaymentMethodSelectorProps) {
   const paymentMethodOptions: SelectOption[] = Object.entries(
     paymentMethodLabels,
@@ -34,7 +34,7 @@ export default function PaymentMethodSelector({
       id="payment-method-selector"
       options={paymentMethodOptions}
       value={selectedMethod}
-      onChange={(value) => onSelectMethod(value as PaymentMethodEnum)}
+      onChange={(value) => onSelectMethodAction(value as PaymentMethodEnum)}
       placeholder="Seleccione método de pago"
     />
   );

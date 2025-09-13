@@ -76,8 +76,8 @@ export default function CategoriesPage() {
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-teal-50 to-blue-50">
       <DeleteConfirmationModal
         isOpen={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        onConfirm={confirmDelete}
+        onCloseAction={() => setDeleteModalOpen(false)}
+        onConfirmAction={confirmDelete}
         title={`¿Eliminar categoría ${categoryToDelete?.name}?`}
         description="Esta acción no se puede deshacer. Todos los productos asociados a esta categoría perderán su clasificación."
         isLoading={deleting}

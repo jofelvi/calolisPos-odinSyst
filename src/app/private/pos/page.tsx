@@ -27,6 +27,7 @@ import {
 import Loader from '@/components/shared/Loader/Loader';
 import { Table } from '@/modelTypes/table';
 import { formatTime } from '@/shared/utils/dateHelpers';
+import { TableStatusEnum } from '@/shared';
 
 interface TableWithOrder extends Table {
   currentOrder?: Order | null;
@@ -103,7 +104,7 @@ export default function POSPage() {
     if (table.currentOrder) return 'occupied';
 
     // Si no hay currentOrder, verificar otros campos
-    if (table.status === 'occupied') return 'occupied';
+    if (table.status === TableStatusEnum.OCCUPIED) return 'occupied';
     if (!table.isAvailable) return 'occupied';
     if (table.orderId) return 'occupied';
 

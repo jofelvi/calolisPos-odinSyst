@@ -8,7 +8,7 @@ import { searchCustomers } from '@/services/firebase/customersServices';
 import { Input } from '@/components/shared/input/input';
 import Modal from '../../components/shared/modal';
 import { customerService } from '@/services/firebase/genericServices';
-import { IdentificationType } from '@/modelTypes/enumShared';
+import { IdentificationType } from '@/shared';
 import {
   CustomerFormData,
   customerSchema,
@@ -17,12 +17,12 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 
 interface CustomerSearchProps {
-  onSelectCustomer: (customer: Customer | null) => void;
+  onSelectCustomerAction: (customer: Customer | null) => void;
   selectedCustomer: Customer | null;
 }
 
 export default function CustomerSearch({
-  onSelectCustomer,
+  onSelectCustomerAction,
   selectedCustomer,
 }: CustomerSearchProps) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,7 +71,7 @@ export default function CustomerSearch({
   const handleSelectCustomer = (e: React.MouseEvent, customer: Customer) => {
     e.preventDefault();
     e.stopPropagation();
-    onSelectCustomer(customer);
+    onSelectCustomerAction(customer);
     setSearchTerm('');
     setSearchResults([]);
   };
@@ -79,7 +79,7 @@ export default function CustomerSearch({
   const handleClearSelection = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    onSelectCustomer(null);
+    onSelectCustomerAction(null);
   };
 
   const handleOpenNewCustomerModal = (e: React.MouseEvent) => {
@@ -103,7 +103,7 @@ export default function CustomerSearch({
         updatedAt: new Date(),
       });
 
-      onSelectCustomer(newCustomer);
+      onSelectCustomerAction(newCustomer);
       handleCloseModal();
     } catch {
       // console.error('Error creating customer:', error);

@@ -12,7 +12,7 @@ import {
 import { Badge } from '@/components/shared/badge/badge';
 import { Button } from '@/components/shared/button/Button';
 import Link from 'next/link';
-import { InvoiceStatusEnum } from '@/modelTypes/enumShared';
+import { InvoiceStatusEnum } from '@/shared';
 import { notFound } from 'next/navigation';
 
 interface AccountReceivableDetailsPageProps {

@@ -1,6 +1,6 @@
 import { CategoryForm } from '@/features/categories/CategoryForm';
 import BackIcon from '@/components/shared/BackButton/BackButton';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared/constantsRoutes/routes';
 
 export default function NewCategoryPage() {
   return (

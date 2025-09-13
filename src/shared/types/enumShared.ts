@@ -15,6 +15,33 @@ export enum CurrencyEnum {
   COP = 'COP',
 }
 
+// Backward compatibility alias
+export const VE = CurrencyEnum.VES;
+
+export enum DocumentTypeEnum {
+  RECEIPT = 'RECEIPT',
+  INVOICE = 'INVOICE',
+  DELIVERY_NOTE = 'DELIVERY_NOTE',
+  CREDIT_NOTE = 'CREDIT_NOTE',
+  DEBIT_NOTE = 'DEBIT_NOTE',
+}
+
+export enum SupplierPaymentTermEnum {
+  IMMEDIATE = 'IMMEDIATE',
+  NET_15 = 'NET_15',
+  NET_30 = 'NET_30',
+  NET_60 = 'NET_60',
+  NET_90 = 'NET_90',
+  ON_DELIVERY = 'ON_DELIVERY',
+}
+
+export enum SubscriptionPlanEnum {
+  FREEPLAN = 'FREEPLAN',
+  BASICPLAN = 'BASICPLAN',
+  PREMIUMPLAN = 'PREMIUMPLAN',
+  ENTERPRISEPLAN = 'ENTERPRISEPLAN',
+}
+
 export enum ProductTypeEnum {
   BASE = 'BASE',
   MIXED = 'COMPUESTO',

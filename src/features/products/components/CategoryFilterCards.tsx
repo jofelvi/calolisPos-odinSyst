@@ -34,7 +34,7 @@ interface CategoryFilterCardsProps {
   categories: Category[];
   products: Product[];
   selectedCategory: string | null;
-  onCategorySelect: (categoryId: string | null) => void;
+  onCategorySelectAction: (categoryId: string | null) => void;
   filteredProductsCount: number;
 }
 
@@ -42,7 +42,7 @@ export const CategoryFilterCards = ({
   categories,
   products,
   selectedCategory,
-  onCategorySelect,
+  onCategorySelectAction,
   filteredProductsCount,
 }: CategoryFilterCardsProps) => {
   // Inyectar estilos CSS personalizados
@@ -107,7 +107,7 @@ export const CategoryFilterCards = ({
 
           {selectedCategory && (
             <Button
-              onClick={() => onCategorySelect(null)}
+              onClick={() => onCategorySelectAction(null)}
               variant="ghost"
               size="sm"
               className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 w-fit order-1 sm:order-2"
@@ -135,7 +135,7 @@ export const CategoryFilterCards = ({
                 selectedCategory === (item.id === 'all' ? null : item.id)
               }
               onClick={() =>
-                onCategorySelect(item.id === 'all' ? null : item.id)
+                onCategorySelectAction(item.id === 'all' ? null : item.id)
               }
               imageUrl={item.imageUrl}
               name={item.name}

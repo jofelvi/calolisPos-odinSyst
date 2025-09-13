@@ -1,5 +1,3 @@
-import { CurrencyEnum } from '@/shared/types/enumShared';
-
 export interface GoogleMapsLocation {
   address: string;
   latitude?: number;
@@ -81,10 +79,16 @@ export interface BranchSettings {
 
   // Tax Configuration
   taxRate: number; // As percentage (16 for 16%)
-  
+
   // Tip Configuration
   enableTips: boolean;
   defaultTipPercentage: number;
+  tipEnabled: boolean; // Alias for backwards compatibility
+  tipSuggestions: number[]; // Suggested tip percentages
+
+  // Service Charge Configuration
+  serviceChargeEnabled: boolean;
+  serviceChargeRate: number;
 
   // Business Hours
   businessHours: BusinessHours;

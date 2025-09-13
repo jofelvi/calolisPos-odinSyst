@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import { AttendanceStatusEnum } from '@/modelTypes/enumShared';
+import { AttendanceStatusEnum } from '@/shared';
 
 export const attendanceSchema = yup.object().shape({
   employeeId: yup.string().required('Empleado es requerido').defined(),

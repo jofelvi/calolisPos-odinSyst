@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import { PayrollStatusEnum } from '@/modelTypes/enumShared';
+import { PayrollStatusEnum } from '@/shared';
 
 export const payrollSchema = yup.object({
   employeeId: yup.string().required('Empleado es requerido'),

@@ -8,15 +8,17 @@ import SelectCustom from '@/shared/ui/selectCustom/SelectCustom';
 interface StockFiltersProps {
   stockFilter: 'all' | 'outOfStock' | 'lowStock';
   selectedCategory: string | null;
-  onStockFilterChange: (filter: 'all' | 'outOfStock' | 'lowStock') => void;
-  onClearFilters: () => void;
+  onStockFilterChangeAction: (
+    filter: 'all' | 'outOfStock' | 'lowStock',
+  ) => void;
+  onClearFiltersAction: () => void;
 }
 
 export const StockFilters = ({
   stockFilter,
   selectedCategory,
-  onStockFilterChange,
-  onClearFilters,
+  onStockFilterChangeAction,
+  onClearFiltersAction,
 }: StockFiltersProps) => {
   const stockFilterOptions = [
     { value: 'all', label: 'Todos los productos' },
@@ -43,7 +45,7 @@ export const StockFilters = ({
           </div>
           {(selectedCategory || stockFilter !== 'all') && (
             <Button
-              onClick={onClearFilters}
+              onClick={onClearFiltersAction}
               variant="ghost"
               size="sm"
               className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 w-fit"
@@ -60,7 +62,9 @@ export const StockFilters = ({
             options={stockFilterOptions}
             value={stockFilter}
             onChange={(value) =>
-              onStockFilterChange(value as 'all' | 'outOfStock' | 'lowStock')
+              onStockFilterChangeAction(
+                value as 'all' | 'outOfStock' | 'lowStock',
+              )
             }
             placeholder="Filtrar por stock..."
             className="w-full"

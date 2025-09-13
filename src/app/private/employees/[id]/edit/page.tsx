@@ -96,8 +96,8 @@ export default function EditEmployeePage() {
         initialData={employee}
         loading={loading}
         error={error}
-        onSubmit={onSubmit}
-        onBack={handleBack}
+        onSubmitAction={onSubmit}
+        onBackAction={handleBack}
       />
     );
   }

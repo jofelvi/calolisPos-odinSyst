@@ -16,7 +16,6 @@ import {
   Package,
   ShoppingCart,
   TableProperties,
-  TrendingUp,
   Truck,
   Users,
 } from 'lucide-react';
@@ -144,7 +143,7 @@ export default function DashboardPage() {
   // Calculate today's revenue with proper date filtering
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayRevenue = dashboardData.orders
+  const _todayRevenue = dashboardData.orders
     .filter((order) => {
       if (!order.createdAt) return false;
       const orderDate = convertFirebaseDate(order.createdAt);

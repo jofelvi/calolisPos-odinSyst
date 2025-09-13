@@ -1,6 +1,6 @@
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from './firebase';
-import { OrderStatusEnum } from '@/modelTypes/enumShared';
+import { OrderStatusEnum } from '@/shared';
 import { Order } from '@/modelTypes/order';
 
 export const getActiveOrders = async (): Promise<Order[]> => {

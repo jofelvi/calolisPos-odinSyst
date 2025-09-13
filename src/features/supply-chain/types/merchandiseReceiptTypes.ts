@@ -1,4 +1,4 @@
-import { DocumentTypeEnum } from '@/shared/types/enumShared';
+import { DocumentTypeEnum } from '@/shared';
 
 export interface ReceivedItem {
   productId: string;
@@ -63,5 +63,5 @@ export interface PriceVarianceReport {
   receivedPrice: number;
   variance: number;
   variancePercentage: number;
-  impact: 'positive' | 'negative' | 'neutral'; // Impacto en costos
+  impact: 'positive' | 'negative' | 'neutral';
 }

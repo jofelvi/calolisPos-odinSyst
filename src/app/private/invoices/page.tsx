@@ -18,7 +18,7 @@ import { Calendar, DollarSign, Eye, FileText, Filter } from 'lucide-react';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 import { invoiceService } from '@/services/firebase/genericServices';
 import { Invoice } from '@/modelTypes/invoice';
-import { InvoiceStatusEnum } from '@/modelTypes/enumShared';
+import { InvoiceStatusEnum } from '@/shared';
 import { formatDate } from '@/shared/utils/dateHelpers';
 import PDFDownloadButton from '@/features/invoices/PDFDownloadButton';
 

@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
-    "check-format": "prettier --check ."
+    "check-format": "prettier --check .",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@firebase/auth": "^1.10.8",

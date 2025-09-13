@@ -27,7 +27,7 @@ import {
   ShoppingCart,
   User,
 } from 'lucide-react';
-import { InvoiceStatusEnum } from '@/modelTypes/enumShared';
+import { InvoiceStatusEnum } from '@/shared';
 import {
   InvoiceDetailData,
   invoiceDetailService,

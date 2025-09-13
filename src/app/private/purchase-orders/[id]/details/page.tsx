@@ -14,7 +14,7 @@ import {
 } from '@/components/shared/card/card';
 import { Badge } from '@/components/shared/badge/badge';
 import { formatDate, formatDateTime } from '@/shared/utils/dateHelpers';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared/constantsRoutes/routes';
 import { Button } from '@/components/shared/button/Button';
 import { ArrowLeft, Edit, Package } from 'lucide-react';
 
@@ -61,7 +61,7 @@ export default async function PurchaseOrderDetailPage({
           </div>
           <div className="flex space-x-3">
             {order.status === 'pending' && (
-              <Link href={`/private/purchase-orders/${order.id}/receive`}>
+              <Link href={PRIVATE_ROUTES.PURCHASE_ORDERS_RECEIVE(order.id)}>
                 <Button>
                   <Package className="w-4 h-4 mr-2" />
                   Recibir Pedido

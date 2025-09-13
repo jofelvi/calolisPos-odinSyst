@@ -1,8 +1,4 @@
-import {
-  CurrencyEnum,
-  InvoiceStatusEnum,
-  PaymentTypeEnum,
-} from '@/modelTypes/enumShared';
+import { CurrencyEnum, InvoiceStatusEnum, PaymentTypeEnum } from '@/shared';
 
 export interface Invoice {
   id: string;

@@ -1,4 +1,4 @@
-import { PurchaseOrderStatusEnum } from '@/modelTypes/enumShared';
+import { PurchaseOrderStatusEnum } from '@/shared';
 
 export function getStatusInSpanish(status: PurchaseOrderStatusEnum): string {
   const statusMap: Record<PurchaseOrderStatusEnum, string> = {

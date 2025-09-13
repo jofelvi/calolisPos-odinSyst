@@ -14,13 +14,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AttendanceStatusEnum } from '@/modelTypes/enumShared';
 import { CreateAttendanceData } from '@/modelTypes/attendance';
 import { attendanceService } from '@/services/firebase/genericServices';
 import {
   AttendanceFormValues,
   attendanceSchema,
 } from '@/shared/schemas/attendanceSchema';
+import { AttendanceStatusEnum } from '@/shared';
 
 interface AttendanceFormProps {
   employeeId: string;

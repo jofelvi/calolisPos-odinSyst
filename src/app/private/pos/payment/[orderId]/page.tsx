@@ -13,7 +13,7 @@ import {
   PaymentStatusEnum,
   PaymentTypeEnum,
   TableStatusEnum,
-} from '@/modelTypes/enumShared';
+} from '@/shared';
 import {
   accountReceivableService,
   getCustomerReceivables,
@@ -1032,7 +1032,7 @@ export default function PaymentPage({ params }: PageProps) {
                   CLIENTE
                 </h3>
                 <CustomerSearch
-                  onSelectCustomer={setSelectedCustomer}
+                  onSelectCustomerAction={setSelectedCustomer}
                   selectedCustomer={selectedCustomer}
                 />
 

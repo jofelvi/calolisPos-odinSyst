@@ -7,8 +7,8 @@ import { Button } from '@/components/shared/button/Button';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
+  onCloseAction: () => void;
+  onConfirmAction: () => void;
   title: string;
   description: string;
   isLoading?: boolean;
@@ -17,15 +17,15 @@ interface DeleteConfirmationModalProps {
 
 export const DeleteConfirmationModal = ({
   isOpen,
-  onClose,
-  onConfirm,
+  onCloseAction,
+  onConfirmAction,
   title,
   description,
   isLoading = false,
   items = [],
 }: DeleteConfirmationModalProps) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onCloseAction}>
       <div className="bg-white rounded-lg p-6 max-w-md w-full">
         <div className="flex items-start">
           <div className="flex-shrink-0">
@@ -67,7 +67,7 @@ export const DeleteConfirmationModal = ({
         <div className="mt-6 flex justify-end space-x-3">
           <Button
             variant="outline"
-            onClick={onClose}
+            onClick={onCloseAction}
             disabled={isLoading}
             className="border-gray-300"
           >
@@ -75,7 +75,7 @@ export const DeleteConfirmationModal = ({
           </Button>
           <Button
             variant="destructive"
-            onClick={onConfirm}
+            onClick={onConfirmAction}
             isLoading={isLoading}
             startIcon={<FiTrash2 />}
           >

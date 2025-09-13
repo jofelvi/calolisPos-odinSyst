@@ -1,4 +1,4 @@
-import { CurrencyEnum, ProductTypeEnum } from '@/modelTypes/enumShared';
+import { CurrencyEnum, ProductTypeEnum } from '@/shared';
 
 export interface Product {
   id: string;

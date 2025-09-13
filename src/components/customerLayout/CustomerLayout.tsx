@@ -4,7 +4,7 @@ import { CustomerSidebar } from '@/components/customerSidebar/CustomerSidebar';
 import { CustomerHeader } from '@/components/customerHeader/CustomerHeader';
 import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
-import { UserRoleEnum } from '@/modelTypes/enumShared';
+import { UserRoleEnum } from '@/shared';
 import { useRouter } from 'next/navigation';
 import { PRIVATE_ROUTES } from '@/constants/routes';
 

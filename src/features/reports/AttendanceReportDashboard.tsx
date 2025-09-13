@@ -16,7 +16,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Employee } from '@/modelTypes/employee';
 import { AttendanceSummary, DailyAttendance } from '@/modelTypes/attendance';
-import { AttendanceStatusEnum } from '@/modelTypes/enumShared';
 import { employeeService } from '@/services/firebase/genericServices';
 import { attendanceReportService } from '@/services/attendanceService';
 import {
@@ -30,6 +29,7 @@ import {
   UsersIcon,
   XCircleIcon,
 } from 'lucide-react';
+import { AttendanceStatusEnum } from '@/shared';
 
 export default function AttendanceReportDashboard() {
   const [employees, setEmployees] = useState<Employee[]>([]);

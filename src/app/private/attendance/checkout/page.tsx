@@ -11,7 +11,7 @@ import { useToast } from '@/components/hooks/useToast';
 import { Textarea } from '@/components/ui/textarea';
 import { Employee } from '@/modelTypes/employee';
 import { Attendance } from '@/modelTypes/attendance';
-import { AttendanceStatusEnum } from '@/modelTypes/enumShared';
+import { AttendanceStatusEnum } from '@/shared';
 import {
   attendanceService,
   employeeService,

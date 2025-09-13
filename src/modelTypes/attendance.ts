@@ -1,4 +1,4 @@
-import { AttendanceStatusEnum } from '@/modelTypes/enumShared';
+import { AttendanceStatusEnum } from '@/shared';
 
 export interface Attendance {
   id: string;

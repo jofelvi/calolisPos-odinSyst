@@ -1,4 +1,4 @@
-import { TableStatusEnum } from '@/modelTypes/enumShared';
+import { TableStatusEnum } from '@/shared';
 import { BadgeVariant } from '@/components/shared/badge/badge';
 
 export const getStatusVariant = (status: TableStatusEnum): BadgeVariant => {

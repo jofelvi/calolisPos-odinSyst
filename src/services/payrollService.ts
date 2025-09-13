@@ -5,7 +5,7 @@ import {
   PayrollSettings,
   PayrollSummary,
 } from '@/modelTypes/payroll';
-import { PayrollStatusEnum } from '@/modelTypes/enumShared';
+import { PayrollStatusEnum } from '@/shared';
 import {
   employeeService,
   getEmployeePayrollByPeriod,

@@ -1,7 +1,7 @@
 'use client';
 import { Payment } from '@/modelTypes/payment';
 import { Order } from '@/modelTypes/order';
-import { PaymentMethodEnum } from '@/modelTypes/enumShared';
+import { PaymentMethodEnum } from '@/shared';
 
 interface ReceiptProps {
   order: Order;

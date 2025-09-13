@@ -1,4 +1,4 @@
-import { UserRoleEnum } from '@/shared/types/enumShared';
+import { UserRoleEnum } from '../shared/types/enumShared';
 
 export interface UserBranch {
   id: string;

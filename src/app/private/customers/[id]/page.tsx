@@ -1,7 +1,7 @@
 import {
   customerService,
-  orderService,
   getCustomerReceivables,
+  orderService,
 } from '@/services/firebase/genericServices';
 import {
   Card,
@@ -12,9 +12,10 @@ import {
 import { Badge } from '@/components/shared/badge/badge';
 import { Button } from '@/components/shared/button/Button';
 import Link from 'next/link';
-import { InvoiceStatusEnum } from '@/modelTypes/enumShared';
+import { InvoiceStatusEnum } from '@/shared';
 import { notFound } from 'next/navigation';
 import { OrderItem } from '@/modelTypes/orderItem';
+import { PRIVATE_ROUTES } from '@/shared/constantsRoutes/routes';
 
 interface CustomerProfilePageProps {
   params: Promise<{ id: string }>;
@@ -131,10 +132,7 @@ export default async function CustomerProfilePage({
           <p className="text-gray-600">Información detallada del cliente</p>
         </div>
         <div className="flex gap-2">
-          <Link href={`/private/customers/${id}/edit`}>
-            <Button variant="outline">Editar Cliente</Button>
-          </Link>
-          <Link href="/private/customers">
+          <Link href={PRIVATE_ROUTES.CUSTOMERS}>
             <Button variant="outline">Volver</Button>
           </Link>
         </div>
@@ -418,7 +416,9 @@ export default async function CustomerProfilePage({
                   {accountsReceivable.map((receivable) => (
                     <Link
                       key={receivable.id}
-                      href={`/private/accounts-receivable/${receivable.id}`}
+                      href={PRIVATE_ROUTES.ACCOUNTS_RECEIVABLE_DETAILS(
+                        receivable.id,
+                      )}
                       className="block"
                     >
                       <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
@@ -451,7 +451,7 @@ export default async function CustomerProfilePage({
               {accountsReceivable.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <Link
-                    href={`/private/accounts-receivable?query=${customer.name}`}
+                    href={`${PRIVATE_ROUTES.ACCOUNTS_RECEIVABLE}?query=${customer.name}`}
                   >
                     <Button variant="outline" className="w-full">
                       Ver Todas las Cuentas por Cobrar

@@ -9,10 +9,10 @@ import { Button, Input, Label, SelectCustom } from '@/shared';
 import { PRIVATE_ROUTES } from '@/shared/constantsRoutes/routes';
 import { useToast } from '@/shared/hooks/useToast';
 import { useBranch } from '@/shared/hooks/useBranch';
-import { FiSave, FiSettings, FiGlobe, FiDollarSign } from 'react-icons/fi';
-import { 
+import { FiDollarSign, FiGlobe, FiSave, FiSettings } from 'react-icons/fi';
+import {
   transformBranchSettingsToFormData,
-  transformGeneralSettingsFormData 
+  transformGeneralSettingsFormData,
 } from './utils/settingsTransformers';
 
 const settingsSchema = yup.object({
@@ -20,12 +20,13 @@ const settingsSchema = yup.object({
   language: yup.string().required('El idioma es obligatorio'),
   timezone: yup.string().required('La zona horaria es obligatoria'),
   dateFormat: yup.string().required('El formato de fecha es obligatorio'),
-  taxRate: yup.number().min(0).max(100).required('La tasa de impuesto es obligatoria'),
-  enableTips: yup.boolean(),
-  defaultTipPercentage: yup.number().min(0).max(100).when('enableTips', {
-    is: true,
-    then: (schema) => schema.required('El porcentaje de propina es obligatorio'),
-  }),
+  taxRate: yup
+    .number()
+    .min(0)
+    .max(100)
+    .required('La tasa de impuesto es obligatoria'),
+  enableTips: yup.boolean().default(false),
+  defaultTipPercentage: yup.number().min(0).max(100).default(0),
 });
 
 type SettingsFormValues = yup.InferType<typeof settingsSchema>;
@@ -57,7 +58,8 @@ const dateFormatOptions = [
 export function GeneralSettingsForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { currentBranch, currentBranchSettings, updateBranchSettings } = useBranch();
+  const { currentBranch, currentBranchSettings, updateBranchSettings } =
+    useBranch();
   const toast = useToast();
 
   // Debug logs
@@ -115,7 +117,7 @@ export function GeneralSettingsForm() {
       console.log('Transforming form data...');
       const updatedSettings = transformGeneralSettingsFormData(data);
       console.log('Transformed settings:', updatedSettings);
-      
+
       console.log('Calling updateBranchSettings...');
       await updateBranchSettings(updatedSettings);
       console.log('updateBranchSettings completed successfully');
@@ -158,9 +160,11 @@ export function GeneralSettingsForm() {
         <div className="border-t pt-6">
           <div className="flex items-center mb-4">
             <FiGlobe className="text-lg text-gray-600 mr-2" />
-            <h3 className="text-lg font-medium text-gray-800">Configuración Regional</h3>
+            <h3 className="text-lg font-medium text-gray-800">
+              Configuración Regional
+            </h3>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <SelectCustom
               id="currency"
@@ -208,9 +212,11 @@ export function GeneralSettingsForm() {
         <div className="border-t pt-6">
           <div className="flex items-center mb-4">
             <FiDollarSign className="text-lg text-gray-600 mr-2" />
-            <h3 className="text-lg font-medium text-gray-800">Impuestos y Propinas</h3>
+            <h3 className="text-lg font-medium text-gray-800">
+              Impuestos y Propinas
+            </h3>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label htmlFor="taxRate">Tasa de Impuesto (%) *</Label>
@@ -223,7 +229,9 @@ export function GeneralSettingsForm() {
                 {...register('taxRate', { valueAsNumber: true })}
               />
               {errors.taxRate && (
-                <p className="text-sm text-red-600 mt-1">{errors.taxRate.message}</p>
+                <p className="text-sm text-red-600 mt-1">
+                  {errors.taxRate.message}
+                </p>
               )}
               <p className="text-sm text-gray-500 mt-1">
                 Porcentaje de impuesto aplicado a los productos
@@ -245,14 +253,18 @@ export function GeneralSettingsForm() {
 
               {enableTips && (
                 <div>
-                  <Label htmlFor="defaultTipPercentage">Propina por defecto (%)</Label>
+                  <Label htmlFor="defaultTipPercentage">
+                    Propina por defecto (%)
+                  </Label>
                   <Input
                     type="number"
                     step="0.01"
                     min="0"
                     max="100"
                     placeholder="10.00"
-                    {...register('defaultTipPercentage', { valueAsNumber: true })}
+                    {...register('defaultTipPercentage', {
+                      valueAsNumber: true,
+                    })}
                   />
                   {errors.defaultTipPercentage && (
                     <p className="text-sm text-red-600 mt-1">

@@ -23,7 +23,7 @@ import {
 } from '@/services/firebase/genericServices';
 import { AccountReceivable } from '@/modelTypes/accountReceivable';
 import { Customer } from '@/modelTypes/customer';
-import { InvoiceStatusEnum } from '@/modelTypes/enumShared';
+import { InvoiceStatusEnum } from '@/shared';
 
 const accountReceivableSchema = yup.object({
   customerId: yup.string().required('Cliente es requerido'),

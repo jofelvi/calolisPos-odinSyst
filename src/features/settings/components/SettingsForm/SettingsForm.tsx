@@ -70,7 +70,9 @@ export default function SettingsForm({
             />
           </div>
 
-          <div className={`grid grid-cols-1 ${showDateFormat ? 'md:grid-cols-2' : ''} gap-6`}>
+          <div
+            className={`grid grid-cols-1 ${showDateFormat ? 'md:grid-cols-2' : ''} gap-6`}
+          >
             <SelectCustom
               id="timezone"
               label="Zona Horaria"

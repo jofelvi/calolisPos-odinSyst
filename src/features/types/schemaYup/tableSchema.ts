@@ -1,6 +1,6 @@
 // schemas/tableSchema.ts
 import * as yup from 'yup';
-import { TableStatusEnum } from '@/modelTypes/enumShared';
+import { TableStatusEnum } from '@/shared';
 
 export const tableSchema = yup.object().shape({
   name: yup.string().required('El nombre es requerido').defined(),

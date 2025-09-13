@@ -108,8 +108,8 @@ export default function ProductsPage() {
     <div className="min-h-screen bg-gray-50">
       <DeleteConfirmationModal
         isOpen={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        onConfirm={confirmDelete}
+        onCloseAction={() => setDeleteModalOpen(false)}
+        onConfirmAction={confirmDelete}
         title={`¿Eliminar producto ${productToDelete?.name}?`}
         description="Esta acción no se puede deshacer. Todos los datos relacionados con este producto se perderán permanentemente."
         isLoading={deleting}
@@ -143,8 +143,8 @@ export default function ProductsPage() {
         <StockFilters
           stockFilter={stockFilter}
           selectedCategory={selectedCategory}
-          onStockFilterChange={setStockFilter}
-          onClearFilters={clearFilters}
+          onStockFilterChangeAction={setStockFilter}
+          onClearFiltersAction={clearFilters}
         />
 
         {/* Filtro de categorías */}
@@ -152,7 +152,7 @@ export default function ProductsPage() {
           categories={categories}
           products={products}
           selectedCategory={selectedCategory}
-          onCategorySelect={setSelectedCategory}
+          onCategorySelectAction={setSelectedCategory}
           filteredProductsCount={filteredProducts.length}
         />
 

@@ -1,4 +1,4 @@
-import { SubscriptionPlanEnum } from '@/shared/types/enumShared';
+import { SubscriptionPlanEnum } from '../shared/types/enumShared';
 
 export interface Organization {
   id: string;

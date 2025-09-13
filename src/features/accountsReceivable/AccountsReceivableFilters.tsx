@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Input } from '@/components/shared/input/input';
 import SelectCustom from '@/components/shared/selectCustom/SelectCustom';
-import { InvoiceStatusEnum } from '@/modelTypes/enumShared';
+import { InvoiceStatusEnum } from '@/shared';
 
 const statusOptions = [
   { value: '', label: 'Todos los estados' },

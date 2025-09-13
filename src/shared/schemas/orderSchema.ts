@@ -3,7 +3,7 @@ import {
   OrderStatusEnum,
   PaymentMethodEnum,
   PaymentStatusEnum,
-} from '@/modelTypes/enumShared';
+} from '@/shared';
 
 export const orderItemSchema = yup.object().shape({
   productId: yup.string().required().defined(),

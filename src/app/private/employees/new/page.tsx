@@ -43,8 +43,8 @@ export default function NewEmployeePage() {
       mode="create"
       loading={loading}
       error={error}
-      onSubmit={onSubmit}
-      onBack={handleBack}
+      onSubmitAction={onSubmit}
+      onBackAction={handleBack}
     />
   );
 }

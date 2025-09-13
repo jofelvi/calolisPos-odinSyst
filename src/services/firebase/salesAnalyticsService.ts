@@ -2,7 +2,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from './firebase';
 import { convertFirebaseDate } from '@/shared/utils/dateHelpers';
 import { Order } from '@/modelTypes/order';
-import { PaymentStatusEnum } from '@/modelTypes/enumShared';
+import { PaymentStatusEnum } from '@/shared';
 
 export interface WeeklySalesData {
   day: string;

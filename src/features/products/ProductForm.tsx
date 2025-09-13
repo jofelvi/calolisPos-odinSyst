@@ -15,7 +15,7 @@ import {
   CurrencyEnum,
   ProductPresentationEnum,
   ProductTypeEnum,
-} from '@/modelTypes/enumShared';
+} from '@/shared';
 import { Category } from '@/modelTypes/category';
 import { v4 as uuidv4 } from 'uuid';
 import { storage } from '@/services/firebase/firebase';

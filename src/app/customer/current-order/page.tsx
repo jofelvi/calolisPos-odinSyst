@@ -12,7 +12,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/services/firebase/firebase';
 import { CheckCircle, ChefHat, Coffee, Package, XCircle } from 'lucide-react';
-import { OrderStatusEnum } from '@/modelTypes/enumShared';
+import { OrderStatusEnum } from '@/shared';
 import { CUSTOMER_ROUTES } from '@/constants/routes';
 
 const statusSteps = [

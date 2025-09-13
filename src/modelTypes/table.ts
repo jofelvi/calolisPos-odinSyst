@@ -1,4 +1,4 @@
-import { TableStatusEnum } from '@/modelTypes/enumShared';
+import { TableStatusEnum } from '@/shared';
 
 export interface Table {
   id: string;

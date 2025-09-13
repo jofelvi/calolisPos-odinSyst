@@ -6,12 +6,12 @@ import {
   DailyAttendance,
 } from '@/modelTypes/attendance';
 import { Employee } from '@/modelTypes/employee';
-import { AttendanceStatusEnum } from '@/modelTypes/enumShared';
 import {
   attendanceService,
   employeeService,
   getEmployeeAttendanceByPeriod,
 } from '@/services/firebase/genericServices';
+import { AttendanceStatusEnum } from '@/shared';
 
 // Default attendance settings
 const DEFAULT_ATTENDANCE_SETTINGS: AttendanceSettings = {

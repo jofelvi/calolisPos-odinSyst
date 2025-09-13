@@ -1,7 +1,7 @@
 import {
   PaymentMethodEnum,
   SupplierPaymentTermEnum,
-} from '@/shared/types/enumShared';
+} from '../../../shared/types/enumShared';
 
 export interface SupplierContact {
   name: string;

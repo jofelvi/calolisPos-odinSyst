@@ -1,7 +1,7 @@
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from './firebase';
 import { Table } from '@/modelTypes/table';
-import { TableStatusEnum } from '@/modelTypes/enumShared';
+import { TableStatusEnum } from '@/shared';
 
 export const getAvailableTables = async (): Promise<Table[]> => {
   const q = query(collection(db, 'tables'), where('isAvailable', '==', true));

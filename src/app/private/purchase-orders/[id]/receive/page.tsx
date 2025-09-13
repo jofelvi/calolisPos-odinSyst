@@ -18,6 +18,7 @@ import { Input } from '@/shared/ui/input/input';
 import { TextareaWithError } from '@/shared/ui/textarea/TextareaWithError';
 import BackButton from '@/shared/ui/BackButton/BackButton';
 import { Badge } from '@/shared/ui/badge/badge';
+import { PRIVATE_ROUTES } from '@/shared/constantsRoutes/routes';
 import { Loader } from '@/shared';
 import { EmptyState } from '@/shared/ui/EmptyState/EmptyState';
 import { FormErrorSummary } from '@/shared/ui/formErrorSummary/FormErrorSummary';
@@ -322,7 +323,7 @@ export default function ReceiveMerchandisePage() {
         {/* Header */}
         <div className="mb-8">
           <BackButton
-            href={`/private/purchase-orders/${purchaseOrder.id}/details`}
+            href={PRIVATE_ROUTES.PURCHASE_ORDERS_DETAILS(purchaseOrder.id)}
             className="mb-4"
           />
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

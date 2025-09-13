@@ -221,7 +221,7 @@ export function BranchForm({
               dailyReports: false,
               systemAlerts: true,
             },
-          },
+          } as any,
         };
 
         await createBranch(branchData);

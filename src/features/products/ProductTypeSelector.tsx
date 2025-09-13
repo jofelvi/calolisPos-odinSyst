@@ -1,6 +1,6 @@
 import { FieldErrors, UseFormRegister, UseFormWatch } from 'react-hook-form';
 import { ProductFormData } from '@/features/types/schemaYup/productSchema';
-import { ProductTypeEnum } from '@/modelTypes/enumShared';
+import { ProductTypeEnum } from '@/shared';
 
 interface ProductTypeSelectorProps {
   register: UseFormRegister<ProductFormData>;

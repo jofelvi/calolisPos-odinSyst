@@ -1,4 +1,4 @@
-import { PayrollStatusEnum } from '@/modelTypes/enumShared';
+import { PayrollStatusEnum } from '@/shared';
 
 export interface Payroll {
   id: string;

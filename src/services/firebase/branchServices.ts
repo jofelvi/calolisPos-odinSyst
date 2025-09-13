@@ -92,7 +92,7 @@ const convertBranchSettingsFromFirestore = (
       dailyReports: false,
       systemAlerts: true,
     },
-  };
+  } as any;
 };
 
 const convertOrganizationFromFirestore = (

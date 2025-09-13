@@ -1,4 +1,4 @@
-import { CurrencyEnum, ProductTypeEnum } from '@/modelTypes/enumShared';
+import { CurrencyEnum, ProductTypeEnum } from '@/shared';
 import { FieldErrors, UseFormRegister, UseFormWatch } from 'react-hook-form';
 import { ProductFormData } from '@/features/types/schemaYup/productSchema';
 import { Input } from '@/components/shared/input/input';

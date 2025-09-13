@@ -19,8 +19,8 @@ interface EmployeeFormProps {
   initialData?: Employee;
   loading: boolean;
   error: string | null;
-  onSubmit: (data: EmployeeFormValues) => void;
-  onBack: () => void;
+  onSubmitAction: (data: EmployeeFormValues) => void;
+  onBackAction: () => void;
 }
 
 export default function EmployeeForm({
@@ -28,8 +28,8 @@ export default function EmployeeForm({
   initialData,
   loading,
   error,
-  onSubmit,
-  onBack,
+  onSubmitAction,
+  onBackAction,
 }: EmployeeFormProps) {
   const {
     register,
@@ -96,7 +96,7 @@ export default function EmployeeForm({
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={onBack}>
+        <Button variant="outline" onClick={onBackAction}>
           <ArrowLeftIcon className="h-4 w-4 mr-2" />
           Volver
         </Button>
@@ -112,7 +112,7 @@ export default function EmployeeForm({
           <CardTitle>Información del Empleado</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmitAction)} className="space-y-6">
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-md p-4">
                 <p className="text-red-600">{error}</p>
@@ -330,7 +330,7 @@ export default function EmployeeForm({
                     ? 'Guardar Empleado'
                     : 'Guardar Cambios'}
               </Button>
-              <Button type="button" variant="outline" onClick={onBack}>
+              <Button type="button" variant="outline" onClick={onBackAction}>
                 Cancelar
               </Button>
             </div>

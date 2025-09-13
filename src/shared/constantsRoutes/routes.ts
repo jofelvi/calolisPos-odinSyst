@@ -32,6 +32,8 @@ export const PRIVATE_ROUTES = {
 
   // Clientes
   CUSTOMERS: '/private/customers',
+  CUSTOMERS_DETAILS: (id: string) => `/private/customers/${id}`,
+  CUSTOMERS_NEW: '/private/customers/new',
 
   // Cuentas por Cobrar
   ACCOUNTS_RECEIVABLE: '/private/accounts-receivable',
@@ -65,6 +67,8 @@ export const PRIVATE_ROUTES = {
   PURCHASE_ORDERS_DETAILS: (id: string) =>
     `/private/purchase-orders/${id}/details`,
   PURCHASE_ORDERS_EDIT: (id: string) => `/private/purchase-orders/${id}`,
+  PURCHASE_ORDERS_RECEIVE: (id: string) =>
+    `/private/purchase-orders/${id}/receive`,
 
   // Proveedores
   SUPPLIERS: '/private/suppliers',
@@ -84,6 +88,18 @@ export const PRIVATE_ROUTES = {
   EMPLOYEES_EDIT: (id: string) => `/private/employees/${id}/edit`,
   EMPLOYEES_ATTENDANCE: (id: string) => `/private/employees/${id}/attendance`,
   EMPLOYEES_PAYROLL: (id: string) => `/private/employees/${id}/payroll`,
+
+  // Nóminas
+  PAYROLL: '/private/payroll',
+  PAYROLL_NEW: '/private/payroll/new',
+
+  // Reportes
+  REPORTS: '/private/reports',
+
+  // Asistencia
+  ATTENDANCE: '/private/attendance',
+  ATTENDANCE_CHECKIN: '/private/attendance/checkin',
+  ATTENDANCE_CHECKOUT: '/private/attendance/checkout',
 
   // Configuración
   SETTINGS: '/private/settings',

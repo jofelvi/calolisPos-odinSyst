@@ -9,7 +9,7 @@ import {
   TableFormValues,
   tableSchema,
 } from '@/features/types/schemaYup/tableSchema';
-import { TableStatusEnum } from '@/modelTypes/enumShared';
+import { TableStatusEnum } from '@/shared';
 import { tableService } from '@/services/firebase/genericServices';
 import { Table } from '@/modelTypes/table';
 
@@ -33,7 +33,7 @@ export default function TableForm({
     watch,
     formState: { errors },
   } = useForm<TableFormValues>({
-    resolver: yupResolver(tableSchema),
+    resolver: yupResolver(tableSchema) as any,
     defaultValues: {
       name: '',
       number: 0,

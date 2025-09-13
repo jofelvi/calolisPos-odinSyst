@@ -14,7 +14,7 @@ export interface FormState<T> {
 
 export interface UseFormStateOptions<T> {
   initialData: T;
-  onSubmit: (data: T) => Promise<void> | void;
+  onSubmitAction: (data: T) => Promise<void> | void;
   onSuccess?: (data: T) => void;
   onError?: (error: unknown) => void;
   resetOnSuccess?: boolean;
@@ -45,7 +45,7 @@ export interface UseFormStateReturn<T> {
 // KISS: Simple form state management
 export function useFormState<T extends Record<string, unknown>>({
   initialData,
-  onSubmit,
+  onSubmitAction,
   onSuccess,
   onError,
   resetOnSuccess = false,
@@ -112,7 +112,7 @@ export function useFormState<T extends Record<string, unknown>>({
     setIsSubmitting(true);
 
     try {
-      await onSubmit(data);
+      await onSubmitAction(data);
 
       if (resetOnSuccess) {
         reset();
@@ -126,7 +126,15 @@ export function useFormState<T extends Record<string, unknown>>({
     } finally {
       setIsSubmitting(false);
     }
-  }, [data, isSubmitting, onSubmit, onSuccess, onError, reset, resetOnSuccess]);
+  }, [
+    data,
+    isSubmitting,
+    onSubmitAction,
+    onSuccess,
+    onError,
+    reset,
+    resetOnSuccess,
+  ]);
 
   return {
     // State

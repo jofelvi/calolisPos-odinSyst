@@ -2,7 +2,7 @@
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { Customer } from '@/modelTypes/customer';
-import { IdentificationType } from '@/modelTypes/enumShared';
+import { IdentificationType } from '@/shared';
 import { Input } from '@/components/shared/input/input';
 import SelectCustom from '@/components/shared/selectCustom/SelectCustom';
 import { enumToSelectOptions } from '@/shared/utils/enumToSelectOptions';
@@ -14,13 +14,13 @@ import {
 
 interface CustomerFormProps {
   initialData?: Customer | null;
-  onSubmit: (values: CustomerFormData) => Promise<void>;
+  onSubmitAction: (values: CustomerFormData) => Promise<void>;
   isSubmitting: boolean;
 }
 
 export default function CustomerForm({
   initialData,
-  onSubmit,
+  onSubmitAction,
   isSubmitting,
 }: CustomerFormProps) {
   const {
@@ -28,7 +28,7 @@ export default function CustomerForm({
     handleSubmit,
     formState: { errors },
   } = useForm<CustomerFormData>({
-    resolver: yupResolver(customerSchema),
+    resolver: yupResolver(customerSchema) as any,
     defaultValues: {
       name: initialData?.name || '',
       email: initialData?.email || null,
@@ -41,7 +41,7 @@ export default function CustomerForm({
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmitAction)} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Nombre */}
         <div>

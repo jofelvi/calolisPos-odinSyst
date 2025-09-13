@@ -14,6 +14,9 @@
     "jsx": "preserve",
     "incremental": true,
     "types": ["next-auth"],
+
+    // Suppress specific Next.js server action warnings
+    "ignoreDeprecations": "5.0",
     "plugins": [
       {
         "name": "next"

@@ -4,7 +4,6 @@ import Link from 'next/link';
 import {
   Building2,
   Settings,
-  Globe,
   CreditCard,
   MapPin,
   Users,

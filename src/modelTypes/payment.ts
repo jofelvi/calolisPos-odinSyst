@@ -1,4 +1,4 @@
-import { PaymentMethodEnum, PaymentStatusEnum } from '@/modelTypes/enumShared';
+import { PaymentMethodEnum, PaymentStatusEnum } from '@/shared';
 
 export interface Payment {
   id: string;

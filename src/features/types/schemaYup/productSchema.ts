@@ -3,7 +3,7 @@ import {
   CurrencyEnum,
   ProductPresentationEnum,
   ProductTypeEnum,
-} from '@/modelTypes/enumShared';
+} from '@/shared';
 
 const ingredientSchema = yup.object({
   productId: yup.string().required('El producto es requerido'),

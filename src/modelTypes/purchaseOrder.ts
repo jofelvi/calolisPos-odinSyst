@@ -1,5 +1,5 @@
 import { PurchaseOrderItem } from '@/modelTypes/purchaseOrderItem';
-import { CurrencyEnum, PurchaseOrderStatusEnum } from '@/modelTypes/enumShared';
+import { CurrencyEnum, PurchaseOrderStatusEnum } from '@/shared';
 
 export interface PurchaseOrder {
   id: string;

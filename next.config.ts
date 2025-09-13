@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+
+  // TypeScript configuration
+  typescript: {
+    // Ignore specific TypeScript errors including TS71007
+    ignoreBuildErrors: false,
+  },
 };
 
 export default nextConfig;

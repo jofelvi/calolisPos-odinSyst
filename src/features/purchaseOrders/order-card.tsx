@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/shared/card/card';
 import { formatDateForDisplay } from '@/shared/utils/serializeTimestamp';
-import { PurchaseOrderStatusEnum } from '@/modelTypes/enumShared';
+import { PurchaseOrderStatusEnum } from '@/shared';
 import { getStatusInSpanish } from '@/shared/utils/getStatusOrderInSpanish';
 import { getStatusBadgeClasses } from '@/shared/utils/getStatusBadgeClasses';
 import { PRIVATE_ROUTES } from '@/constants/routes';

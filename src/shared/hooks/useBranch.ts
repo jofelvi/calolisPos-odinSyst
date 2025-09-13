@@ -9,7 +9,7 @@ import {
   userBranchService,
 } from '@/services/firebase/branchServices';
 import { Branch, BranchSettings } from '@/modelTypes/branch';
-import { UserRoleEnum, SubscriptionPlanEnum } from '@/shared';
+import { SubscriptionPlanEnum, UserRoleEnum } from '@/shared';
 
 export const useBranch = () => {
   const { data: session } = useSession();
@@ -65,12 +65,12 @@ export const useBranch = () => {
       console.log('User already has organization, checking for branches...');
       // If user has organization but no branches, create a branch for the existing org
       const existingOrg = existingOrganizations[0];
-      
+
       const orgBranches = await branchService.getByOrganization(existingOrg.id);
       if (orgBranches.length === 0) {
         console.log('Creating branch for existing organization');
         isCreatingDefaultBranch.current = true;
-        
+
         try {
           const defaultBranch = await branchService.create({
             organizationId: existingOrg.id,
@@ -93,7 +93,7 @@ export const useBranch = () => {
           });
 
           await branchSettingsService.createDefault(defaultBranch.id, userId);
-          
+
           await userBranchService.addUserToBranch({
             userId: userId,
             branchId: defaultBranch.id,
@@ -128,14 +128,14 @@ export const useBranch = () => {
 
     console.log('Creating default organization and branch for user:', userId);
     isCreatingDefaultBranch.current = true;
-    
+
     try {
       // Create default organization
       const defaultOrganization = await organizationService.create({
         name: 'Mi Organización',
         description: 'Organización por defecto',
         ownerId: userId,
-        subscriptionPlan: SubscriptionPlanEnum.BASIC,
+        subscriptionPlan: SubscriptionPlanEnum.BASICPLAN,
         subscriptionStatus: 'active',
         subscriptionStartDate: new Date(),
         maxBranches: 10,
@@ -210,7 +210,7 @@ export const useBranch = () => {
   const initializeBranches = useCallback(async () => {
     console.log('=== INITIALIZING BRANCHES ===');
     console.log('Session user ID:', session?.user?.id);
-    
+
     if (!session?.user?.id) {
       console.log('No session user ID, skipping initialization');
       return;
@@ -227,7 +227,9 @@ export const useBranch = () => {
       setUserBranches(userBranchesData);
 
       if (userBranchesData.length === 0) {
-        console.log('User has no branches, creating default organization and branch');
+        console.log(
+          'User has no branches, creating default organization and branch',
+        );
         await createDefaultBranchForUser(session.user.id);
         // Retry initialization after creating default branch
         setTimeout(() => initializeBranches(), 1000);
@@ -378,7 +380,9 @@ export const useBranch = () => {
           session.user.id,
         );
 
-        console.log('branchSettingsService.update completed, reloading settings...');
+        console.log(
+          'branchSettingsService.update completed, reloading settings...',
+        );
         // Reload settings
         await loadBranchSettings(currentBranch.id);
         console.log('Settings reloaded successfully');

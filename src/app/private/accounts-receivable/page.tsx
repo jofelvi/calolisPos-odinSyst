@@ -9,7 +9,8 @@ import {
 } from '@/components/shared/card/card';
 import { Badge } from '@/components/shared/badge/badge';
 import AccountsReceivableFilters from '@/features/accountsReceivable/AccountsReceivableFilters';
-import { InvoiceStatusEnum } from '@/modelTypes/enumShared';
+import { InvoiceStatusEnum } from '@/shared';
+import { PRIVATE_ROUTES } from '@/shared/constantsRoutes/routes';
 
 export default async function AccountsReceivablePage({
   searchParams,
@@ -83,7 +84,7 @@ export default async function AccountsReceivablePage({
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Cuentas por Cobrar</h1>
         <div className="flex gap-2">
-          <Link href="/private/accounts-receivable/new">
+          <Link href={PRIVATE_ROUTES.ACCOUNTS_RECEIVABLE_NEW}>
             <Button>Nueva Cuenta por Cobrar</Button>
           </Link>
         </div>
@@ -133,7 +134,7 @@ export default async function AccountsReceivablePage({
         {accountsReceivable.map((receivable) => (
           <Link
             key={receivable.id}
-            href={`/private/accounts-receivable/${receivable.id}`}
+            href={PRIVATE_ROUTES.ACCOUNTS_RECEIVABLE_DETAILS(receivable.id)}
           >
             <Card className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
@@ -187,7 +188,7 @@ export default async function AccountsReceivablePage({
             No se encontraron cuentas por cobrar
           </p>
           <Link
-            href="/private/accounts-receivable/new"
+            href={PRIVATE_ROUTES.ACCOUNTS_RECEIVABLE_NEW}
             className="mt-4 inline-block"
           >
             <Button>Crear primera cuenta por cobrar</Button>
