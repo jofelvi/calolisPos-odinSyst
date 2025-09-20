@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { UserRoleEnum } from '@/shared';
-import { AUTH_ROUTES, CUSTOMER_ROUTES } from '@/constants/routes';
+import { AUTH_ROUTES, CUSTOMER_ROUTES } from '@/shared';
 import ProtectedLayout from '@/components/protectedLayout/ProtectedLayout';
 
 export default function DashboardLayout({

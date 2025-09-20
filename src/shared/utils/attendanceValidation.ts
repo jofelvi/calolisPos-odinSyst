@@ -1,5 +1,5 @@
 import { Attendance, CreateAttendanceData } from '@/modelTypes/attendance';
-import { AttendanceStatusEnum } from '@/shared';
+import { AttendanceStatusEnum } from '@/shared/types/enumShared';
 
 export interface AttendanceValidationError {
   field: string;

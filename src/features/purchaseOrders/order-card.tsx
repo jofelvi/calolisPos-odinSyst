@@ -11,7 +11,7 @@ import { formatDateForDisplay } from '@/shared/utils/serializeTimestamp';
 import { PurchaseOrderStatusEnum } from '@/shared';
 import { getStatusInSpanish } from '@/shared/utils/getStatusOrderInSpanish';
 import { getStatusBadgeClasses } from '@/shared/utils/getStatusBadgeClasses';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 
 interface OrderCardProps {
   order: PurchaseOrder;

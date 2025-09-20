@@ -8,7 +8,7 @@ import { Label } from '@/shared/ui/label/label';
 import { Textarea } from '@/shared/ui/textarea/textarea';
 import { Button } from '@/shared/ui/button/Button';
 import SelectCustom from '@/shared/ui/selectCustom/SelectCustom';
-import { FormFieldError } from '@/shared';
+import FormFieldError from '@/shared/ui/formFieldError/FormFieldError';
 
 // SOLID: Interface Segregation - Focused interfaces for different field types
 export interface BaseFieldProps {

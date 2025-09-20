@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { Bell, ChevronDown, LogOut, Menu, Settings, X } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/shared/utils/utils';
-import { PRIVATE_ROUTES, PUBLIC_ROUTES } from '@/shared';
+import { PRIVATE_ROUTES, PUBLIC_ROUTES } from '@/shared/constantsRoutes/routes';
 
 // Header.jsx
 export function Header() {

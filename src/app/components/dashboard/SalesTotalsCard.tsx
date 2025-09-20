@@ -15,7 +15,7 @@ import {
   SalesInterval,
   SalesIntervalEnum,
 } from '@/services/firebase/salesAnalyticsService';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 
 const SalesTotalsCard = () => {
   const router = useRouter();

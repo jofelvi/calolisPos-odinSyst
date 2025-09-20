@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 import { UserRoleEnum } from '@/shared';
 import { useRouter } from 'next/navigation';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 
 function SyncSessionToZustand() {
   const { data: session } = useSession();

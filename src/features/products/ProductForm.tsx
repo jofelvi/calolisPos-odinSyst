@@ -41,7 +41,7 @@ import {
 } from '@/features/products/productsUtils';
 import { FormErrorSummary } from '@/components/shared/formErrorSummary/FormErrorSummary';
 import Loader from '@/components/shared/Loader/Loader';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 
 interface ProductFormProps {
   initialData?: Product | null;

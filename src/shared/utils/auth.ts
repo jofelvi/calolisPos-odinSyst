@@ -3,9 +3,9 @@ import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { getUserByEmail } from '@/services/firebase/userServices';
 import { userService } from '@/services/firebase/genericServices';
-import { AUTH_ROUTES } from '@/constants/routes';
+import { AUTH_ROUTES } from '@/shared/constantsRoutes/routes';
 import { useUserStore } from '@/shared/store/useUserStore';
-import { UserRoleEnum } from '@/shared';
+import { UserRoleEnum } from '@/shared/types/enumShared';
 
 export function isAuthenticated() {
   const { user } = useUserStore.getState();

@@ -1,4 +1,4 @@
-import { UserRoleEnum } from '@/modelTypes/enumShared';
+import { UserRoleEnum } from '@/shared/types/enumShared';
 
 declare module 'next-auth' {
   interface Session {

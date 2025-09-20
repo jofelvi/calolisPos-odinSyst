@@ -13,7 +13,7 @@ import {
 import { db } from '@/services/firebase/firebase';
 import { CheckCircle, ChefHat, Coffee, Package, XCircle } from 'lucide-react';
 import { OrderStatusEnum } from '@/shared';
-import { CUSTOMER_ROUTES } from '@/constants/routes';
+import { CUSTOMER_ROUTES } from '@/shared';
 
 const statusSteps = [
   {

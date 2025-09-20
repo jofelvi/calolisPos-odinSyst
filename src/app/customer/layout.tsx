@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { UserRoleEnum } from '@/shared';
-import { AUTH_ROUTES, PRIVATE_ROUTES } from '@/constants/routes';
+import { AUTH_ROUTES, PRIVATE_ROUTES } from '@/shared';
 import CustomerLayout from '@/components/customerLayout/CustomerLayout';
 
 export default function CustomerDashboardLayout({

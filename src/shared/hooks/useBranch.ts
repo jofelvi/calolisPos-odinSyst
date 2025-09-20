@@ -9,7 +9,7 @@ import {
   userBranchService,
 } from '@/services/firebase/branchServices';
 import { Branch, BranchSettings } from '@/modelTypes/branch';
-import { SubscriptionPlanEnum, UserRoleEnum } from '@/shared';
+import { SubscriptionPlanEnum, UserRoleEnum } from '@/shared/types/enumShared';
 
 export const useBranch = () => {
   const { data: session } = useSession();
@@ -135,7 +135,7 @@ export const useBranch = () => {
         name: 'Mi Organización',
         description: 'Organización por defecto',
         ownerId: userId,
-        subscriptionPlan: SubscriptionPlanEnum.BASICPLAN,
+        subscriptionPlan: SubscriptionPlanEnum.BASIC,
         subscriptionStatus: 'active',
         subscriptionStartDate: new Date(),
         maxBranches: 10,

@@ -21,7 +21,7 @@ import {
   purchaseOrderService,
   supplierService,
 } from '@/services/firebase/genericServices';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 import { Button } from '@/components/shared/button/Button';
 import { useToast } from '@/components/hooks/useToast';
 import { Toaster } from 'react-hot-toast';

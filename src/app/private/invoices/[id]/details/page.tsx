@@ -11,7 +11,7 @@ import {
 } from '@/components/shared/card/card';
 import { Badge } from '@/components/shared/badge/badge';
 import { formatDate, formatDateTime } from '@/shared/utils/dateHelpers';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 import { Button } from '@/components/shared/button/Button';
 import {
   ArrowLeft,

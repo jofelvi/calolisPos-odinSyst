@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { supplierService } from '@/services/firebase/genericServices';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 import { Button } from '@/components/shared/button/Button';
 
 export default async function SuppliersPage() {

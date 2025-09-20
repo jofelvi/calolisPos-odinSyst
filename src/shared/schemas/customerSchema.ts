@@ -1,6 +1,6 @@
 // schemas/customerSchema.ts
 import * as yup from 'yup';
-import { IdentificationType } from '@/shared';
+import { IdentificationType } from '@/shared/types/enumShared';
 
 export const customerSchema = yup.object({
   name: yup.string().required('El nombre es requerido').defined(),

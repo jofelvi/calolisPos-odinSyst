@@ -11,7 +11,7 @@ import {
 } from '@/services/firebase/genericServices';
 import { Button } from '@/components/shared/button/Button';
 import { Card } from '@/components/shared/card/card';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 import {
   AlertCircle,
   ChefHat,

@@ -4,7 +4,7 @@ import { useUserStore } from '@/shared/store/useUserStore';
 import { useCustomerCartStore } from '@/shared/store/useCustomerCartStore';
 import { CheckCircle, Clock, ShoppingBag, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
-import { CUSTOMER_ROUTES } from '@/constants/routes';
+import { CUSTOMER_ROUTES } from '@/shared';
 import { orderService } from '@/services/firebase/genericServices';
 import { Order } from '@/modelTypes/order';
 

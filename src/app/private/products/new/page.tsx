@@ -1,6 +1,6 @@
 import ProductForm from '@/features/products/ProductForm';
 import BackIcon from '@/components/shared/BackButton/BackButton';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 
 export default function NewSupplierPage() {
   return (

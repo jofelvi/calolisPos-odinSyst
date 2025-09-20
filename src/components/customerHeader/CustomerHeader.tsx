@@ -4,7 +4,7 @@ import { useSidebarStore } from '@/shared/store/useSidebarStore';
 import { signOut } from 'next-auth/react';
 import { LogOut, Menu, ShoppingCart, User, X } from 'lucide-react';
 import { useCustomerCartStore } from '@/shared/store/useCustomerCartStore';
-import { AUTH_ROUTES } from '@/constants/routes';
+import { AUTH_ROUTES } from '@/shared';
 
 export function CustomerHeader() {
   const { user } = useUserStore();

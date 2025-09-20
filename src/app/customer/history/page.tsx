@@ -13,7 +13,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { OrderStatusEnum, PaymentStatusEnum } from '@/shared';
-import { CUSTOMER_ROUTES } from '@/constants/routes';
+import { CUSTOMER_ROUTES } from '@/shared';
 import Link from 'next/link';
 
 const statusConfig = {

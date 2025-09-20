@@ -14,7 +14,7 @@ import { Badge } from '@/shared/ui/badge/badge';
 import { Button } from '@/shared/ui/button/Button';
 import { Edit, Eye, Package, Trash2 } from 'lucide-react';
 import { EntityGridActions, EntityGridConfig } from './EntityGridRefactored';
-import { formatCurrency } from '@/shared';
+import { formatCurrency } from '@/shared/utils/currencyHelpers';
 
 interface EntityCardProps<T extends { id: string }> {
   item: T;

@@ -35,13 +35,6 @@ export enum SupplierPaymentTermEnum {
   ON_DELIVERY = 'ON_DELIVERY',
 }
 
-export enum SubscriptionPlanEnum {
-  FREEPLAN = 'FREEPLAN',
-  BASICPLAN = 'BASICPLAN',
-  PREMIUMPLAN = 'PREMIUMPLAN',
-  ENTERPRISEPLAN = 'ENTERPRISEPLAN',
-}
-
 export enum ProductTypeEnum {
   BASE = 'BASE',
   MIXED = 'COMPUESTO',

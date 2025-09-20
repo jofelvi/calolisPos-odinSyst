@@ -3,7 +3,8 @@ import { useUserStore } from '@/shared/store/useUserStore';
 
 import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
-import { Header, Sidebar } from '@/shared';
+import { Header } from '@/shared/ui/Header';
+import { Sidebar } from '@/shared/ui/Sidebar';
 
 function SyncSessionToZustand() {
   const { data: session } = useSession();

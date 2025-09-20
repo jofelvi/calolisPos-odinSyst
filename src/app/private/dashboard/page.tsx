@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import WeeklySalesChart from '@/app/components/dashboard/WeeklySalesChart';
 import SalesTotalsCard from '@/app/components/dashboard/SalesTotalsCard';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 import {
   customerService,
   orderService,

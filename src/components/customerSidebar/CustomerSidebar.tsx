@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ClipboardList, Clock, Home, ShoppingBag } from 'lucide-react';
-import { CUSTOMER_ROUTES } from '@/constants/routes';
+import { CUSTOMER_ROUTES } from '@/shared';
 import { useSidebarStore } from '@/shared/store/useSidebarStore';
 import { useEffect } from 'react';
 import { cn } from '@/shared/utils/utils';

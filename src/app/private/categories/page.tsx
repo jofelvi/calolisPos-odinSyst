@@ -11,7 +11,7 @@ import { DeleteConfirmationModal } from '@/features/categories/DeleteConfirmatio
 import { FiPlus } from 'react-icons/fi';
 import { EmptyState } from '@/components/shared/EmptyState/EmptyState';
 import { EntityGrid } from '@/components/shared/EntityGrid/EntityGrid';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);

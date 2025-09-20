@@ -14,7 +14,7 @@ import odinsys from '../../../public/odinLogin.jpeg';
 import Image from 'next/image';
 import { Button } from '@/components/shared/button/Button';
 import { signIn } from 'next-auth/react';
-import { PUBLIC_ROUTES } from '@/constants/routes';
+import { PUBLIC_ROUTES } from '@/shared';
 
 // Infer types from schemas
 type LoginInput = yup.InferType<typeof loginSchema>;

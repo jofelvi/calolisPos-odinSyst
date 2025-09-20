@@ -1,4 +1,4 @@
-import { ProductTypeEnum } from '@/shared';
+import { ProductTypeEnum } from '@/shared/types/enumShared';
 import { Product } from '@/modelTypes/product';
 
 export const calculateAvailableStock = (

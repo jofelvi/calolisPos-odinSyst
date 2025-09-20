@@ -10,7 +10,7 @@ import {
 } from '@/components/shared/card/card';
 import { Badge } from '@/components/shared/badge/badge';
 import { Input } from '@/components/shared/input/input';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 
 export default async function CustomersPage({
   searchParams,

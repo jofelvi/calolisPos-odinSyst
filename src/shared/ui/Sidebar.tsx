@@ -29,7 +29,7 @@ import {
   FiUserCheck,
   FiUsers,
 } from 'react-icons/fi';
-import { PRIVATE_ROUTES } from '@/shared';
+import { PRIVATE_ROUTES } from '@/shared/constantsRoutes/routes';
 
 const menuItems = [
   {

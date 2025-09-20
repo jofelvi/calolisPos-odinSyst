@@ -6,7 +6,7 @@ import { cn } from '@/shared/utils/utils';
 import { useSidebarStore } from '@/shared/store/useSidebarStore';
 import Image from 'next/image';
 import logo from '../../../public/odinsys.webp';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 import { useEffect } from 'react';
 
 import {

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { ArchiveX, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/shared/button/Button';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 
 export function EmptyState() {
   return (

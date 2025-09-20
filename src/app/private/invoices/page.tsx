@@ -15,7 +15,7 @@ import { Button } from '@/components/shared/button/Button';
 import Table from '@/components/shared/Table';
 import Loader from '@/components/shared/Loader/Loader';
 import { Calendar, DollarSign, Eye, FileText, Filter } from 'lucide-react';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 import { invoiceService } from '@/services/firebase/genericServices';
 import { Invoice } from '@/modelTypes/invoice';
 import { InvoiceStatusEnum } from '@/shared';

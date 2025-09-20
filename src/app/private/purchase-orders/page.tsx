@@ -4,7 +4,7 @@ import { Input } from '@/components/shared/input/input';
 import { PlusCircle, Search } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/shared/button/Button';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 
 export const dynamic = 'force-dynamic';
 

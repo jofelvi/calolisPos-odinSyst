@@ -10,7 +10,7 @@ import {
 } from '@/components/shared/card/card';
 import { Badge } from '@/components/shared/badge/badge';
 import BackIcon from '@/components/shared/BackButton/BackButton';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 import Link from 'next/link';
 
 interface PageProps {

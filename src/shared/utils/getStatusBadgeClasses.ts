@@ -1,4 +1,4 @@
-import { PurchaseOrderStatusEnum } from '@/shared';
+import { PurchaseOrderStatusEnum } from '@/shared/types/enumShared';
 
 export function getStatusBadgeClasses(status: PurchaseOrderStatusEnum): string {
   const baseClasses =

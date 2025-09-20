@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { PurchaseOrderStatusEnum } from '@/shared';
+import { PurchaseOrderStatusEnum } from '@/shared/types/enumShared';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

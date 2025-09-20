@@ -1,4 +1,4 @@
-import { ProductPresentationEnum } from '@/shared';
+import { ProductPresentationEnum } from '@/shared/types/enumShared';
 
 export enum UnitCategory {
   WEIGHT = 'weight',

@@ -3,7 +3,7 @@ import { purchaseOrderService } from '@/services/firebase/genericServices';
 import PurchaseOrderForm from '@/features/purchaseOrders/PurchaseOrderForm';
 import { formatDateForDisplay } from '@/shared/utils/serializeTimestamp';
 import BackIcon from '@/components/shared/BackButton/BackButton';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 
 interface PageProps {
   params: Promise<{ id: string }>;

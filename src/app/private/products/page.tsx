@@ -15,7 +15,7 @@ import { EmptyState } from '@/components/shared/EmptyState/EmptyState';
 import { Category } from '@/modelTypes/category';
 import '@/features/products/producs.css';
 import { OrderGridSkeleton } from '@/features/purchaseOrders/order-skeleton';
-import { PRIVATE_ROUTES } from '@/constants/routes';
+import { PRIVATE_ROUTES } from '@/shared';
 import { useProductFiltersStore } from '@/shared/store/useProductFiltersStore';
 import { CategoryFilterCards } from '@/features/products/components/CategoryFilterCards';
 import { StockFilters } from '@/features/products/components/StockFilters';
