@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/shared/utils/utils';
 import { useSidebarStore } from '@/shared/store/useSidebarStore';
@@ -8,7 +8,6 @@ import { BranchSelector } from '@/shared/ui/BranchSelector';
 import Image from 'next/image';
 import logo from '../../../public/odinsys.webp';
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 import {
   FiBarChart,
@@ -199,107 +198,107 @@ export function Sidebar() {
 
           {/* Navigation */}
           <nav className="flex flex-col gap-2 mt-6 px-4 pb-4">
-          {menuItems.map(({ label, path, icon }) => {
-            const isActive = pathname === path;
-            return (
-              <Link
-                key={path}
-                href={path}
-                className={cn(
-                  'group flex items-center rounded-xl text-sm font-medium transition-all duration-200 relative overflow-hidden',
-                  isCollapsed ? 'justify-center p-3 mx-1' : 'gap-3 px-4 py-3',
-                  isActive
-                    ? 'bg-gradient-to-r from-cyan-500/10 to-teal-500/10 text-cyan-400 shadow-lg shadow-cyan-500/10 border border-cyan-500/20'
-                    : 'text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50',
-                )}
-                title={isCollapsed ? label : undefined}
-              >
-                {isActive && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-teal-500/5 rounded-xl"></div>
-                )}
-                <div
+            {menuItems.map(({ label, path, icon }) => {
+              const isActive = pathname === path;
+              return (
+                <Link
+                  key={path}
+                  href={path}
                   className={cn(
-                    'flex items-center justify-center relative z-10',
-                    isCollapsed ? 'w-full' : 'min-w-[24px]',
+                    'group flex items-center rounded-xl text-sm font-medium transition-all duration-200 relative overflow-hidden',
+                    isCollapsed ? 'justify-center p-3 mx-1' : 'gap-3 px-4 py-3',
                     isActive
-                      ? 'text-cyan-400'
-                      : 'text-slate-400 group-hover:text-cyan-400',
+                      ? 'bg-gradient-to-r from-cyan-500/10 to-teal-500/10 text-cyan-400 shadow-lg shadow-cyan-500/10 border border-cyan-500/20'
+                      : 'text-slate-300 hover:text-cyan-400 hover:bg-slate-800/50',
                   )}
+                  title={isCollapsed ? label : undefined}
                 >
-                  {icon}
-                </div>
-                {!isCollapsed && (
-                  <span className="relative z-10 transition-colors duration-200">
-                    {label}
-                  </span>
-                )}
-                {isActive && (
-                  <div className="absolute right-0 w-1 h-8 bg-gradient-to-b from-cyan-400 to-teal-500 rounded-l-full"></div>
-                )}
-              </Link>
-            );
-          })}
+                  {isActive && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-teal-500/5 rounded-xl"></div>
+                  )}
+                  <div
+                    className={cn(
+                      'flex items-center justify-center relative z-10',
+                      isCollapsed ? 'w-full' : 'min-w-[24px]',
+                      isActive
+                        ? 'text-cyan-400'
+                        : 'text-slate-400 group-hover:text-cyan-400',
+                    )}
+                  >
+                    {icon}
+                  </div>
+                  {!isCollapsed && (
+                    <span className="relative z-10 transition-colors duration-200">
+                      {label}
+                    </span>
+                  )}
+                  {isActive && (
+                    <div className="absolute right-0 w-1 h-8 bg-gradient-to-b from-cyan-400 to-teal-500 rounded-l-full"></div>
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Attendance Actions */}
           <div className="p-4 border-t border-slate-700/50 mt-4">
-          {!isCollapsed && (
-            <div className="space-y-2">
-              <Link
-                href={PRIVATE_ROUTES.ATTENDANCE_CHECKIN}
-                className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 transition-all duration-200"
-              >
-                <FiLogIn className="h-4 w-4 text-green-400" />
-                <span className="text-sm font-medium text-green-400">
-                  Registrar Entrada
-                </span>
-              </Link>
-              <Link
-                href={PRIVATE_ROUTES.ATTENDANCE_CHECKOUT}
-                className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-orange-600/20 to-red-600/20 hover:from-orange-600/30 hover:to-red-600/30 border border-orange-500/30 transition-all duration-200"
-              >
-                <FiLogOut className="h-4 w-4 text-orange-400" />
-                <span className="text-sm font-medium text-orange-400">
-                  Registrar Salida
-                </span>
-              </Link>
-            </div>
-          )}
-          {isCollapsed && (
-            <div className="space-y-2">
-              <Link
-                href={PRIVATE_ROUTES.ATTENDANCE_CHECKIN}
-                className="flex items-center justify-center p-3 rounded-lg bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 transition-all duration-200"
-                title="Registrar Entrada"
-              >
-                <FiLogIn className="h-4 w-4 text-green-400" />
-              </Link>
-              <Link
-                href={PRIVATE_ROUTES.ATTENDANCE_CHECKOUT}
-                className="flex items-center justify-center p-3 rounded-lg bg-gradient-to-r from-orange-600/20 to-red-600/20 hover:from-orange-600/30 hover:to-red-600/30 border border-orange-500/30 transition-all duration-200"
-                title="Registrar Salida"
-              >
-                <FiLogOut className="h-4 w-4 text-orange-400" />
-              </Link>
-            </div>
-          )}
+            {!isCollapsed && (
+              <div className="space-y-2">
+                <Link
+                  href={PRIVATE_ROUTES.ATTENDANCE_CHECKIN}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 transition-all duration-200"
+                >
+                  <FiLogIn className="h-4 w-4 text-green-400" />
+                  <span className="text-sm font-medium text-green-400">
+                    Registrar Entrada
+                  </span>
+                </Link>
+                <Link
+                  href={PRIVATE_ROUTES.ATTENDANCE_CHECKOUT}
+                  className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-orange-600/20 to-red-600/20 hover:from-orange-600/30 hover:to-red-600/30 border border-orange-500/30 transition-all duration-200"
+                >
+                  <FiLogOut className="h-4 w-4 text-orange-400" />
+                  <span className="text-sm font-medium text-orange-400">
+                    Registrar Salida
+                  </span>
+                </Link>
+              </div>
+            )}
+            {isCollapsed && (
+              <div className="space-y-2">
+                <Link
+                  href={PRIVATE_ROUTES.ATTENDANCE_CHECKIN}
+                  className="flex items-center justify-center p-3 rounded-lg bg-gradient-to-r from-green-600/20 to-emerald-600/20 hover:from-green-600/30 hover:to-emerald-600/30 border border-green-500/30 transition-all duration-200"
+                  title="Registrar Entrada"
+                >
+                  <FiLogIn className="h-4 w-4 text-green-400" />
+                </Link>
+                <Link
+                  href={PRIVATE_ROUTES.ATTENDANCE_CHECKOUT}
+                  className="flex items-center justify-center p-3 rounded-lg bg-gradient-to-r from-orange-600/20 to-red-600/20 hover:from-orange-600/30 hover:to-red-600/30 border border-orange-500/30 transition-all duration-200"
+                  title="Registrar Salida"
+                >
+                  <FiLogOut className="h-4 w-4 text-orange-400" />
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Footer */}
           <div className="p-4 border-t border-slate-700/50">
-          {!isCollapsed && (
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-              <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-500 rounded-full animate-pulse"></div>
-              <div className="text-xs text-slate-400 font-medium">
-                OdinSys v1.2.0
+            {!isCollapsed && (
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-500 rounded-full animate-pulse"></div>
+                <div className="text-xs text-slate-400 font-medium">
+                  OdinSys v1.2.0
+                </div>
               </div>
-            </div>
-          )}
-          {isCollapsed && (
-            <div className="flex justify-center">
-              <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-500 rounded-full animate-pulse"></div>
-            </div>
-          )}
+            )}
+            {isCollapsed && (
+              <div className="flex justify-center">
+                <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-500 rounded-full animate-pulse"></div>
+              </div>
+            )}
           </div>
         </div>
       </aside>

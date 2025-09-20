@@ -144,7 +144,7 @@ export function Sidebar() {
         {/* Header */}
         <div
           className={cn(
-            'flex items-center p-6 border-b border-slate-700/50',
+            'flex items-center p-6 border-b border-slate-700/50 flex-shrink-0',
             isCollapsed ? 'justify-center' : 'justify-between',
           )}
         >
@@ -175,7 +175,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col gap-2 mt-6 px-4 flex-grow">
+        <nav className="flex flex-col gap-2 mt-6 px-4 pb-4 flex-grow overflow-y-auto sidebar-scroll">
           {menuItems.map(({ label, path, icon }) => {
             const isActive = pathname === path;
             return (
@@ -219,7 +219,7 @@ export function Sidebar() {
         </nav>
 
         {/* Attendance Actions */}
-        <div className="p-4 border-t border-slate-700/50">
+        <div className="p-4 border-t border-slate-700/50 flex-shrink-0">
           {!isCollapsed && (
             <div className="space-y-2">
               <Link
@@ -263,7 +263,7 @@ export function Sidebar() {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-700/50">
+        <div className="p-4 border-t border-slate-700/50 flex-shrink-0">
           {!isCollapsed && (
             <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
               <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-500 rounded-full animate-pulse"></div>
