@@ -141,12 +141,12 @@ export function Sidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 backdrop-blur-xl transition-all duration-300 flex flex-col shadow-2xl',
+          'bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 border-r border-slate-700/50 backdrop-blur-xl transition-all duration-300 flex flex-col shadow-2xl h-screen',
           // Desktop behavior
-          'hidden md:flex',
+          'hidden md:flex md:relative',
           isCollapsed ? 'md:w-20' : 'md:w-72',
           // Mobile behavior
-          'md:relative fixed top-0 left-0 z-50',
+          'fixed top-0 left-0 z-50',
           isMobileOpen ? 'flex w-72' : 'hidden md:flex',
         )}
       >
@@ -183,20 +183,22 @@ export function Sidebar() {
           </div>
         </div>
 
-        {/* Branch Selector */}
-        {!isCollapsed && (
-          <div className="px-4 mt-4">
-            <BranchSelector
-              showCreateButton={true}
-              onCreateBranch={() => {
-                router.push(PRIVATE_ROUTES.SETTINGS_BRANCHES_NEW);
-              }}
-            />
-          </div>
-        )}
+        {/* Scrollable Content Container */}
+        <div className="flex-1 min-h-0 overflow-y-auto sidebar-scroll">
+          {/* Branch Selector */}
+          {!isCollapsed && (
+            <div className="px-4 mt-4">
+              <BranchSelector
+                showCreateButton={true}
+                onCreateBranch={() => {
+                  router.push(PRIVATE_ROUTES.SETTINGS_BRANCHES_NEW);
+                }}
+              />
+            </div>
+          )}
 
-        {/* Navigation */}
-        <nav className="flex flex-col gap-2 mt-6 px-4 flex-grow">
+          {/* Navigation */}
+          <nav className="flex flex-col gap-2 mt-6 px-4 pb-4">
           {menuItems.map(({ label, path, icon }) => {
             const isActive = pathname === path;
             return (
@@ -237,10 +239,10 @@ export function Sidebar() {
               </Link>
             );
           })}
-        </nav>
+          </nav>
 
-        {/* Attendance Actions */}
-        <div className="p-4 border-t border-slate-700/50">
+          {/* Attendance Actions */}
+          <div className="p-4 border-t border-slate-700/50 mt-4">
           {!isCollapsed && (
             <div className="space-y-2">
               <Link
@@ -281,10 +283,10 @@ export function Sidebar() {
               </Link>
             </div>
           )}
-        </div>
+          </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-700/50">
+          {/* Footer */}
+          <div className="p-4 border-t border-slate-700/50">
           {!isCollapsed && (
             <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
               <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-500 rounded-full animate-pulse"></div>
@@ -298,6 +300,7 @@ export function Sidebar() {
               <div className="w-2 h-2 bg-gradient-to-r from-cyan-400 to-teal-500 rounded-full animate-pulse"></div>
             </div>
           )}
+          </div>
         </div>
       </aside>
     </>

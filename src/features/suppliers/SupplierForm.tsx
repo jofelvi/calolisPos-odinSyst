@@ -72,7 +72,7 @@ export default function SupplierForm({ initialData }: SupplierFormProps) {
       // Actualizar productos con el proveedor
       await updateProductsWithSupplier(initialData?.id, data.productIds || []);
 
-      router.push('/suppliers');
+      router.push('/private/suppliers');
     } catch (error) {
       // Handle error appropriately - could show a toast notification here
       throw error;
@@ -242,7 +242,7 @@ export default function SupplierForm({ initialData }: SupplierFormProps) {
       <div className="flex justify-end space-x-3">
         <button
           type="button"
-          onClick={() => router.push('/suppliers')}
+          onClick={() => router.push('/private/suppliers')}
           className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           disabled={isSubmitting}
         >

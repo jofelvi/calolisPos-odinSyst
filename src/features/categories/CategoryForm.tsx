@@ -134,7 +134,7 @@ export function CategoryForm({
       if (isFromProduct && onClose) {
         onClose();
       } else {
-        router.push('/categories');
+        router.push('/private/categories');
       }
     } catch {
       // console.error('Error al guardar la categoría:', error);
@@ -144,7 +144,7 @@ export function CategoryForm({
   };
 
   const handleCancelBtn = () =>
-    onClose ? onClose() : router.push('/categories');
+    onClose ? onClose() : router.push('/private/categories');
 
   return (
     <form
