@@ -5,11 +5,16 @@ import { useRouter } from 'next/navigation';
 import {
   FiClock,
   FiDollarSign,
+  FiDownload,
   FiEye,
   FiFilter,
   FiMapPin,
+  FiRefreshCw,
+  FiSearch,
   FiShoppingCart,
   FiUser,
+  FiX,
+  FiCheck,
 } from 'react-icons/fi';
 import {
   collection,
@@ -21,9 +26,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/services/firebase/firebase';
 import { orderService } from '@/services/firebase/genericServices';
-import { convertFirebaseDate, formatDate } from '@/shared/utils/dateHelpers';
+import { convertFirebaseDate, formatDate, getDateRange, filterOrdersByDateRange } from '@/shared/utils/dateHelpers';
 import { Order } from '@/modelTypes/order';
-import { OrderStatusEnum, PaymentStatusEnum, UserRoleEnum } from '@/shared';
+import { OrderStatusEnum, PaymentStatusEnum, UserRoleEnum, DateFilterEnum } from '@/shared';
 import { Button } from '@/components/shared/button/Button';
 import { useUserStore } from '@/shared/store/useUserStore';
 import { PRIVATE_ROUTES } from '@/shared/constantsRoutes/routes';
@@ -55,6 +60,34 @@ const getOrdersLast24Hours = async (): Promise<Order[]> => {
   } catch (error) {
     console.error('Error fetching last 24h orders:', error);
     throw new Error('Failed to fetch recent orders');
+  }
+};
+
+// Función para obtener órdenes de hoy (más eficiente que filtrar todo)
+const getOrdersToday = async (): Promise<Order[]> => {
+  try {
+    const today = new Date();
+    const startOfToday = new Date(today);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const ordersCollection = collection(db, 'orders');
+    const q = query(
+      ordersCollection,
+      where('createdAt', '>=', Timestamp.fromDate(startOfToday)),
+      orderBy('createdAt', 'desc'),
+    );
+
+    const ordersSnapshot = await getDocs(q);
+
+    return ordersSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: convertFirebaseDate(doc.data().createdAt),
+      updatedAt: convertFirebaseDate(doc.data().updatedAt),
+    })) as Order[];
+  } catch (error) {
+    console.error('Error fetching today orders:', error);
+    throw new Error('Failed to fetch today orders');
   }
 };
 
@@ -90,53 +123,81 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<OrderStatusEnum | 'ALL'>(
     'ALL',
   );
+  const [dateFilter, setDateFilter] = useState<DateFilterEnum>(DateFilterEnum.TODAY);
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      if (!user) return;
+  const fetchOrders = async () => {
+    if (!user) return;
 
-      setLoading(true);
-      try {
-        let fetchedOrders: Order[];
+    setLoading(true);
+    try {
+      let fetchedOrders: Order[];
 
-        // Filtrar por rol del usuario
-        if (
-          user.role === UserRoleEnum.ADMIN ||
-          user.role === UserRoleEnum.MANAGER
-        ) {
-          // Admin/Manager: Ver todas las órdenes (historial completo)
-          fetchedOrders = await orderService.getAll();
-        } else if (user.role === UserRoleEnum.CUSTOMER) {
-          // Cliente: Ver solo sus propias órdenes (historial personal)
-          fetchedOrders = await getCustomerOrders(user.id);
+      // Filtrar por rol del usuario
+      if (
+        user.role === UserRoleEnum.ADMIN ||
+        user.role === UserRoleEnum.MANAGER
+      ) {
+        // Admin/Manager: Para filtro de "hoy" usar consulta optimizada, sino cargar todo
+        if (dateFilter === DateFilterEnum.TODAY) {
+          fetchedOrders = await getOrdersToday();
         } else {
-          // Cajeros y otros roles: Solo órdenes de las últimas 24 horas
+          fetchedOrders = await orderService.getAll();
+        }
+      } else if (user.role === UserRoleEnum.CUSTOMER) {
+        // Cliente: Ver solo sus propias órdenes (historial personal)
+        fetchedOrders = await getCustomerOrders(user.id);
+      } else {
+        // Cajeros y otros roles: Para filtro de "hoy" usar consulta optimizada, sino 24h
+        if (dateFilter === DateFilterEnum.TODAY) {
+          fetchedOrders = await getOrdersToday();
+        } else {
           fetchedOrders = await getOrdersLast24Hours();
         }
-
-        // Ordenar por fecha de creación (más recientes primero)
-        fetchedOrders.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        );
-
-        setOrders(fetchedOrders);
-      } catch (error) {
-        console.error('Error loading orders:', error);
-      } finally {
-        setLoading(false);
       }
-    };
 
+      // Ordenar por fecha de creación (más recientes primero)
+      fetchedOrders.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
+      setOrders(fetchedOrders);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     void fetchOrders();
-  }, [user]);
+  }, [user, dateFilter]);
 
-  // Filtrar órdenes por estado
-  const filteredOrders = orders.filter(
+  // Obtener rango de fechas basado en el filtro seleccionado
+  const dateRange = getDateRange(dateFilter);
+
+  // Filtrar órdenes por fecha primero
+  const dateFilteredOrders = filterOrdersByDateRange(orders, dateRange.startDate, dateRange.endDate);
+
+  // Luego filtrar por estado
+  const statusFilteredOrders = dateFilteredOrders.filter(
     (order) => statusFilter === 'ALL' || order.status === statusFilter,
   );
+
+  // Finalmente filtrar por término de búsqueda
+  const filteredOrders = statusFilteredOrders.filter((order) => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      order.id.toLowerCase().includes(searchLower) ||
+      order.tableId?.toString().toLowerCase().includes(searchLower) ||
+      order.customerName?.toLowerCase().includes(searchLower) ||
+      order.items.some(item => item.name.toLowerCase().includes(searchLower))
+    );
+  });
 
   const handleOrderClick = (order: Order) => {
     // Si la orden está pagada, mostrar modal con resumen
@@ -244,7 +305,7 @@ export default function OrdersPage() {
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
                   {user?.role === UserRoleEnum.ADMIN ||
                   user?.role === UserRoleEnum.MANAGER
-                    ? 'Historial de Ventas'
+                    ? 'Gestión de Órdenes'
                     : user?.role === UserRoleEnum.CUSTOMER
                       ? 'Mi Historial de Órdenes'
                       : 'Órdenes Actuales'}
@@ -252,7 +313,7 @@ export default function OrdersPage() {
                 <p className="text-gray-600 mt-1 text-sm sm:text-base">
                   {user?.role === UserRoleEnum.ADMIN ||
                   user?.role === UserRoleEnum.MANAGER
-                    ? 'Gestiona todas las órdenes del sistema'
+                    ? 'Vista completa y control total de todas las órdenes del sistema'
                     : user?.role === UserRoleEnum.CUSTOMER
                       ? 'Todas tus órdenes realizadas'
                       : 'Órdenes de las últimas 24 horas'}
@@ -262,30 +323,99 @@ export default function OrdersPage() {
 
             {/* Filtros */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-4">
                 <FiFilter className="text-gray-500 w-4 h-4" />
                 <span className="text-sm font-medium text-gray-700">
-                  Filtrar por estado:
+                  Filtros y Búsqueda:
                 </span>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={statusFilter === 'ALL' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setStatusFilter('ALL')}
-                >
-                  Todas
-                </Button>
-                {Object.values(OrderStatusEnum).map((status) => (
+
+              {/* Búsqueda */}
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-4">
+                <div className="relative flex-1 max-w-md">
+                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por ID, mesa, cliente o producto..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <FiX className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Acciones Rápidas */}
+                <div className="flex gap-2">
                   <Button
-                    key={status}
-                    variant={statusFilter === status ? 'default' : 'outline'}
+                    variant="outline"
                     size="sm"
-                    onClick={() => setStatusFilter(status)}
+                    onClick={() => void fetchOrders()}
+                    className="flex items-center gap-2"
+                    disabled={loading}
                   >
-                    {getStatusLabel(status)}
+                    <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    Actualizar
                   </Button>
-                ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <FiDownload className="w-4 h-4" />
+                    Exportar
+                  </Button>
+                </div>
+              </div>
+
+              {/* Filtros */}
+              <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+                {/* Filtro de Tiempo */}
+                <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                  <span className="text-sm text-gray-600 min-w-max">Período:</span>
+                  <select
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value as DateFilterEnum)}
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
+                  >
+                    <option value={DateFilterEnum.TODAY}>Hoy</option>
+                    <option value={DateFilterEnum.YESTERDAY}>Ayer</option>
+                    <option value={DateFilterEnum.LAST_WEEK}>Última semana</option>
+                    <option value={DateFilterEnum.LAST_TWO_WEEKS}>2 semanas</option>
+                    <option value={DateFilterEnum.THIS_MONTH}>Este mes</option>
+                    <option value={DateFilterEnum.LAST_MONTH}>Mes anterior</option>
+                  </select>
+                </div>
+
+                {/* Filtro de Estado */}
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="text-sm text-gray-600 min-w-max">Estado:</span>
+                  <div className="flex flex-wrap gap-1">
+                    <Button
+                      variant={statusFilter === 'ALL' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setStatusFilter('ALL')}
+                    >
+                      Todas
+                    </Button>
+                    {Object.values(OrderStatusEnum).map((status) => (
+                      <Button
+                        key={status}
+                        variant={statusFilter === status ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setStatusFilter(status)}
+                      >
+                        {getStatusLabel(status)}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -311,7 +441,7 @@ export default function OrdersPage() {
                 <p className="text-sm text-gray-600">Pendientes</p>
                 <p className="text-2xl font-bold text-yellow-600">
                   {
-                    orders.filter((o) => o.status === OrderStatusEnum.PENDING)
+                    dateFilteredOrders.filter((o) => o.status === OrderStatusEnum.PENDING)
                       .length
                   }
                 </p>
@@ -326,7 +456,7 @@ export default function OrdersPage() {
                 <p className="text-sm text-gray-600">En Progreso</p>
                 <p className="text-2xl font-bold text-blue-600">
                   {
-                    orders.filter(
+                    dateFilteredOrders.filter(
                       (o) => o.status === OrderStatusEnum.IN_PROGRESS,
                     ).length
                   }
@@ -342,7 +472,7 @@ export default function OrdersPage() {
                 <p className="text-sm text-gray-600">Total Ventas</p>
                 <p className="text-2xl font-bold text-green-600">
                   {formatCurrency(
-                    orders.reduce((sum, order) => sum + order.total, 0),
+                    dateFilteredOrders.reduce((sum, order) => sum + order.total, 0),
                   )}
                 </p>
               </div>
@@ -474,15 +604,39 @@ export default function OrdersPage() {
                       </td>
 
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOrderClick(order)}
-                          className="flex items-center gap-2"
-                        >
-                          <FiEye className="w-4 h-4" />
-                          Ver Detalle
-                        </Button>
+                        <div className="flex items-center gap-2 justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOrderClick(order)}
+                            className="flex items-center gap-1"
+                          >
+                            <FiEye className="w-3 h-3" />
+                            Ver
+                          </Button>
+                          {order.status === OrderStatusEnum.PENDING && (
+                            user?.role === UserRoleEnum.ADMIN || user?.role === UserRoleEnum.MANAGER
+                          ) && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50"
+                              >
+                                <FiCheck className="w-3 h-3" />
+                                Aprobar
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <FiX className="w-3 h-3" />
+                                Cancelar
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

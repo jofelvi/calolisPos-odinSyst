@@ -32,67 +32,6 @@ export default function SalesPage() {
       setLoading(false);
     }
   };
-  /*
-    // Mapeo de acciones a estados y mensajes
-    const ACTION_CONFIG = {
-      accept: {
-        status: OrderStatusEnum.IN_PROGRESS,
-        message: 'Orden aceptada y en preparación',
-      },
-      decline: {
-        status: OrderStatusEnum.CANCELLED,
-        message: 'Orden rechazada',
-      },
-      ready: {
-        status: OrderStatusEnum.READY,
-        message: 'Orden marcada como lista',
-      },
-    } as const;
-
-    // Single responsibility: actualizar orden
-    const updateOrderInState = (orderId: string, newStatus: OrderStatusEnum) => {
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.id === orderId
-            ? { ...order, status: newStatus, updatedAt: new Date() }
-            : order,
-        ),
-      );
-    };
-
-    // Manejar acciones de órdenes para el rol de cocina
-    const handleKitchenOrderAction = async (
-      orderId: string,
-      action: keyof typeof ACTION_CONFIG,
-    ) => {
-      const config = ACTION_CONFIG[action];
-      if (!config) return;
-
-      try {
-        await orderService.updateOrderStatus(orderId, config.status);
-        updateOrderInState(orderId, config.status);
-        success({ title: config.message });
-      } catch {
-        error({ title: 'Error al actualizar la orden' });
-      }
-    };
-
-    // Manejar acciones de órdenes para admin/cajero
-    const handleAdminOrderAction = (orderId: string, action: string) => {
-      const routes = {
-        view: PRIVATE_ROUTES.ORDER_DETAILS(orderId),
-        edit: PRIVATE_ROUTES.ORDER_EDIT(orderId),
-      } as const;
-
-      const route = routes[action as keyof typeof routes];
-      if (route) router.push(route);
-    };
-
-    // Manejar cambio en el filtro de tiempo del AdminOrdersView
-    const handleTimeFilterChange = (period: string, filteredOrders: Order[]) => {
-      setFilteredOrdersCount(filteredOrders.length);
-    };*/
-
   // Verificar autenticación
   if (status === 'loading') {
     return (

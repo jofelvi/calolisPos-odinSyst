@@ -158,3 +158,12 @@ export enum TableStatusEnum {
   RESERVED = 'RESERVED',
   CLEANING = 'CLEANING',
 }
+
+export enum DateFilterEnum {
+  TODAY = 'today',
+  YESTERDAY = 'yesterday',
+  LAST_WEEK = 'last_week',
+  LAST_TWO_WEEKS = 'last_two_weeks',
+  THIS_MONTH = 'this_month',
+  LAST_MONTH = 'last_month',
+}

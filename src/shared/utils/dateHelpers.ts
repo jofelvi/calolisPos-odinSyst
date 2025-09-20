@@ -152,3 +152,75 @@ export function getEndOfDay(date: any): Date {
   endOfDay.setHours(23, 59, 59, 999);
   return endOfDay;
 }
+
+/**
+ * Obtiene rangos de fechas predefinidos para filtros
+ */
+export function getDateRange(filter: string): { startDate: Date; endDate: Date } {
+  const now = new Date();
+  const today = new Date(now);
+
+  switch (filter) {
+    case 'today':
+      return {
+        startDate: getStartOfDay(today),
+        endDate: getEndOfDay(today),
+      };
+
+    case 'yesterday':
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      return {
+        startDate: getStartOfDay(yesterday),
+        endDate: getEndOfDay(yesterday),
+      };
+
+    case 'last_week':
+      const lastWeek = new Date(today);
+      lastWeek.setDate(lastWeek.getDate() - 7);
+      return {
+        startDate: getStartOfDay(lastWeek),
+        endDate: getEndOfDay(today),
+      };
+
+    case 'last_two_weeks':
+      const twoWeeksAgo = new Date(today);
+      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+      return {
+        startDate: getStartOfDay(twoWeeksAgo),
+        endDate: getEndOfDay(today),
+      };
+
+    case 'this_month':
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      return {
+        startDate: getStartOfDay(startOfMonth),
+        endDate: getEndOfDay(today),
+      };
+
+    case 'last_month':
+      const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      return {
+        startDate: getStartOfDay(lastMonth),
+        endDate: getEndOfDay(endOfLastMonth),
+      };
+
+    default:
+      // Por defecto, devuelve el día de hoy
+      return {
+        startDate: getStartOfDay(today),
+        endDate: getEndOfDay(today),
+      };
+  }
+}
+
+/**
+ * Filtra órdenes por rango de fechas
+ */
+export function filterOrdersByDateRange(orders: any[], startDate: Date, endDate: Date) {
+  return orders.filter(order => {
+    const orderDate = convertFirebaseDate(order.createdAt);
+    return orderDate >= startDate && orderDate <= endDate;
+  });
+}

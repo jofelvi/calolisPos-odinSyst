@@ -45,7 +45,7 @@ const menuItems = [
     icon: <FiPackage size={20} />,
   },
   {
-    label: 'Ventas',
+    label: 'Órdenes',
     path: PRIVATE_ROUTES.ORDERS,
     icon: <FiShoppingCart size={20} />,
   },
