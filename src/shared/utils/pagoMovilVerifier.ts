@@ -11,8 +11,8 @@ export class PagoMovilVerifier {
   constructor() {
     this.scraper = new BankScraper();
     this.credentials = {
-      username: process.env.NEXT_PUBLIC_BANK_USERNAME || 'jofelvi07',
-      password: process.env.NEXT_PUBLIC_BANK_PASSWORD || 'Dylan*04',
+      username: process.env.BANK_USERNAME || process.env.NEXT_PUBLIC_BANK_USERNAME || 'jofelvi07',
+      password: process.env.BANK_PASSWORD || process.env.NEXT_PUBLIC_BANK_PASSWORD || 'Dylan*04',
     };
   }
 
@@ -56,6 +56,16 @@ export class PagoMovilVerifier {
         actualAmount: transactionResult.amount,
       };
     } catch (error) {
+      // Verificar si es un error de "no hay movimientos"
+      if (error instanceof Error && error.message.includes('NO_MOVEMENTS')) {
+        return {
+          success: false,
+          found: false,
+          amountMatches: false,
+          errorMessage: 'No hay movimientos bancarios asociados a esta cuenta. Por favor, intente más tarde.',
+        };
+      }
+
       return {
         success: false,
         found: false,

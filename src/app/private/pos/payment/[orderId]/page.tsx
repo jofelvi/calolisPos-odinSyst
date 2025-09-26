@@ -35,14 +35,19 @@ import { Card } from '@/components/shared/card/card';
 import { Button } from '@/components/shared/button/Button';
 import {
   AlertCircle,
+  AlertTriangle,
   Banknote,
   Calculator,
   Clock,
   CreditCard,
   DollarSign,
+  Edit3,
+  Save,
   Smartphone,
   TrendingUp,
   X,
+  XCircle,
+  CheckCircle,
 } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 import { OrderItem } from '@/modelTypes/orderItem';
@@ -66,6 +71,9 @@ export default function PaymentPage({ params }: PageProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [bcvRate, setBcvRate] = useState<number>(0);
   const [loadingRate, setLoadingRate] = useState(false);
+  const [isEditingRate, setIsEditingRate] = useState(false);
+  const [tempRateValue, setTempRateValue] = useState<string>('');
+  const [isUsingDefaultRate, setIsUsingDefaultRate] = useState(false);
 
   // Estados para propinas
   const [tipAmount, setTipAmount] = useState(0);
@@ -103,6 +111,15 @@ export default function PaymentPage({ params }: PageProps) {
     reference: '',
     phone: '',
   });
+
+  // Estados para pagos móviles verificados
+  const [verifiedPagoMoviles, setVerifiedPagoMoviles] = useState<PagoMovil[]>([]);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
+  const [currentVerificationToast, setCurrentVerificationToast] = useState<string | null>(null);
+
+  // Estados para confirmación de eliminación
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{index: number, name: string} | null>(null);
 
   const handleUpdateQuantity = async (
     itemIndex: number,
@@ -152,8 +169,33 @@ export default function PaymentPage({ params }: PageProps) {
     }
   };
 
-  const handleRemoveItem = async (itemIndex: number) => {
-    await handleUpdateQuantity(itemIndex, 0);
+  const handleRemoveItem = (itemIndex: number) => {
+    if (!order) return;
+
+    const item = order.items[itemIndex];
+    if (item) {
+      setItemToDelete({ index: itemIndex, name: item.name });
+      setShowDeleteConfirm(true);
+    }
+  };
+
+  const confirmDeleteItem = async () => {
+    if (itemToDelete) {
+      await handleUpdateQuantity(itemToDelete.index, 0);
+
+      toast.success({
+        title: 'Producto eliminado',
+        description: `${itemToDelete.name} ha sido eliminado de la orden`,
+      });
+    }
+
+    setShowDeleteConfirm(false);
+    setItemToDelete(null);
+  };
+
+  const cancelDeleteItem = () => {
+    setShowDeleteConfirm(false);
+    setItemToDelete(null);
   };
 
   // Definir columnas para la tabla de items
@@ -266,23 +308,112 @@ export default function PaymentPage({ params }: PageProps) {
     void loadOrder();
   }, [orderId, router]);
 
-  // Cargar tasa BCV al montar el componente
-  useEffect(() => {
-    const loadBcvRate = async () => {
-      setLoadingRate(true);
-      try {
-        const response = await fetch('/api/bcv-rate');
-        const data = await response.json();
-        setBcvRate(data.rate);
-      } catch {
-        setBcvRate(36.5);
-      } finally {
-        setLoadingRate(false);
-      }
-    };
+  // Función para cargar tasa BCV
+  const loadBcvRate = async () => {
+    setLoadingRate(true);
+    try {
+      console.log('🔄 Cargando tasa BCV...');
+      const response = await fetch('/api/bcv-rate', {
+        cache: 'no-store', // Evitar cache
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      const data = await response.json();
+      console.log('📊 Respuesta BCV:', data);
+      setBcvRate(data.rate);
 
-    loadBcvRate();
-  }, []);
+      if (data.source === 'default') {
+        console.warn('⚠️ Usando tasa por defecto, servicio BCV falló');
+        setIsUsingDefaultRate(true);
+        toast.warning({
+          title: 'Tasa BCV',
+          description: 'Usando tasa por defecto. Haz clic para editar manualmente.',
+        });
+      } else {
+        console.log('✅ Tasa BCV actualizada:', data.rate);
+        setIsUsingDefaultRate(false);
+      }
+    } catch (error) {
+      console.error('❌ Error cargando tasa BCV:', error);
+      setBcvRate(36.5);
+      setIsUsingDefaultRate(true);
+      toast.error({
+        title: 'Error de conexión',
+        description: 'No se pudo obtener la tasa BCV. Usando valor por defecto.',
+      });
+    } finally {
+      setLoadingRate(false);
+    }
+  };
+
+  const handleEditRateStart = () => {
+    setTempRateValue(bcvRate.toString());
+    setIsEditingRate(true);
+  };
+
+  const handleEditRateCancel = () => {
+    setIsEditingRate(false);
+    setTempRateValue('');
+  };
+
+  const handleEditRateSave = () => {
+    const numericValue = parseFloat(tempRateValue);
+    if (!isNaN(numericValue) && numericValue > 0) {
+      setBcvRate(numericValue);
+      setIsUsingDefaultRate(false);
+      setIsEditingRate(false);
+      setTempRateValue('');
+      toast.success({
+        title: 'Tasa actualizada',
+        description: `Nueva tasa BCV: ${numericValue.toFixed(2)}`,
+      });
+    } else {
+      toast.error({
+        title: 'Valor inválido',
+        description: 'Ingrese un valor numérico válido mayor a 0',
+      });
+    }
+  };
+
+  // Cargar tasa BCV y pagos móviles verificados al montar el componente
+  useEffect(() => {
+    void loadBcvRate();
+    void loadVerifiedPagoMoviles();
+  }, [orderId]);
+
+  // Cargar pagos móviles verificados para esta orden
+  const loadVerifiedPagoMoviles = async () => {
+    try {
+      const pagoMoviles = await pagoMovilService.getAll();
+      const orderPagoMoviles = pagoMoviles.filter(
+        (pm) => pm.orderId === orderId && pm.status === 'verified'
+      );
+      setVerifiedPagoMoviles(orderPagoMoviles);
+
+      // Si hay pagos móviles verificados, actualizar el monto total
+      if (orderPagoMoviles.length > 0) {
+        const totalPagoMovil = orderPagoMoviles.reduce(
+          (sum, pm) => sum + pm.expectedAmount,
+          0
+        );
+        setPaymentAmounts((prev) => ({
+          ...prev,
+          [PaymentMethodEnum.PAGO_MOVIL]: totalPagoMovil.toString(),
+        }));
+        setSelectedPaymentMethods((prev) => {
+          if (!prev.includes(PaymentMethodEnum.PAGO_MOVIL)) {
+            return [...prev, PaymentMethodEnum.PAGO_MOVIL];
+          }
+          return prev;
+        });
+      }
+    } catch (error) {
+      console.error('Error loading verified pago moviles:', error);
+    }
+  };
 
   // Cargar cuentas por cobrar cuando se selecciona un cliente
   useEffect(() => {
@@ -433,6 +564,18 @@ export default function PaymentPage({ params }: PageProps) {
       } else {
         // Agregar método
         if (method === PaymentMethodEnum.PAGO_MOVIL) {
+          // Calcular monto restante por pagar en USD
+          const totalPaid = calculateTotalPaid();
+          const remainingUSD = totalWithTip - totalPaid;
+          // Convertir a bolívares para el pago móvil
+          const remainingBS = remainingUSD > 0 ? (remainingUSD * bcvRate).toFixed(0) : '0';
+
+          // Establecer monto por defecto en bolívares
+          setPagoMovilData((prev) => ({
+            ...prev,
+            amount: remainingBS,
+          }));
+
           setShowPagoMovilModal(true);
         }
         return [...prev, method];
@@ -448,7 +591,7 @@ export default function PaymentPage({ params }: PageProps) {
     }));
   };
 
-  // Manejar modal de Pago Móvil con verificación
+  // Manejar modal de Pago Móvil con verificación asíncrona
   const handlePagoMovilSubmit = async () => {
     const { amount, reference, phone } = pagoMovilData;
 
@@ -479,81 +622,162 @@ export default function PaymentPage({ params }: PageProps) {
 
     if (!order) return;
 
-    setIsProcessing(true);
+    // Convertir monto de Bs a USD para la verificación
+    const amountInUSD = bcvRate > 0 ? (parseFloat(amount) / bcvRate).toFixed(2) : '0';
+
+    // Mostrar toast de inicio INMEDIATAMENTE antes de cualquier acción
+    toast.info({
+      title: '🔄 Procesando solicitud',
+      description: `Iniciando verificación de Ref: ${reference}`,
+      duration: 60000, // Toast largo que se reemplazará con actualizaciones
+    });
+
+    setIsVerifyingPayment(true);
+
     try {
-      // Verificar si ya existe un registro de esta referencia
+      // PRIMERO verificar si ya existe en la base de datos
+      toast.info({
+        title: '🔍 Consultando base de datos',
+        description: 'Verificando si la referencia ya fue procesada...',
+        duration: 3000,
+      });
+
       const existingPagoMovil = await getPagoMovilByReference(reference);
 
       if (existingPagoMovil) {
+        setIsVerifyingPayment(false);
+
         if (existingPagoMovil.status === 'verified') {
-          toast.warning({
-            title: 'Referencia duplicada',
-            description: 'Esta referencia ya fue verificada y utilizada',
+          toast.error({
+            title: '❌ Referencia duplicada',
+            description: `Esta referencia ${reference} ya fue verificada y utilizada en otra orden`,
+            duration: 8000,
           });
           return;
         }
 
-        if (existingPagoMovil.status === 'amount_mismatch') {
-          // Verificar si ahora el monto coincide
-          if (parseFloat(amount) === existingPagoMovil.expectedAmount) {
-            // Actualizar status a verificado
-            await pagoMovilService.update(existingPagoMovil.id, {
-              status: 'verified',
-              updatedAt: new Date(),
-            });
-
-            // Proceder con el pago
-            setPaymentAmounts((prev) => ({
-              ...prev,
-              [PaymentMethodEnum.PAGO_MOVIL]: amount,
-            }));
-
-            setSelectedPaymentMethods((prev) => {
-              if (!prev.includes(PaymentMethodEnum.PAGO_MOVIL)) {
-                return [...prev, PaymentMethodEnum.PAGO_MOVIL];
-              }
-              return prev;
-            });
-
-            setShowPagoMovilModal(false);
-            setPagoMovilData({ amount: '', reference: '', phone: '' });
-            toast.success({
-              title: 'Verificación exitosa',
-              description: 'Pago Móvil verificado correctamente',
-            });
-            return;
-          }
+        if (existingPagoMovil.status === 'pending') {
+          toast.warning({
+            title: '⚠️ Verificación en proceso',
+            description: 'Esta referencia ya está siendo verificada en otro proceso',
+            duration: 6000,
+          });
+          return;
         }
       }
 
-      // Realizar verificación usando el scraper
+      // Cerrar modal solo después de verificar duplicados
+      setShowPagoMovilModal(false);
+      setPagoMovilData({ amount: '', reference: '', phone: '' });
+
+      // Ejecutar verificación en segundo plano
+      verifyPagoMovilInBackground(amountInUSD, reference, phone, amount);
+
+    } catch (error) {
+      setIsVerifyingPayment(false);
+      toast.error({
+        title: '❌ Error al verificar',
+        description: 'No se pudo iniciar la verificación. Intente nuevamente.',
+        duration: 5000,
+      });
+    }
+  };
+
+  // Función para verificar Pago Móvil en segundo plano
+  const verifyPagoMovilInBackground = async (amountUSD: string, reference: string, phone: string, amountBS: string) => {
+    try {
+      // Toast de progreso durante la verificación automática
       toast.info({
-        title: 'Verificando',
-        description:
-          'Verificando transacción, esto puede tomar unos momentos...',
+        title: '🌐 Conectando al banco',
+        description: 'Iniciando sesión en el sistema bancario para verificar...',
+        duration: 5000,
       });
 
-      const verificationResponse = await fetch('/api/verify-pago-movil', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          referenceNumber: reference,
-          expectedAmount: amount,
-          phoneNumber: phone,
-        }),
+      let verificationResult;
+      try {
+        // Configurar timeout para la request (60 segundos)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+        // Toast adicional para indicar búsqueda activa
+        setTimeout(() => {
+          if (!controller.signal.aborted) {
+            toast.info({
+              title: '🔎 Buscando transacción',
+              description: `Analizando movimientos bancarios para Ref: ${reference}...`,
+              duration: 5000,
+            });
+          }
+        }, 5000);
+
+        // Toast de progreso más avanzado
+        setTimeout(() => {
+          if (!controller.signal.aborted) {
+            toast.info({
+              title: '⏳ Procesando datos',
+              description: 'Validando monto y detalles de la transacción...',
+              duration: 5000,
+            });
+          }
+        }, 15000);
+
+        const verificationResponse = await fetch('/api/verify-pago-movil', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            referenceNumber: reference,
+            expectedAmount: amountBS, // Enviar monto en Bolívares
+            phoneNumber: phone,
+          }),
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timeoutId));
+
+        verificationResult = await verificationResponse.json();
+      } catch (error) {
+        // Si el scraping falla, crear un resultado de error
+        verificationResult = {
+          success: false,
+          found: false,
+          amountMatches: false,
+          errorMessage: error instanceof Error ? error.message : 'Error de conexión o timeout',
+        };
+
+        if (error instanceof Error && error.name === 'AbortError') {
+          toast.warning({
+            title: '⏰ Tiempo de espera agotado',
+            description: 'La verificación tardó más de lo esperado. El registro se guardó para revisión manual.',
+            duration: 8000,
+          });
+        } else {
+          toast.warning({
+            title: '🔧 Error de conectividad',
+            description: 'No se pudo conectar al sistema bancario. Se guardará el registro para verificación manual.',
+            duration: 8000,
+          });
+        }
+      }
+
+      // Toast de finalización del scraping
+      toast.info({
+        title: '💾 Guardando resultado',
+        description: 'Registrando la verificación en el sistema...',
+        duration: 2000,
       });
 
-      const verificationResult = await verificationResponse.json();
-
-      // Crear registro de PagoMovil
+      // Crear registro de PagoMovil con ambos montos
       const pagoMovilData: Omit<PagoMovil, 'id'> = {
         orderId: order.id,
         referenceNumber: reference,
-        expectedAmount: parseFloat(amount),
+        expectedAmount: parseFloat(amountUSD), // Legacy field en USD
+        expectedAmountBS: parseFloat(amountBS), // Monto en Bolívares
+        expectedAmountUSD: parseFloat(amountUSD), // Monto en USD
         actualAmount: verificationResult.actualAmount
           ? parseFloat(verificationResult.actualAmount)
+          : undefined,
+        actualAmountUSD: verificationResult.actualAmount && bcvRate > 0
+          ? parseFloat(verificationResult.actualAmount) / bcvRate
           : undefined,
         phoneNumber: phone,
         status:
@@ -568,6 +792,7 @@ export default function PaymentPage({ params }: PageProps) {
                 : 'error',
         verificationDate: new Date(),
         errorMessage: verificationResult.errorMessage,
+        bcvRate: bcvRate, // Guardar la tasa BCV del momento
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -579,10 +804,17 @@ export default function PaymentPage({ params }: PageProps) {
         verificationResult.found &&
         verificationResult.amountMatches
       ) {
-        // Verificación exitosa
+        // Verificación exitosa - agregar al listado y actualizar el total
+        const createdPagoMovil = { ...pagoMovilData, id: Date.now().toString() } as PagoMovil;
+        setVerifiedPagoMoviles(prev => [...prev, createdPagoMovil]);
+
+        // Actualizar el monto total de pagos móviles en USD
+        const currentTotal = parseFloat(paymentAmounts[PaymentMethodEnum.PAGO_MOVIL] || '0');
+        const newTotal = currentTotal + parseFloat(amountUSD);
+
         setPaymentAmounts((prev) => ({
           ...prev,
-          [PaymentMethodEnum.PAGO_MOVIL]: amount,
+          [PaymentMethodEnum.PAGO_MOVIL]: newTotal.toString(),
         }));
 
         setSelectedPaymentMethods((prev) => {
@@ -595,39 +827,58 @@ export default function PaymentPage({ params }: PageProps) {
         setShowPagoMovilModal(false);
         setPagoMovilData({ amount: '', reference: '', phone: '' });
         toast.success({
-          title: 'Verificación exitosa',
-          description: '¡Pago Móvil verificado exitosamente!',
+          title: '🎉 ¡Verificación exitosa!',
+          description: `Pago Móvil validado: Ref ${reference} por Bs.${amountBS} (${amountUSD} USD)`,
+          duration: 6000,
         });
+
+        // Recargar pagos móviles desde Firebase
+        await loadVerifiedPagoMoviles();
       } else if (
         verificationResult.found &&
         !verificationResult.amountMatches
       ) {
         // Transacción encontrada pero monto no coincide
         toast.warning({
-          title: 'Monto no coincide',
-          description: `Transacción encontrada pero el monto no coincide. Esperado: $${amount}, Encontrado: $${verificationResult.actualAmount || 'N/A'}. El registro se guardó para futuras verificaciones.`,
+          title: '⚠️ Discrepancia en el monto',
+          description: `Se encontró la transacción pero hay diferencias. Esperado: Bs.${amountBS}, Banco: Bs.${verificationResult.actualAmount || 'N/A'}. Contacte al administrador para revisar.`,
+          duration: 10000,
         });
       } else if (!verificationResult.found) {
         // Transacción no encontrada
+        const errorReasons = [
+          'La transacción puede estar pendiente de procesamiento bancario',
+          'Verifique que el número de referencia sea correcto',
+          'Asegúrese de que la transferencia se realizó desde el teléfono indicado',
+          'Puede tomar hasta 24 horas en aparecer en el sistema bancario'
+        ];
+
         toast.error({
-          title: 'Transacción no encontrada',
-          description:
-            'No se encontró una transacción con esa referencia. Verifique los datos e intente nuevamente.',
+          title: '❌ Transacción no encontrada',
+          description: `No se localizó la referencia ${reference}. ${errorReasons[Math.floor(Math.random() * errorReasons.length)]}`,
+          duration: 10000,
         });
       } else {
         // Error en la verificación
+        const specificError = verificationResult.errorMessage?.includes('NO_MOVEMENTS')
+          ? 'No hay movimientos bancarios recientes en la cuenta asociada'
+          : verificationResult.errorMessage || 'Error desconocido en el sistema de verificación';
+
         toast.error({
-          title: 'Error en la verificación',
-          description: verificationResult.errorMessage || 'Error desconocido',
+          title: '🔧 Error en la verificación',
+          description: specificError,
+          duration: 8000,
         });
       }
-    } catch {
+    } catch (error) {
       toast.error({
-        title: 'Error del sistema',
-        description: 'Error al verificar el Pago Móvil. Intente nuevamente.',
+        title: '💥 Error del sistema',
+        description: 'Error interno al procesar la verificación. Contacte al soporte técnico.',
+        duration: 8000,
       });
     } finally {
-      setIsProcessing(false);
+      setIsVerifyingPayment(false);
+      setCurrentVerificationToast(null);
     }
   };
 
@@ -924,9 +1175,60 @@ export default function PaymentPage({ params }: PageProps) {
                       Bs. {totalInBs.toFixed(0)}
                     </div>
                     <div className="text-xs text-gray-500 text-center">
-                      {loadingRate
-                        ? 'Cargando...'
-                        : `BCV: ${bcvRate.toFixed(2)}`}
+                      {loadingRate ? (
+                        'Cargando...'
+                      ) : isEditingRate ? (
+                        <div className="flex items-center justify-center gap-1">
+                          <Input
+                            type="number"
+                            value={tempRateValue}
+                            onChange={(e) => setTempRateValue(e.target.value)}
+                            className="w-16 h-6 text-xs px-1 border-amber-300 focus:border-amber-500"
+                            step="0.01"
+                            min="0"
+                          />
+                          <button
+                            onClick={handleEditRateSave}
+                            className="p-1 rounded hover:bg-green-100 text-green-600"
+                            title="Guardar tasa"
+                          >
+                            <Save className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={handleEditRateCancel}
+                            className="p-1 rounded hover:bg-red-100 text-red-600"
+                            title="Cancelar edición"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center gap-1">
+                          <span className={isUsingDefaultRate ? 'text-amber-600 font-medium' : ''}>
+                            BCV: {bcvRate.toFixed(2)}
+                            {isUsingDefaultRate && ' (manual)'}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={loadBcvRate}
+                              disabled={loadingRate}
+                              className="p-1 rounded hover:bg-gray-100 disabled:opacity-50"
+                              title="Actualizar tasa BCV"
+                            >
+                              <TrendingUp className={`w-3 h-3 ${loadingRate ? 'animate-spin' : ''}`} />
+                            </button>
+                            {(isUsingDefaultRate || bcvRate <= 50) && (
+                              <button
+                                onClick={handleEditRateStart}
+                                className="p-1 rounded hover:bg-amber-100 text-amber-600"
+                                title="Editar tasa manualmente"
+                              >
+                                <Edit3 className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1056,44 +1358,77 @@ export default function PaymentPage({ params }: PageProps) {
               </Card>
 
               {/* Botones de Acción */}
-              <div className="mt-auto space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+              <div className="mt-auto space-y-4">
+                {/* Información del estado de pago */}
+                <div className="text-center py-2">
+                  <div className="text-sm text-gray-600 mb-1">
+                    {calculateTotalPaid() <= 0
+                      ? 'Selecciona método de pago o cobra directo'
+                      : calculateTotalPaid() >= totalWithTip
+                      ? `Pago completo - Cambio: $${(calculateTotalPaid() - totalWithTip).toFixed(2)}`
+                      : `Pagado: $${calculateTotalPaid().toFixed(2)} - Falta: $${(totalWithTip - calculateTotalPaid()).toFixed(2)}`
+                    }
+                  </div>
+                </div>
+
+                {/* Botones secundarios */}
+                <div className="grid grid-cols-2 gap-4">
                   <Button
                     onClick={handleCancelPayment}
                     variant="outline"
-                    className="h-12 bg-red-50 border-red-200 text-red-700 hover:bg-red-100 text-sm"
+                    className="h-12 px-4 bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100 flex items-center justify-center gap-2 text-sm font-medium"
                   >
-                    CANCELAR
+                    <XCircle className="w-4 h-4" />
+                    <span>Volver</span>
                   </Button>
 
                   {selectedCustomer && (
                     <Button
                       onClick={handlePendingPayment}
                       disabled={isProcessing}
-                      className="h-12 bg-amber-500 hover:bg-amber-600 text-white text-sm"
+                      className="h-12 px-4 bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center gap-2 text-sm font-medium"
                     >
-                      <Clock className="h-4 w-4 mr-1" />
-                      PENDIENTE
+                      <Clock className="w-4 h-4" />
+                      <span>Dejar Pendiente</span>
                     </Button>
                   )}
                 </div>
 
-                {/* Botón COBRAR directo */}
-                <Button
-                  onClick={handleDirectCharge}
-                  disabled={isProcessing}
-                  className="w-full h-14 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold text-base"
-                >
-                  {isProcessing ? 'COBRANDO...' : 'COBRAR'}
-                </Button>
-
+                {/* Botón principal unificado de COBRAR */}
                 <Button
                   onClick={handlePayment}
-                  disabled={isProcessing || calculateTotalPaid() <= 0}
-                  className="w-full h-14 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-bold text-base"
+                  disabled={
+                    isProcessing ||
+                    calculateTotalPaid() < totalWithTip
+                  }
+                  className="w-full h-14 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base font-bold"
                 >
-                  {isProcessing ? 'PROCESANDO...' : 'PROCESAR PAGO'}
+                  {isProcessing ? (
+                    <span>Procesando pago...</span>
+                  ) : calculateTotalPaid() < totalWithTip ? (
+                    <>
+                      <XCircle className="w-5 h-5" />
+                      <span>Pendiente: ${(totalWithTip - calculateTotalPaid()).toFixed(2)}</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-5 h-5" />
+                      <span>Procesar Pago</span>
+                    </>
+                  )}
                 </Button>
+
+                {/* Texto explicativo */}
+                <div className="text-xs text-center text-gray-500">
+                  {calculateTotalPaid() <= 0
+                    ? 'Ingrese el monto a pagar en cualquier método de pago'
+                    : calculateTotalPaid() < totalWithTip
+                    ? `Falta $${(totalWithTip - calculateTotalPaid()).toFixed(2)} para completar el pago`
+                    : calculateTotalPaid() > totalWithTip
+                    ? `Cambio: $${(calculateTotalPaid() - totalWithTip).toFixed(2)}`
+                    : 'Pago completo - Presione para procesar'
+                  }
+                </div>
               </div>
             </div>
           </div>
@@ -1177,35 +1512,70 @@ export default function PaymentPage({ params }: PageProps) {
                 </div>
 
                 {/* Pago Móvil */}
-                <div className="flex items-center gap-2 p-3 border-2 border-gray-200 rounded-lg hover:border-cyan-300 transition-colors">
-                  <button
-                    onClick={() =>
-                      handlePaymentMethodToggle(PaymentMethodEnum.PAGO_MOVIL)
-                    }
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all min-w-[120px] ${
-                      selectedPaymentMethods.includes(
-                        PaymentMethodEnum.PAGO_MOVIL,
-                      )
-                        ? 'bg-cyan-500 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-cyan-100'
-                    }`}
-                  >
-                    <Smartphone className="h-4 w-4" />
-                    <span>Pago Móvil</span>
-                  </button>
-                  <Input
-                    type="number"
-                    placeholder="Clic para configurar"
-                    value={paymentAmounts[PaymentMethodEnum.PAGO_MOVIL]}
-                    disabled={true}
-                    readOnly
-                    className="flex-1 h-10 text-sm border-cyan-200 disabled:bg-gray-50 cursor-pointer"
-                    onClick={() =>
-                      selectedPaymentMethods.includes(
-                        PaymentMethodEnum.PAGO_MOVIL,
-                      ) && setShowPagoMovilModal(true)
-                    }
-                  />
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 p-3 border-2 border-gray-200 rounded-lg hover:border-cyan-300 transition-colors">
+                    <button
+                      onClick={() =>
+                        handlePaymentMethodToggle(PaymentMethodEnum.PAGO_MOVIL)
+                      }
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all min-w-[120px] ${
+                        selectedPaymentMethods.includes(
+                          PaymentMethodEnum.PAGO_MOVIL,
+                        )
+                          ? 'bg-cyan-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-cyan-100'
+                      }`}
+                    >
+                      <Smartphone className="h-4 w-4" />
+                      <span>Pago Móvil</span>
+                    </button>
+                    <div className="flex-1 flex items-center gap-2">
+                      <Input
+                        type="text"
+                        placeholder={verifiedPagoMoviles.length > 0 ? `${verifiedPagoMoviles.length} pago(s) - $${paymentAmounts[PaymentMethodEnum.PAGO_MOVIL]}` : "Clic para agregar"}
+                        value={verifiedPagoMoviles.length > 0 ? `${verifiedPagoMoviles.length} verificado(s)` : ''}
+                        disabled={true}
+                        readOnly
+                        className="flex-1 h-10 text-sm border-cyan-200 disabled:bg-gray-50 cursor-pointer"
+                        onClick={() =>
+                          selectedPaymentMethods.includes(
+                            PaymentMethodEnum.PAGO_MOVIL,
+                          ) && setShowPagoMovilModal(true)
+                        }
+                      />
+                      {selectedPaymentMethods.includes(PaymentMethodEnum.PAGO_MOVIL) && (
+                        <button
+                          onClick={() => setShowPagoMovilModal(true)}
+                          className="px-3 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-medium"
+                          title="Agregar otro pago móvil"
+                        >
+                          +
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Lista de pagos móviles verificados */}
+                  {verifiedPagoMoviles.length > 0 && (
+                    <div className="ml-4 space-y-1">
+                      {verifiedPagoMoviles.map((pm, index) => (
+                        <div key={pm.id} className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-lg text-xs">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                          <span className="font-medium">Ref: {pm.referenceNumber}</span>
+                          <span className="text-green-700">${pm.expectedAmount.toFixed(2)}</span>
+                          <span className="text-gray-500">Tel: {pm.phoneNumber}</span>
+                          {pm.verificationDate && (
+                            <span className="text-gray-400 ml-auto">
+                              {new Date(pm.verificationDate).toLocaleTimeString('es-VE', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Tarjeta */}
@@ -1278,6 +1648,53 @@ export default function PaymentPage({ params }: PageProps) {
         </div>
       </div>
 
+      {/* Modal de confirmación de eliminación */}
+      <Modal isOpen={showDeleteConfirm} onClose={cancelDeleteItem}>
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Confirmar eliminación
+              </h3>
+              <p className="text-sm text-gray-600">
+                Esta acción no se puede deshacer
+              </p>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <p className="text-gray-700">
+              ¿Estás seguro de que deseas eliminar{' '}
+              <span className="font-semibold text-red-600">
+                {itemToDelete?.name}
+              </span>{' '}
+              de la orden?
+            </p>
+          </div>
+
+          <div className="flex gap-3 justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={cancelDeleteItem}
+              className="px-4 py-2 border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={confirmDeleteItem}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white"
+            >
+              Eliminar
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Modal de Pago Móvil */}
       <Modal
         isOpen={showPagoMovilModal}
@@ -1302,11 +1719,11 @@ export default function PaymentPage({ params }: PageProps) {
             {/* Monto */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Monto (USD)
+                Monto (Bs)
               </label>
               <Input
                 type="number"
-                placeholder="0.00"
+                placeholder="0"
                 value={pagoMovilData.amount}
                 onChange={(e) =>
                   setPagoMovilData((prev) => ({
@@ -1315,9 +1732,12 @@ export default function PaymentPage({ params }: PageProps) {
                   }))
                 }
                 className="w-full h-12 text-lg border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500"
-                step="0.01"
+                step="1"
                 min="0"
               />
+              <div className="text-xs text-gray-500 mt-1">
+                Equivalente: ${bcvRate > 0 ? (parseFloat(pagoMovilData.amount || '0') / bcvRate).toFixed(2) : '0.00'} USD
+              </div>
             </div>
 
             {/* Número de Referencia */}

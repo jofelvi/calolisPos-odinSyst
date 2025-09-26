@@ -244,9 +244,10 @@ class BankScraper {
         if (element) element.value = '';
       }, selector);
 
+      // Tipeo más rápido para mejorar velocidad
       for (const char of text) {
         await this.page!.type(selector, char, {
-          delay: Math.random() * 100 + 50, // Entre 50-150ms por caracter
+          delay: Math.random() * 30 + 20, // Reducido: entre 20-50ms por caracter
         });
       }
     } catch (error) {
@@ -292,47 +293,61 @@ class BankScraper {
         '--disable-backgrounding-occluded-windows',
         '--disable-renderer-backgrounding',
         '--disable-background-networking',
+        '--disable-ipc-flooding-protection',
+        '--disable-renderer-backgrounding',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-client-side-phishing-detection',
+        '--disable-component-update',
+        '--disable-default-apps',
+        '--disable-domain-reliability',
+        '--disable-features=TranslateUI',
+        '--disable-hang-monitor',
+        '--disable-ipc-flooding-protection',
+        '--disable-popup-blocking',
+        '--disable-prompt-on-repost',
+        '--disable-sync',
+        '--metrics-recording-only',
+        '--no-crash-upload',
+        '--no-default-browser-check',
+        '--no-first-run',
+        '--no-pings',
+        '--password-store=basic',
+        '--use-mock-keychain',
+        '--disable-gpu',
+        '--disable-software-rasterizer',
       ];
 
-      if (useFastBrowser) {
-        args.push(
-          '--disable-gpu',
-          '--disable-software-rasterizer',
-          '--disable-background-media-suspend',
-          '--disable-client-side-phishing-detection',
-          '--disable-default-apps',
-          '--disable-hang-monitor',
-          '--disable-popup-blocking',
-          '--disable-prompt-on-repost',
-          '--disable-sync',
-          '--disable-translate',
-          '--metrics-recording-only',
-          '--no-first-run',
-          '--safebrowsing-disable-auto-update',
-          '--enable-automation',
-          '--password-store=basic',
-          '--use-mock-keychain',
-        );
-      }
-
       this.browser = await puppeteer.launch({
-        headless: false,
+        headless: 'new', // Siempre modo headless para máxima estabilidad
         defaultViewport: { width: 1366, height: 768 },
         args,
         ignoreDefaultArgs: ['--disable-extensions'],
-        timeout: 60000,
+        timeout: 30000, // Reducido de 60s a 30s
       });
 
       this.page = await this.browser.newPage();
 
-      // Configuraciones adicionales para mejorar velocidad
-      this.page.setDefaultNavigationTimeout(90000);
-      this.page.setDefaultTimeout(60000);
+      // Configuraciones agresivas para velocidad
+      this.page.setDefaultNavigationTimeout(30000); // Reducido de 90s a 30s
+      this.page.setDefaultTimeout(15000); // Reducido de 60s a 15s
 
-      // SOLUCIÓN 1: Eliminar bloqueo de recursos para cargar estilos correctamente
-      await this.page.setRequestInterception(false);
+      // Bloquear recursos innecesarios para acelerar carga
+      await this.page.setRequestInterception(true);
+      this.page.on('request', (req) => {
+        const resourceType = req.resourceType();
+        if (
+          resourceType === 'image' ||
+          resourceType === 'stylesheet' ||
+          resourceType === 'font' ||
+          resourceType === 'media'
+        ) {
+          req.abort();
+        } else {
+          req.continue();
+        }
+      });
 
-      // SOLUCIÓN 2: Configurar user agent actualizado
+      // User agent optimizado
       await this.page.setUserAgent(
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
       );
@@ -344,15 +359,15 @@ class BankScraper {
   async navigateToBank(): Promise<void> {
     try {
       await this.waitWithRetry(async () => {
-        // SOLUCIÓN 3: Cambiar a 'networkidle0' para esperar recursos críticos
+        // Usar 'domcontentloaded' para cargar más rápido
         await this.page!.goto('https://bdvenlinea.banvenez.com/', {
-          waitUntil: 'networkidle0',
-          timeout: 90000,
+          waitUntil: 'domcontentloaded',
+          timeout: 30000, // Reducido de 90s a 30s
         });
       });
 
-      // Esperar a que la página se estabilice
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      // Esperar mínimo para que se estabilice
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // Reducido de 5s a 2s
 
       //await this.takeScreenshot('01_pagina_inicial');
     } catch (error) {
@@ -852,13 +867,49 @@ class BankScraper {
 
   async waitForMovimientos(): Promise<void> {
     try {
-      // Esperar a que aparezcan los datos de movimientos
+      // Esperar un momento para que la página cargue
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
+      // Verificar si aparece el mensaje de "NO HAY MOVIMIENTOS"
+      const noMovements = await this.page!.evaluate(() => {
+        // Buscar el elemento del anunciador de accesibilidad
+        const announcer = document.querySelector('.cdk-live-announcer-element');
+        if (
+          announcer &&
+          announcer.textContent?.includes('NO HAY MOVIMIENTOS')
+        ) {
+          return true;
+        }
+
+        // También buscar en otros posibles elementos
+        const allElements = document.querySelectorAll('*');
+        for (const element of allElements) {
+          if (
+            element.textContent?.trim() === 'NO HAY MOVIMIENTOS' ||
+            element.textContent?.includes('No hay movimientos') ||
+            element.textContent?.includes('Sin movimientos')
+          ) {
+            return true;
+          }
+        }
+        return false;
+      });
+
+      if (noMovements) {
+        // Si no hay movimientos, cerrar sesión y lanzar error específico
+        await this.clickSalirButton();
+        throw new Error(
+          'NO_MOVEMENTS: No hay movimientos bancarios asociados a esta cuenta',
+        );
+      }
+
+      // Si no detectamos "no hay movimientos", intentar esperar por los elementos de tabla
       await Promise.race([
         // Esperar tabla de movimientos
         this.page!.waitForSelector(
           'table, .table, mat-table, [class*="movement"], [class*="transaction"]',
           {
-            timeout: 30000,
+            timeout: 15000,
           },
         ),
 
@@ -866,16 +917,31 @@ class BankScraper {
         this.page!.waitForSelector(
           '[class*="result"], [class*="data"], .list, ul li',
           {
-            timeout: 30000,
+            timeout: 15000,
           },
         ),
+      ]).catch(async () => {
+        // Si no encontramos elementos de tabla después del timeout, verificar de nuevo si no hay movimientos
+        const hasNoMovements = await this.page!.evaluate(() => {
+          const announcer = document.querySelector(
+            '.cdk-live-announcer-element',
+          );
+          return (
+            announcer && announcer.textContent?.includes('NO HAY MOVIMIENTOS')
+          );
+        });
 
-        // Esperar por timeout mínimo
-        new Promise((resolve) => setTimeout(resolve, 10000)),
-      ]).catch(() => {
-        //errrp
+        if (hasNoMovements) {
+          await this.clickSalirButton();
+          throw new Error(
+            'NO_MOVEMENTS: No hay movimientos bancarios asociados a esta cuenta',
+          );
+        }
       });
     } catch (error) {
+      if (error instanceof Error && error.message.includes('NO_MOVEMENTS')) {
+        throw error;
+      }
       throw new Error(`❌ Error esperando movimientos: ${error}`);
     }
   }
@@ -900,7 +966,6 @@ class BankScraper {
       throw new Error(`❌ Error navegando a movimientos: ${error}`);
     }
   }
-
   async performLogin(
     credentials: LoginCredentials,
     useFastBrowser: boolean = false,
@@ -961,12 +1026,30 @@ class BankScraper {
 
   async close(): Promise<void> {
     try {
-      if (this.browser) {
-        await this.clickSalirButton();
-        await this.browser.close();
+      if (this.page) {
+        try {
+          await this.clickSalirButton();
+        } catch {
+          // Si falla el logout, continuar con el cierre
+        }
       }
-    } catch {
-      //error
+
+      if (this.browser) {
+        await this.browser.close();
+        this.browser = null;
+        this.page = null;
+      }
+    } catch (error) {
+      // Asegurarse de cerrar el navegador aunque haya error
+      if (this.browser) {
+        try {
+          await this.browser.close();
+        } catch {
+          // Ignorar error al cerrar
+        }
+        this.browser = null;
+        this.page = null;
+      }
     }
   }
 

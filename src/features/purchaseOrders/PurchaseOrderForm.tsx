@@ -24,7 +24,6 @@ import {
 import { PRIVATE_ROUTES } from '@/shared';
 import { Button } from '@/components/shared/button/Button';
 import { useToast } from '@/components/hooks/useToast';
-import { Toaster } from 'react-hot-toast';
 import { useUserStore } from '@/shared/store/useUserStore';
 
 interface PurchaseOrderFormProps {
@@ -279,17 +278,6 @@ export default function PurchaseOrderForm({
   };
 
   return (
-    <>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 5000,
-          style: {
-            zIndex: 9999,
-            marginTop: '60px',
-          },
-        }}
-      />
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {Object.keys(errors).length > 0 && (
           <div className="bg-gradient-to-r from-red-50 to-pink-50 border border-red-300 text-red-800 px-4 py-3 rounded-xl shadow-sm">
@@ -697,6 +685,5 @@ export default function PurchaseOrderForm({
           </Button>
         </div>
       </form>
-    </>
   );
 }

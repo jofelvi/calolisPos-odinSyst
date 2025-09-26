@@ -43,10 +43,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Realizar verificación
-    const result = await pagoMovilVerifier.verifyPayment(body);
+    // Configurar timeout de 90 segundos para toda la operación
+    const verificationPromise = pagoMovilVerifier.verifyPayment(body);
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Timeout: Verificación tardó más de 90 segundos')), 90000);
+    });
+
+    // Realizar verificación con timeout
+    const result = await Promise.race([verificationPromise, timeoutPromise]);
     return NextResponse.json(result);
   } catch (error) {
+    console.error('❌ Error en verify-pago-movil API:', error);
     return NextResponse.json(
       {
         success: false,

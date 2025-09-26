@@ -1,7 +1,4 @@
-import { toast } from 'react-hot-toast';
-import CustomToaster from '@/components/shared/toast/customToaster';
-
-type ToastVariant = 'success' | 'error' | 'warning' | 'information';
+import { toast } from 'react-toastify';
 
 interface ToastOptions {
   title?: string;
@@ -10,26 +7,19 @@ interface ToastOptions {
 }
 
 export const useToast = () => {
-  const showToast = (variant: ToastVariant, options: ToastOptions = {}) => {
+  const showToast = (type: 'success' | 'error' | 'warning' | 'info', options: ToastOptions = {}) => {
     const { title = '', description = '', duration = 5000 } = options;
 
-    return toast.custom(
-      (t) => (
-        <CustomToaster
-          variant={variant}
-          title={title}
-          description={description}
-          isVisible={t.visible}
-        />
-      ),
-      {
-        duration,
-        position: 'top-right',
-        style: {
-          zIndex: 9999,
-        },
-      },
-    );
+    const message = title && description ? `${title}: ${description}` : title || description || '';
+
+    return toast[type](message, {
+      autoClose: duration,
+      position: 'top-right',
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
   };
 
   return {
@@ -40,6 +30,6 @@ export const useToast = () => {
     warning: (options?: ToastOptions) =>
       showToast('warning', { duration: 5000, ...options }),
     info: (options?: ToastOptions) =>
-      showToast('information', { duration: 4000, ...options }),
+      showToast('info', { duration: 4000, ...options }),
   };
 };
