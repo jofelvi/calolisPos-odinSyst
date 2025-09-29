@@ -185,6 +185,19 @@ class FirestoreService<T extends { id: string }> {
       ) {
         converted[key] = convertFirebaseDate(value);
       }
+      // IMPORTANTE: Si es un campo numérico conocido (cost, price, stock, etc), mantenerlo como está
+      else if (
+        ['cost', 'price', 'stock', 'minStock', 'presentationQuantity', 'quantity', 'total', 'subtotal'].includes(key)
+      ) {
+        // Si parece ser un Timestamp pero es un campo numérico, extraer el valor correcto
+        if (value && typeof value === 'object' && value.seconds !== undefined) {
+          // El valor se guardó mal como Timestamp
+          // El campo 'seconds' contiene el valor real (ej: 2.27974)
+          converted[key] = value.seconds;
+        } else {
+          converted[key] = value;
+        }
+      }
       // Manejar objetos anidados
       else if (
         value !== null &&

@@ -5,8 +5,9 @@ import {
   supplierService,
 } from '@/services/firebase/genericServices';
 import { Supplier } from '@/modelTypes/supplier';
+import { Product } from '@/modelTypes/product';
 import BackIcon from '@/components/shared/BackButton/BackButton';
-import { PRIVATE_ROUTES } from '@/shared';
+import { PRIVATE_ROUTES, ProductTypeEnum } from '@/shared';
 import {
   Card,
   CardContent,
@@ -15,15 +16,74 @@ import {
 } from '@/components/shared/card/card';
 import { Badge } from '@/components/shared/badge/badge';
 import { Button } from '@/components/shared/button/Button';
+import { calculateMixedProductCost } from '@/features/products/productsUtils';
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+// Función para verificar y corregir el costo de productos MIXED
+async function verifyAndFixProductCost(product: Product): Promise<Product> {
+  // Solo verificar productos MIXED con ingredientes
+  if (product.type !== ProductTypeEnum.MIXED || !product.ingredients?.length) {
+    console.log('Product is not MIXED or has no ingredients:', {
+      type: product.type,
+      hasIngredients: !!product.ingredients?.length
+    });
+    return product;
+  }
+
+  console.log('Verifying cost for MIXED product:', product.name);
+  console.log('Current ingredients:', product.ingredients);
+
+  // Obtener todos los productos para calcular el costo correcto
+  const allProducts = await productService.getAll();
+  console.log('Total products available for calculation:', allProducts.length);
+
+  // Calcular el costo correcto basado en los ingredientes
+  const correctCost = calculateMixedProductCost(product.ingredients, allProducts);
+  console.log('Calculated correct cost:', correctCost);
+
+  // Verificar si el costo actual es diferente al calculado (con tolerancia de 0.01)
+  const currentCost = product.cost || 0;
+  const costDifference = Math.abs(currentCost - correctCost);
+
+  console.log('Cost comparison:', {
+    currentCost,
+    correctCost,
+    difference: costDifference,
+    needsUpdate: costDifference > 0.01
+  });
+
+  if (costDifference > 0.01) {
+    console.log('Updating product cost from', currentCost, 'to', correctCost);
+
+    // Actualizar el costo en la base de datos silenciosamente
+    await productService.update(product.id, {
+      cost: correctCost,
+      updatedAt: new Date()
+    });
+
+    console.log('Cost updated successfully in database');
+
+    // Retornar el producto con el costo actualizado
+    return {
+      ...product,
+      cost: correctCost
+    };
+  }
+
+  console.log('No cost update needed');
+  return product;
+}
+
 export default async function ProductDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const product = await productService.getById(id);
+  let product = await productService.getById(id);
   if (!product) return notFound();
+
+  // Verificar y corregir el costo si es necesario (transparente para el usuario)
+  product = await verifyAndFixProductCost(product);
 
   // Obtener proveedores de este producto
   const suppliers = product.supplierIds?.length
@@ -181,18 +241,32 @@ export default async function ProductDetailPage({ params }: PageProps) {
                             </p>
                           </div>
                         )}
-                        {product.cost && (
+                        {product.cost !== undefined && product.cost !== null && (
                           <div>
                             <span className="text-sm font-medium text-emerald-700">
                               Margen:
                             </span>
-                            <p className="text-lg font-semibold text-emerald-800">
-                              {(
-                                ((product.price - product.cost) /
-                                  product.price) *
-                                100
-                              ).toFixed(1)}
-                              %
+                            <p className={`text-lg font-semibold ${
+                              product.price > product.cost
+                                ? 'text-emerald-800'
+                                : product.price < product.cost
+                                ? 'text-red-600'
+                                : 'text-gray-600'
+                            }`}>
+                              {(() => {
+                                // Si el precio es 0, no se puede calcular margen
+                                if (product.price === 0) {
+                                  return 'N/A';
+                                }
+                                // Si el costo es mayor que el precio, mostrar pérdida
+                                if (product.cost > product.price) {
+                                  const loss = ((product.cost - product.price) / product.cost * 100);
+                                  return `-${loss.toFixed(1)}% (Pérdida)`;
+                                }
+                                // Cálculo normal del margen de ganancia
+                                const margin = ((product.price - product.cost) / product.price * 100);
+                                return `${margin.toFixed(1)}%`;
+                              })()}
                             </p>
                           </div>
                         )}

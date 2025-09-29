@@ -24,7 +24,7 @@ export default async function ProductEditPage({ params }: PageProps) {
       <h1 className="text-2xl font-bold mb-1">Editar Producto</h1>
       <BackIcon href="/private/products" />
       <div className="bg-white shadow rounded-lg p-6">
-        <ProductForm initialData={product} />
+        <ProductForm initialData={product} isNew={false} />
       </div>
     </div>
   );

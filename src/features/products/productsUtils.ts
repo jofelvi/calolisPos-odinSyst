@@ -1,16 +1,70 @@
 import { Ingredient, Product } from '@/modelTypes/product';
 import { ProductFormData } from '@/features/types/schemaYup/productSchema';
 import { ProductPresentationEnum, ProductTypeEnum } from '@/shared';
+import { calculateIngredientCost } from '@/shared/utils/unitConversions';
 
 export const calculateMixedProductCost = (
   ingredients: Ingredient[],
   products: Product[],
 ): number => {
-  return ingredients.reduce((total, ingredient) => {
+  console.log('=== CALCULATING MIXED PRODUCT COST ===');
+  console.log('Ingredients to process:', ingredients.length);
+  console.log('Available products:', products.length);
+
+  return ingredients.reduce((total, ingredient, index) => {
+    console.log(`\n--- Processing ingredient ${index + 1} ---`);
+    console.log('Ingredient:', ingredient);
+
     const product = products.find((p) => p.id === ingredient.productId);
-    if (product && product.cost) {
-      return total + product.cost * ingredient.quantity;
+
+    if (!product) {
+      console.log(`❌ Product not found for ID: ${ingredient.productId}`);
+      return total;
     }
+
+    console.log('Found product:', {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      cost: product.cost,
+      presentation: product.presentation,
+      presentationQuantity: product.presentationQuantity
+    });
+
+    if (product.price !== undefined && product.price !== null) {
+      try {
+        // Usar la misma lógica que en IngredientsManager
+        const ingredientCost = calculateIngredientCost(
+          ingredient.quantity,
+          ingredient.unit as ProductPresentationEnum,
+          product.price,
+          product.presentation as ProductPresentationEnum,
+          product.presentationQuantity || 1,
+          ingredient.wastePercentage || 0,
+        );
+
+        console.log(`Calculated cost using proper conversion: ${ingredientCost}`);
+
+        const newTotal = total + ingredientCost;
+        console.log(`Running total: ${total} + ${ingredientCost} = ${newTotal}`);
+
+        return newTotal;
+      } catch (error) {
+        console.log(`❌ Error calculating ingredient cost:`, error);
+        // Fallback al cálculo simple si hay error
+        const ingredientCost = product.price * ingredient.quantity;
+        const wasteMultiplier = ingredient.wastePercentage
+          ? (1 + ingredient.wastePercentage / 100)
+          : 1;
+        const finalIngredientCost = ingredientCost * wasteMultiplier;
+
+        console.log(`Using fallback calculation: ${finalIngredientCost}`);
+        return total + finalIngredientCost;
+      }
+    } else {
+      console.log(`❌ Product ${product.name} has no valid price`);
+    }
+
     return total;
   }, 0);
 };
