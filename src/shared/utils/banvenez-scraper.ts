@@ -270,7 +270,7 @@ class BankScraper {
     }
   }
 
-  async initializeBrowser(useFastBrowser: boolean = false): Promise<void> {
+  async initializeBrowser(_useFastBrowser: boolean = false): Promise<void> {
     try {
       const args = [
         '--no-sandbox',
@@ -318,7 +318,7 @@ class BankScraper {
       ];
 
       this.browser = await puppeteer.launch({
-        headless: 'new', // Siempre modo headless para máxima estabilidad
+        headless: true, // Siempre modo headless para máxima estabilidad
         defaultViewport: { width: 1366, height: 768 },
         args,
         ignoreDefaultArgs: ['--disable-extensions'],
@@ -1039,7 +1039,7 @@ class BankScraper {
         this.browser = null;
         this.page = null;
       }
-    } catch (error) {
+    } catch (_error) {
       // Asegurarse de cerrar el navegador aunque haya error
       if (this.browser) {
         try {

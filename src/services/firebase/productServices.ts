@@ -25,7 +25,16 @@ export const getProductsBySupplier = async (
 export const getActiveProducts = async (): Promise<Product[]> => {
   const q = query(collection(db, 'products'), where('isActive', '==', true));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as Product);
+  const products = snapshot.docs.map(
+    (doc) => ({ id: doc.id, ...doc.data() }) as Product,
+  );
+
+  // Ordenar por nivel (menor nivel = mayor prioridad)
+  return products.sort((a, b) => {
+    const nivelA = a.nivel ?? 999;
+    const nivelB = b.nivel ?? 999;
+    return nivelA - nivelB;
+  });
 };
 
 export const handleProductDeletion = async (productId: string) => {
@@ -78,9 +87,16 @@ export const getProductsByCategory = async (
       where('categoryId', '==', categoryId),
     );
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(
+    const products = querySnapshot.docs.map(
       (doc) => ({ id: doc.id, ...doc.data() }) as Product,
     );
+
+    // Ordenar por nivel (menor nivel = mayor prioridad)
+    return products.sort((a, b) => {
+      const nivelA = a.nivel ?? 999;
+      const nivelB = b.nivel ?? 999;
+      return nivelA - nivelB;
+    });
   } catch {
     // Handle error silently and return empty array
     // In production, you might want to log to a service or show user notification

@@ -26,9 +26,19 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/services/firebase/firebase';
 import { orderService } from '@/services/firebase/genericServices';
-import { convertFirebaseDate, formatDate, getDateRange, filterOrdersByDateRange } from '@/shared/utils/dateHelpers';
+import {
+  convertFirebaseDate,
+  formatDate,
+  getDateRange,
+  filterOrdersByDateRange,
+} from '@/shared/utils/dateHelpers';
 import { Order } from '@/modelTypes/order';
-import { OrderStatusEnum, PaymentStatusEnum, UserRoleEnum, DateFilterEnum } from '@/shared';
+import {
+  OrderStatusEnum,
+  PaymentStatusEnum,
+  UserRoleEnum,
+  DateFilterEnum,
+} from '@/shared';
 import { Button } from '@/components/shared/button/Button';
 import { useUserStore } from '@/shared/store/useUserStore';
 import { PRIVATE_ROUTES } from '@/shared/constantsRoutes/routes';
@@ -123,7 +133,9 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = useState<OrderStatusEnum | 'ALL'>(
     'ALL',
   );
-  const [dateFilter, setDateFilter] = useState<DateFilterEnum>(DateFilterEnum.TODAY);
+  const [dateFilter, setDateFilter] = useState<DateFilterEnum>(
+    DateFilterEnum.TODAY,
+  );
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
@@ -180,7 +192,11 @@ export default function OrdersPage() {
   const dateRange = getDateRange(dateFilter);
 
   // Filtrar órdenes por fecha primero
-  const dateFilteredOrders = filterOrdersByDateRange(orders, dateRange.startDate, dateRange.endDate);
+  const dateFilteredOrders = filterOrdersByDateRange(
+    orders,
+    dateRange.startDate,
+    dateRange.endDate,
+  );
 
   // Luego filtrar por estado
   const statusFilteredOrders = dateFilteredOrders.filter(
@@ -195,7 +211,9 @@ export default function OrdersPage() {
       order.id.toLowerCase().includes(searchLower) ||
       order.tableId?.toString().toLowerCase().includes(searchLower) ||
       order.customerName?.toLowerCase().includes(searchLower) ||
-      order.items.some(item => item.name.toLowerCase().includes(searchLower))
+      order.items.some((item: { name: string }) =>
+        item.name.toLowerCase().includes(searchLower),
+      )
     );
   });
 
@@ -360,7 +378,9 @@ export default function OrdersPage() {
                     className="flex items-center gap-2"
                     disabled={loading}
                   >
-                    <FiRefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    <FiRefreshCw
+                      className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
+                    />
                     Actualizar
                   </Button>
                   <Button
@@ -378,24 +398,36 @@ export default function OrdersPage() {
               <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
                 {/* Filtro de Tiempo */}
                 <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
-                  <span className="text-sm text-gray-600 min-w-max">Período:</span>
+                  <span className="text-sm text-gray-600 min-w-max">
+                    Período:
+                  </span>
                   <select
                     value={dateFilter}
-                    onChange={(e) => setDateFilter(e.target.value as DateFilterEnum)}
+                    onChange={(e) =>
+                      setDateFilter(e.target.value as DateFilterEnum)
+                    }
                     className="px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500"
                   >
                     <option value={DateFilterEnum.TODAY}>Hoy</option>
                     <option value={DateFilterEnum.YESTERDAY}>Ayer</option>
-                    <option value={DateFilterEnum.LAST_WEEK}>Última semana</option>
-                    <option value={DateFilterEnum.LAST_TWO_WEEKS}>2 semanas</option>
+                    <option value={DateFilterEnum.LAST_WEEK}>
+                      Última semana
+                    </option>
+                    <option value={DateFilterEnum.LAST_TWO_WEEKS}>
+                      2 semanas
+                    </option>
                     <option value={DateFilterEnum.THIS_MONTH}>Este mes</option>
-                    <option value={DateFilterEnum.LAST_MONTH}>Mes anterior</option>
+                    <option value={DateFilterEnum.LAST_MONTH}>
+                      Mes anterior
+                    </option>
                   </select>
                 </div>
 
                 {/* Filtro de Estado */}
                 <div className="flex flex-wrap gap-2 items-center">
-                  <span className="text-sm text-gray-600 min-w-max">Estado:</span>
+                  <span className="text-sm text-gray-600 min-w-max">
+                    Estado:
+                  </span>
                   <div className="flex flex-wrap gap-1">
                     <Button
                       variant={statusFilter === 'ALL' ? 'default' : 'outline'}
@@ -407,7 +439,9 @@ export default function OrdersPage() {
                     {Object.values(OrderStatusEnum).map((status) => (
                       <Button
                         key={status}
-                        variant={statusFilter === status ? 'default' : 'outline'}
+                        variant={
+                          statusFilter === status ? 'default' : 'outline'
+                        }
                         size="sm"
                         onClick={() => setStatusFilter(status)}
                       >
@@ -441,8 +475,9 @@ export default function OrdersPage() {
                 <p className="text-sm text-gray-600">Pendientes</p>
                 <p className="text-2xl font-bold text-yellow-600">
                   {
-                    dateFilteredOrders.filter((o) => o.status === OrderStatusEnum.PENDING)
-                      .length
+                    dateFilteredOrders.filter(
+                      (o) => o.status === OrderStatusEnum.PENDING,
+                    ).length
                   }
                 </p>
               </div>
@@ -472,7 +507,10 @@ export default function OrdersPage() {
                 <p className="text-sm text-gray-600">Total Ventas</p>
                 <p className="text-2xl font-bold text-green-600">
                   {formatCurrency(
-                    dateFilteredOrders.reduce((sum, order) => sum + order.total, 0),
+                    dateFilteredOrders.reduce(
+                      (sum, order) => sum + order.total,
+                      0,
+                    ),
                   )}
                 </p>
               </div>
@@ -614,28 +652,28 @@ export default function OrdersPage() {
                             <FiEye className="w-3 h-3" />
                             Ver
                           </Button>
-                          {order.status === OrderStatusEnum.PENDING && (
-                            user?.role === UserRoleEnum.ADMIN || user?.role === UserRoleEnum.MANAGER
-                          ) && (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50"
-                              >
-                                <FiCheck className="w-3 h-3" />
-                                Aprobar
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <FiX className="w-3 h-3" />
-                                Cancelar
-                              </Button>
-                            </>
-                          )}
+                          {order.status === OrderStatusEnum.PENDING &&
+                            (user?.role === UserRoleEnum.ADMIN ||
+                              user?.role === UserRoleEnum.MANAGER) && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                >
+                                  <FiCheck className="w-3 h-3" />
+                                  Aprobar
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <FiX className="w-3 h-3" />
+                                  Cancelar
+                                </Button>
+                              </>
+                            )}
                         </div>
                       </td>
                     </tr>

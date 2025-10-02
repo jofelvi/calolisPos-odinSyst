@@ -5,14 +5,23 @@ import { Input } from '@/components/shared/input/input';
 import { categoryService } from '@/services/firebase/genericServices';
 import Image from 'next/image';
 import { Category } from '@/modelTypes/category';
-import { ChevronLeft, ChevronRight, Package, Search, Settings } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Package,
+  Search,
+  Settings,
+} from 'lucide-react';
 import { Button } from '@/components/shared/button/Button';
 import ProductCustomizationModal from './ProductCustomizationModal';
 import { ProductCustomization } from '@/modelTypes/orderItem';
 
 interface ProductSelectorProps {
   products: Product[];
-  onAddProductAction: (product: Product, customization?: ProductCustomization) => void;
+  onAddProductAction: (
+    product: Product,
+    customization?: ProductCustomization,
+  ) => void;
 }
 
 export default function ProductSelector({
@@ -29,7 +38,8 @@ export default function ProductSelector({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [showCustomizationModal, setShowCustomizationModal] = useState(false);
-  const [selectedProductForCustomization, setSelectedProductForCustomization] = useState<Product | null>(null);
+  const [selectedProductForCustomization, setSelectedProductForCustomization] =
+    useState<Product | null>(null);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -70,6 +80,25 @@ export default function ProductSelector({
         return productNameMatch || categoryMatch || descriptionMatch;
       });
     }
+
+    // Ordenar productos por categoría y nivel
+    result.sort((a, b) => {
+      // Si hay categoría seleccionada, ordenar solo por nivel
+      if (selectedCategoryId) {
+        const nivelA = a.nivel ?? 999;
+        const nivelB = b.nivel ?? 999;
+        return nivelA - nivelB;
+      }
+
+      // Si no hay categoría seleccionada, ordenar por categoría y luego por nivel
+      if (a.categoryId !== b.categoryId) {
+        return a.categoryId.localeCompare(b.categoryId);
+      }
+
+      const nivelA = a.nivel ?? 999;
+      const nivelB = b.nivel ?? 999;
+      return nivelA - nivelB;
+    });
 
     setFilteredProducts(result);
   }, [products, selectedCategoryId, searchTerm, categories]);

@@ -73,6 +73,13 @@ export default function CustomerProducts() {
         );
       }
 
+      // Ordenar por nivel (menor nivel = mayor prioridad)
+      filteredProducts.sort((a, b) => {
+        const nivelA = a.nivel ?? 999;
+        const nivelB = b.nivel ?? 999;
+        return nivelA - nivelB;
+      });
+
       setProducts(filteredProducts);
     } catch {
       // Error filtering products - handled by UI state

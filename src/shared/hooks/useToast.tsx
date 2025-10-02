@@ -7,10 +7,16 @@ interface ToastOptions {
 }
 
 export const useToast = () => {
-  const showToast = (type: 'success' | 'error' | 'warning' | 'info', options: ToastOptions = {}) => {
+  const showToast = (
+    type: 'success' | 'error' | 'warning' | 'info',
+    options: ToastOptions = {},
+  ) => {
     const { title = '', description = '', duration = 5000 } = options;
 
-    const message = title && description ? `${title}: ${description}` : title || description || '';
+    const message =
+      title && description
+        ? `${title}: ${description}`
+        : title || description || '';
 
     return toast[type](message, {
       autoClose: duration,

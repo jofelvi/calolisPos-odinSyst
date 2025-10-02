@@ -113,13 +113,20 @@ export default function PaymentPage({ params }: PageProps) {
   });
 
   // Estados para pagos móviles verificados
-  const [verifiedPagoMoviles, setVerifiedPagoMoviles] = useState<PagoMovil[]>([]);
-  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
-  const [currentVerificationToast, setCurrentVerificationToast] = useState<string | null>(null);
+  const [verifiedPagoMoviles, setVerifiedPagoMoviles] = useState<PagoMovil[]>(
+    [],
+  );
+  const [_isVerifyingPayment, _setIsVerifyingPayment] = useState(false);
+  const [_currentVerificationToast, _setCurrentVerificationToast] = useState<
+    string | null
+  >(null);
 
   // Estados para confirmación de eliminación
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{index: number, name: string} | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{
+    index: number;
+    name: string;
+  } | null>(null);
 
   const handleUpdateQuantity = async (
     itemIndex: number,
@@ -317,9 +324,9 @@ export default function PaymentPage({ params }: PageProps) {
         cache: 'no-store', // Evitar cache
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
       });
       const data = await response.json();
       console.log('📊 Respuesta BCV:', data);
@@ -330,7 +337,8 @@ export default function PaymentPage({ params }: PageProps) {
         setIsUsingDefaultRate(true);
         toast.warning({
           title: 'Tasa BCV',
-          description: 'Usando tasa por defecto. Haz clic para editar manualmente.',
+          description:
+            'Usando tasa por defecto. Haz clic para editar manualmente.',
         });
       } else {
         console.log('✅ Tasa BCV actualizada:', data.rate);
@@ -342,7 +350,8 @@ export default function PaymentPage({ params }: PageProps) {
       setIsUsingDefaultRate(true);
       toast.error({
         title: 'Error de conexión',
-        description: 'No se pudo obtener la tasa BCV. Usando valor por defecto.',
+        description:
+          'No se pudo obtener la tasa BCV. Usando valor por defecto.',
       });
     } finally {
       setLoadingRate(false);
@@ -389,7 +398,7 @@ export default function PaymentPage({ params }: PageProps) {
     try {
       const pagoMoviles = await pagoMovilService.getAll();
       const orderPagoMoviles = pagoMoviles.filter(
-        (pm) => pm.orderId === orderId && pm.status === 'verified'
+        (pm) => pm.orderId === orderId && pm.status === 'verified',
       );
       setVerifiedPagoMoviles(orderPagoMoviles);
 
@@ -397,7 +406,7 @@ export default function PaymentPage({ params }: PageProps) {
       if (orderPagoMoviles.length > 0) {
         const totalPagoMovil = orderPagoMoviles.reduce(
           (sum, pm) => sum + pm.expectedAmount,
-          0
+          0,
         );
         setPaymentAmounts((prev) => ({
           ...prev,
@@ -568,7 +577,8 @@ export default function PaymentPage({ params }: PageProps) {
           const totalPaid = calculateTotalPaid();
           const remainingUSD = totalWithTip - totalPaid;
           // Convertir a bolívares para el pago móvil
-          const remainingBS = remainingUSD > 0 ? (remainingUSD * bcvRate).toFixed(0) : '0';
+          const remainingBS =
+            remainingUSD > 0 ? (remainingUSD * bcvRate).toFixed(0) : '0';
 
           // Establecer monto por defecto en bolívares
           setPagoMovilData((prev) => ({
@@ -623,7 +633,8 @@ export default function PaymentPage({ params }: PageProps) {
     if (!order) return;
 
     // Convertir monto de Bs a USD para la verificación
-    const amountInUSD = bcvRate > 0 ? (parseFloat(amount) / bcvRate).toFixed(2) : '0';
+    const amountInUSD =
+      bcvRate > 0 ? (parseFloat(amount) / bcvRate).toFixed(2) : '0';
 
     // Mostrar toast de inicio INMEDIATAMENTE antes de cualquier acción
     toast.info({
@@ -632,7 +643,7 @@ export default function PaymentPage({ params }: PageProps) {
       duration: 60000, // Toast largo que se reemplazará con actualizaciones
     });
 
-    setIsVerifyingPayment(true);
+    _setIsVerifyingPayment(true);
 
     try {
       // PRIMERO verificar si ya existe en la base de datos
@@ -645,7 +656,7 @@ export default function PaymentPage({ params }: PageProps) {
       const existingPagoMovil = await getPagoMovilByReference(reference);
 
       if (existingPagoMovil) {
-        setIsVerifyingPayment(false);
+        _setIsVerifyingPayment(false);
 
         if (existingPagoMovil.status === 'verified') {
           toast.error({
@@ -659,7 +670,8 @@ export default function PaymentPage({ params }: PageProps) {
         if (existingPagoMovil.status === 'pending') {
           toast.warning({
             title: '⚠️ Verificación en proceso',
-            description: 'Esta referencia ya está siendo verificada en otro proceso',
+            description:
+              'Esta referencia ya está siendo verificada en otro proceso',
             duration: 6000,
           });
           return;
@@ -672,9 +684,8 @@ export default function PaymentPage({ params }: PageProps) {
 
       // Ejecutar verificación en segundo plano
       verifyPagoMovilInBackground(amountInUSD, reference, phone, amount);
-
-    } catch (error) {
-      setIsVerifyingPayment(false);
+    } catch (_error) {
+      _setIsVerifyingPayment(false);
       toast.error({
         title: '❌ Error al verificar',
         description: 'No se pudo iniciar la verificación. Intente nuevamente.',
@@ -684,12 +695,18 @@ export default function PaymentPage({ params }: PageProps) {
   };
 
   // Función para verificar Pago Móvil en segundo plano
-  const verifyPagoMovilInBackground = async (amountUSD: string, reference: string, phone: string, amountBS: string) => {
+  const verifyPagoMovilInBackground = async (
+    amountUSD: string,
+    reference: string,
+    phone: string,
+    amountBS: string,
+  ) => {
     try {
       // Toast de progreso durante la verificación automática
       toast.info({
         title: '🌐 Conectando al banco',
-        description: 'Iniciando sesión en el sistema bancario para verificar...',
+        description:
+          'Iniciando sesión en el sistema bancario para verificar...',
         duration: 5000,
       });
 
@@ -741,19 +758,24 @@ export default function PaymentPage({ params }: PageProps) {
           success: false,
           found: false,
           amountMatches: false,
-          errorMessage: error instanceof Error ? error.message : 'Error de conexión o timeout',
+          errorMessage:
+            error instanceof Error
+              ? error.message
+              : 'Error de conexión o timeout',
         };
 
         if (error instanceof Error && error.name === 'AbortError') {
           toast.warning({
             title: '⏰ Tiempo de espera agotado',
-            description: 'La verificación tardó más de lo esperado. El registro se guardó para revisión manual.',
+            description:
+              'La verificación tardó más de lo esperado. El registro se guardó para revisión manual.',
             duration: 8000,
           });
         } else {
           toast.warning({
             title: '🔧 Error de conectividad',
-            description: 'No se pudo conectar al sistema bancario. Se guardará el registro para verificación manual.',
+            description:
+              'No se pudo conectar al sistema bancario. Se guardará el registro para verificación manual.',
             duration: 8000,
           });
         }
@@ -766,6 +788,14 @@ export default function PaymentPage({ params }: PageProps) {
         duration: 2000,
       });
 
+      if (!order) {
+        toast.error({
+          title: '❌ Error',
+          description: 'No se encontró la orden.',
+        });
+        return;
+      }
+
       // Crear registro de PagoMovil con ambos montos
       const pagoMovilData: Omit<PagoMovil, 'id'> = {
         orderId: order.id,
@@ -776,9 +806,10 @@ export default function PaymentPage({ params }: PageProps) {
         actualAmount: verificationResult.actualAmount
           ? parseFloat(verificationResult.actualAmount)
           : undefined,
-        actualAmountUSD: verificationResult.actualAmount && bcvRate > 0
-          ? parseFloat(verificationResult.actualAmount) / bcvRate
-          : undefined,
+        actualAmountUSD:
+          verificationResult.actualAmount && bcvRate > 0
+            ? parseFloat(verificationResult.actualAmount) / bcvRate
+            : undefined,
         phoneNumber: phone,
         status:
           verificationResult.success &&
@@ -805,11 +836,16 @@ export default function PaymentPage({ params }: PageProps) {
         verificationResult.amountMatches
       ) {
         // Verificación exitosa - agregar al listado y actualizar el total
-        const createdPagoMovil = { ...pagoMovilData, id: Date.now().toString() } as PagoMovil;
-        setVerifiedPagoMoviles(prev => [...prev, createdPagoMovil]);
+        const createdPagoMovil = {
+          ...pagoMovilData,
+          id: Date.now().toString(),
+        } as PagoMovil;
+        setVerifiedPagoMoviles((prev) => [...prev, createdPagoMovil]);
 
         // Actualizar el monto total de pagos móviles en USD
-        const currentTotal = parseFloat(paymentAmounts[PaymentMethodEnum.PAGO_MOVIL] || '0');
+        const currentTotal = parseFloat(
+          paymentAmounts[PaymentMethodEnum.PAGO_MOVIL] || '0',
+        );
         const newTotal = currentTotal + parseFloat(amountUSD);
 
         setPaymentAmounts((prev) => ({
@@ -850,7 +886,7 @@ export default function PaymentPage({ params }: PageProps) {
           'La transacción puede estar pendiente de procesamiento bancario',
           'Verifique que el número de referencia sea correcto',
           'Asegúrese de que la transferencia se realizó desde el teléfono indicado',
-          'Puede tomar hasta 24 horas en aparecer en el sistema bancario'
+          'Puede tomar hasta 24 horas en aparecer en el sistema bancario',
         ];
 
         toast.error({
@@ -860,9 +896,12 @@ export default function PaymentPage({ params }: PageProps) {
         });
       } else {
         // Error en la verificación
-        const specificError = verificationResult.errorMessage?.includes('NO_MOVEMENTS')
+        const specificError = verificationResult.errorMessage?.includes(
+          'NO_MOVEMENTS',
+        )
           ? 'No hay movimientos bancarios recientes en la cuenta asociada'
-          : verificationResult.errorMessage || 'Error desconocido en el sistema de verificación';
+          : verificationResult.errorMessage ||
+            'Error desconocido en el sistema de verificación';
 
         toast.error({
           title: '🔧 Error en la verificación',
@@ -870,15 +909,16 @@ export default function PaymentPage({ params }: PageProps) {
           duration: 8000,
         });
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error({
         title: '💥 Error del sistema',
-        description: 'Error interno al procesar la verificación. Contacte al soporte técnico.',
+        description:
+          'Error interno al procesar la verificación. Contacte al soporte técnico.',
         duration: 8000,
       });
     } finally {
-      setIsVerifyingPayment(false);
-      setCurrentVerificationToast(null);
+      _setIsVerifyingPayment(false);
+      _setCurrentVerificationToast(null);
     }
   };
 
@@ -947,7 +987,7 @@ export default function PaymentPage({ params }: PageProps) {
   };
 
   // Función para cobrar directamente (marcar como pagado y volver al POS)
-  const handleDirectCharge = async () => {
+  const _handleDirectCharge = async () => {
     if (!order) return;
 
     setIsProcessing(true);
@@ -1204,7 +1244,13 @@ export default function PaymentPage({ params }: PageProps) {
                         </div>
                       ) : (
                         <div className="flex items-center justify-center gap-1">
-                          <span className={isUsingDefaultRate ? 'text-amber-600 font-medium' : ''}>
+                          <span
+                            className={
+                              isUsingDefaultRate
+                                ? 'text-amber-600 font-medium'
+                                : ''
+                            }
+                          >
                             BCV: {bcvRate.toFixed(2)}
                             {isUsingDefaultRate && ' (manual)'}
                           </span>
@@ -1215,7 +1261,9 @@ export default function PaymentPage({ params }: PageProps) {
                               className="p-1 rounded hover:bg-gray-100 disabled:opacity-50"
                               title="Actualizar tasa BCV"
                             >
-                              <TrendingUp className={`w-3 h-3 ${loadingRate ? 'animate-spin' : ''}`} />
+                              <TrendingUp
+                                className={`w-3 h-3 ${loadingRate ? 'animate-spin' : ''}`}
+                              />
                             </button>
                             {(isUsingDefaultRate || bcvRate <= 50) && (
                               <button
@@ -1365,9 +1413,8 @@ export default function PaymentPage({ params }: PageProps) {
                     {calculateTotalPaid() <= 0
                       ? 'Selecciona método de pago o cobra directo'
                       : calculateTotalPaid() >= totalWithTip
-                      ? `Pago completo - Cambio: $${(calculateTotalPaid() - totalWithTip).toFixed(2)}`
-                      : `Pagado: $${calculateTotalPaid().toFixed(2)} - Falta: $${(totalWithTip - calculateTotalPaid()).toFixed(2)}`
-                    }
+                        ? `Pago completo - Cambio: $${(calculateTotalPaid() - totalWithTip).toFixed(2)}`
+                        : `Pagado: $${calculateTotalPaid().toFixed(2)} - Falta: $${(totalWithTip - calculateTotalPaid()).toFixed(2)}`}
                   </div>
                 </div>
 
@@ -1397,10 +1444,7 @@ export default function PaymentPage({ params }: PageProps) {
                 {/* Botón principal unificado de COBRAR */}
                 <Button
                   onClick={handlePayment}
-                  disabled={
-                    isProcessing ||
-                    calculateTotalPaid() < totalWithTip
-                  }
+                  disabled={isProcessing || calculateTotalPaid() < totalWithTip}
                   className="w-full h-14 px-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-base font-bold"
                 >
                   {isProcessing ? (
@@ -1408,7 +1452,10 @@ export default function PaymentPage({ params }: PageProps) {
                   ) : calculateTotalPaid() < totalWithTip ? (
                     <>
                       <XCircle className="w-5 h-5" />
-                      <span>Pendiente: ${(totalWithTip - calculateTotalPaid()).toFixed(2)}</span>
+                      <span>
+                        Pendiente: $
+                        {(totalWithTip - calculateTotalPaid()).toFixed(2)}
+                      </span>
                     </>
                   ) : (
                     <>
@@ -1423,11 +1470,10 @@ export default function PaymentPage({ params }: PageProps) {
                   {calculateTotalPaid() <= 0
                     ? 'Ingrese el monto a pagar en cualquier método de pago'
                     : calculateTotalPaid() < totalWithTip
-                    ? `Falta $${(totalWithTip - calculateTotalPaid()).toFixed(2)} para completar el pago`
-                    : calculateTotalPaid() > totalWithTip
-                    ? `Cambio: $${(calculateTotalPaid() - totalWithTip).toFixed(2)}`
-                    : 'Pago completo - Presione para procesar'
-                  }
+                      ? `Falta $${(totalWithTip - calculateTotalPaid()).toFixed(2)} para completar el pago`
+                      : calculateTotalPaid() > totalWithTip
+                        ? `Cambio: $${(calculateTotalPaid() - totalWithTip).toFixed(2)}`
+                        : 'Pago completo - Presione para procesar'}
                 </div>
               </div>
             </div>
@@ -1532,8 +1578,16 @@ export default function PaymentPage({ params }: PageProps) {
                     <div className="flex-1 flex items-center gap-2">
                       <Input
                         type="text"
-                        placeholder={verifiedPagoMoviles.length > 0 ? `${verifiedPagoMoviles.length} pago(s) - $${paymentAmounts[PaymentMethodEnum.PAGO_MOVIL]}` : "Clic para agregar"}
-                        value={verifiedPagoMoviles.length > 0 ? `${verifiedPagoMoviles.length} verificado(s)` : ''}
+                        placeholder={
+                          verifiedPagoMoviles.length > 0
+                            ? `${verifiedPagoMoviles.length} pago(s) - $${paymentAmounts[PaymentMethodEnum.PAGO_MOVIL]}`
+                            : 'Clic para agregar'
+                        }
+                        value={
+                          verifiedPagoMoviles.length > 0
+                            ? `${verifiedPagoMoviles.length} verificado(s)`
+                            : ''
+                        }
                         disabled={true}
                         readOnly
                         className="flex-1 h-10 text-sm border-cyan-200 disabled:bg-gray-50 cursor-pointer"
@@ -1543,7 +1597,9 @@ export default function PaymentPage({ params }: PageProps) {
                           ) && setShowPagoMovilModal(true)
                         }
                       />
-                      {selectedPaymentMethods.includes(PaymentMethodEnum.PAGO_MOVIL) && (
+                      {selectedPaymentMethods.includes(
+                        PaymentMethodEnum.PAGO_MOVIL,
+                      ) && (
                         <button
                           onClick={() => setShowPagoMovilModal(true)}
                           className="px-3 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-medium"
@@ -1558,18 +1614,30 @@ export default function PaymentPage({ params }: PageProps) {
                   {/* Lista de pagos móviles verificados */}
                   {verifiedPagoMoviles.length > 0 && (
                     <div className="ml-4 space-y-1">
-                      {verifiedPagoMoviles.map((pm, index) => (
-                        <div key={pm.id} className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-lg text-xs">
+                      {verifiedPagoMoviles.map((pm) => (
+                        <div
+                          key={pm.id}
+                          className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-lg text-xs"
+                        >
                           <CheckCircle className="h-4 w-4 text-green-600" />
-                          <span className="font-medium">Ref: {pm.referenceNumber}</span>
-                          <span className="text-green-700">${pm.expectedAmount.toFixed(2)}</span>
-                          <span className="text-gray-500">Tel: {pm.phoneNumber}</span>
+                          <span className="font-medium">
+                            Ref: {pm.referenceNumber}
+                          </span>
+                          <span className="text-green-700">
+                            ${pm.expectedAmount.toFixed(2)}
+                          </span>
+                          <span className="text-gray-500">
+                            Tel: {pm.phoneNumber}
+                          </span>
                           {pm.verificationDate && (
                             <span className="text-gray-400 ml-auto">
-                              {new Date(pm.verificationDate).toLocaleTimeString('es-VE', {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
+                              {new Date(pm.verificationDate).toLocaleTimeString(
+                                'es-VE',
+                                {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                },
+                              )}
                             </span>
                           )}
                         </div>
@@ -1736,7 +1804,13 @@ export default function PaymentPage({ params }: PageProps) {
                 min="0"
               />
               <div className="text-xs text-gray-500 mt-1">
-                Equivalente: ${bcvRate > 0 ? (parseFloat(pagoMovilData.amount || '0') / bcvRate).toFixed(2) : '0.00'} USD
+                Equivalente: $
+                {bcvRate > 0
+                  ? (parseFloat(pagoMovilData.amount || '0') / bcvRate).toFixed(
+                      2,
+                    )
+                  : '0.00'}{' '}
+                USD
               </div>
             </div>
 

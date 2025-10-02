@@ -40,7 +40,6 @@ const eslintConfig = [
 
       // Disable TypeScript warnings for Server Actions in client components
       '@typescript-eslint/ban-ts-comment': 'off',
-
     },
   },
 ];

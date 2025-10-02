@@ -187,7 +187,16 @@ class FirestoreService<T extends { id: string }> {
       }
       // IMPORTANTE: Si es un campo numérico conocido (cost, price, stock, etc), mantenerlo como está
       else if (
-        ['cost', 'price', 'stock', 'minStock', 'presentationQuantity', 'quantity', 'total', 'subtotal'].includes(key)
+        [
+          'cost',
+          'price',
+          'stock',
+          'minStock',
+          'presentationQuantity',
+          'quantity',
+          'total',
+          'subtotal',
+        ].includes(key)
       ) {
         // Si parece ser un Timestamp pero es un campo numérico, extraer el valor correcto
         if (value && typeof value === 'object' && value.seconds !== undefined) {

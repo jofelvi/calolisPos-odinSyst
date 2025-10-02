@@ -51,6 +51,17 @@ export default function ProductInventory({
         error={errors.barcode?.message}
         placeholder="Código de barras del producto"
       />
+
+      {/* Nivel de Ordenamiento */}
+      <Input
+        label="Nivel de Ordenamiento"
+        id="nivel"
+        type="number"
+        variant="numeric"
+        {...register('nivel')}
+        error={errors.nivel?.message}
+        placeholder="1, 2, 3... (menor = mayor prioridad)"
+      />
     </>
   );
 }

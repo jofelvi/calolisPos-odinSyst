@@ -92,6 +92,7 @@ export default function ProductForm({
       presentation: ProductPresentationEnum.UNIT,
       presentationQuantity: 1,
       ingredients: [], // Agregar ingredi
+      nivel: null,
     },
   });
 

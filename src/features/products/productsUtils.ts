@@ -28,7 +28,7 @@ export const calculateMixedProductCost = (
       price: product.price,
       cost: product.cost,
       presentation: product.presentation,
-      presentationQuantity: product.presentationQuantity
+      presentationQuantity: product.presentationQuantity,
     });
 
     if (product.price !== undefined && product.price !== null) {
@@ -43,10 +43,14 @@ export const calculateMixedProductCost = (
           ingredient.wastePercentage || 0,
         );
 
-        console.log(`Calculated cost using proper conversion: ${ingredientCost}`);
+        console.log(
+          `Calculated cost using proper conversion: ${ingredientCost}`,
+        );
 
         const newTotal = total + ingredientCost;
-        console.log(`Running total: ${total} + ${ingredientCost} = ${newTotal}`);
+        console.log(
+          `Running total: ${total} + ${ingredientCost} = ${newTotal}`,
+        );
 
         return newTotal;
       } catch (error) {
@@ -54,7 +58,7 @@ export const calculateMixedProductCost = (
         // Fallback al cálculo simple si hay error
         const ingredientCost = product.price * ingredient.quantity;
         const wasteMultiplier = ingredient.wastePercentage
-          ? (1 + ingredient.wastePercentage / 100)
+          ? 1 + ingredient.wastePercentage / 100
           : 1;
         const finalIngredientCost = ingredientCost * wasteMultiplier;
 

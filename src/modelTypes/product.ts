@@ -23,6 +23,7 @@ export interface Product {
   updatedAt?: Date | null;
   imageUrl?: string | null;
   ingredients?: Ingredient[] | null;
+  nivel?: number | null;
 }
 
 export interface Ingredient {

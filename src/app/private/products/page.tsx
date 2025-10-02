@@ -59,24 +59,42 @@ export default function ProductsPage() {
     void fetchData();
   }, []);
 
-  // Filtrar productos por categoría y stock
-  const filteredProducts = products.filter((product) => {
-    // Filtro por categoría
-    const matchesCategory =
-      !selectedCategory || product.categoryId === selectedCategory;
+  // Filtrar y ordenar productos por categoría y stock
+  const filteredProducts = products
+    .filter((product) => {
+      // Filtro por categoría
+      const matchesCategory =
+        !selectedCategory || product.categoryId === selectedCategory;
 
-    // Filtro por stock
-    let matchesStock = true;
-    if (stockFilter === 'outOfStock') {
-      matchesStock = product.stock === 0;
-    } else if (stockFilter === 'lowStock') {
-      const minStock = product.minStock || 5; // Default mínimo de 5 si no está definido
-      matchesStock = product.stock > 0 && product.stock <= minStock;
-    }
-    // 'all' no aplica ningún filtro de stock
+      // Filtro por stock
+      let matchesStock = true;
+      if (stockFilter === 'outOfStock') {
+        matchesStock = product.stock === 0;
+      } else if (stockFilter === 'lowStock') {
+        const minStock = product.minStock || 5; // Default mínimo de 5 si no está definido
+        matchesStock = product.stock > 0 && product.stock <= minStock;
+      }
+      // 'all' no aplica ningún filtro de stock
 
-    return matchesCategory && matchesStock;
-  });
+      return matchesCategory && matchesStock;
+    })
+    .sort((a, b) => {
+      // Si hay categoría seleccionada, ordenar solo por nivel
+      if (selectedCategory) {
+        const nivelA = a.nivel ?? 999;
+        const nivelB = b.nivel ?? 999;
+        return nivelA - nivelB;
+      }
+
+      // Si no hay categoría seleccionada, ordenar por categoría y luego por nivel
+      if (a.categoryId !== b.categoryId) {
+        return a.categoryId.localeCompare(b.categoryId);
+      }
+
+      const nivelA = a.nivel ?? 999;
+      const nivelB = b.nivel ?? 999;
+      return nivelA - nivelB;
+    });
 
   const handleDeleteClick = (product: Product) => {
     setProductToDelete(product);

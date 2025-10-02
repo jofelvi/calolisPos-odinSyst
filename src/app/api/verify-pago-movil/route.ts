@@ -46,7 +46,11 @@ export async function POST(request: NextRequest) {
     // Configurar timeout de 90 segundos para toda la operación
     const verificationPromise = pagoMovilVerifier.verifyPayment(body);
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout: Verificación tardó más de 90 segundos')), 90000);
+      setTimeout(
+        () =>
+          reject(new Error('Timeout: Verificación tardó más de 90 segundos')),
+        90000,
+      );
     });
 
     // Realizar verificación con timeout

@@ -85,6 +85,13 @@ export const productSchema = yup.object({
     .nullable()
     .optional()
     .defined(),
+  nivel: yup
+    .number()
+    .min(1, 'El nivel debe ser al menos 1')
+    .integer('El nivel debe ser un número entero')
+    .nullable()
+    .default(999)
+    .defined(),
 });
 
 export type ProductFormData = yup.InferType<typeof productSchema>;

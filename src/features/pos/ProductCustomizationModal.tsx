@@ -5,17 +5,12 @@ import { Product } from '@/modelTypes/product';
 import { ProductCustomization, AddedExtra } from '@/modelTypes/orderItem';
 import { Button } from '@/components/shared/button/Button';
 import Modal from '@/shared/ui/modal';
-import { Input } from '@/components/shared/input/input';
-import {
-  Package,
-  Plus,
-  Minus,
-  ChefHat,
-  Star,
-  X
-} from 'lucide-react';
+import { Package, Plus, Minus, ChefHat, Star, X } from 'lucide-react';
 import Image from 'next/image';
-import { categoryService, productService } from '@/services/firebase/genericServices';
+import {
+  categoryService,
+  productService,
+} from '@/services/firebase/genericServices';
 
 interface ProductCustomizationModalProps {
   isOpen: boolean;
@@ -33,10 +28,10 @@ export default function ProductCustomizationModal({
   initialCustomization,
 }: ProductCustomizationModalProps) {
   const [removedIngredients, setRemovedIngredients] = useState<string[]>(
-    initialCustomization?.removedIngredients || []
+    initialCustomization?.removedIngredients || [],
   );
   const [addedExtras, setAddedExtras] = useState<AddedExtra[]>(
-    initialCustomization?.addedExtras || []
+    initialCustomization?.addedExtras || [],
   );
   const [additionalProducts, setAdditionalProducts] = useState<Product[]>([]);
   const [ingredientProducts, setIngredientProducts] = useState<Product[]>([]);
@@ -50,15 +45,16 @@ export default function ProductCustomizationModal({
 
         // Cargar categoría "Adicionales"
         const categories = await categoryService.getAll();
-        const additionalCategory = categories.find(cat =>
-          cat.name.toLowerCase().includes('adicional') ||
-          cat.name.toLowerCase().includes('extra')
+        const additionalCategory = categories.find(
+          (cat) =>
+            cat.name.toLowerCase().includes('adicional') ||
+            cat.name.toLowerCase().includes('extra'),
         );
 
         if (additionalCategory) {
           const allProducts = await productService.getAll();
-          const extras = allProducts.filter(p =>
-            p.categoryId === additionalCategory.id && p.isForSale
+          const extras = allProducts.filter(
+            (p) => p.categoryId === additionalCategory.id && p.isForSale,
           );
           setAdditionalProducts(extras);
         }
@@ -67,7 +63,7 @@ export default function ProductCustomizationModal({
         if (product.ingredients && product.ingredients.length > 0) {
           const allProducts = await productService.getAll();
           const ingredients = product.ingredients
-            .map(ing => allProducts.find(p => p.id === ing.productId))
+            .map((ing) => allProducts.find((p) => p.id === ing.productId))
             .filter(Boolean) as Product[];
           setIngredientProducts(ingredients);
         }
@@ -84,36 +80,37 @@ export default function ProductCustomizationModal({
   }, [isOpen, product]);
 
   const handleIngredientToggle = (ingredientId: string) => {
-    setRemovedIngredients(prev =>
+    setRemovedIngredients((prev) =>
       prev.includes(ingredientId)
-        ? prev.filter(id => id !== ingredientId)
-        : [...prev, ingredientId]
+        ? prev.filter((id) => id !== ingredientId)
+        : [...prev, ingredientId],
     );
   };
 
   const handleExtraQuantityChange = (extraProduct: Product, change: number) => {
-    setAddedExtras(prev => {
-      const existing = prev.find(e => e.productId === extraProduct.id);
+    setAddedExtras((prev) => {
+      const existing = prev.find((e) => e.productId === extraProduct.id);
 
       if (!existing && change > 0) {
-        return [...prev, {
-          productId: extraProduct.id,
-          name: extraProduct.name,
-          price: extraProduct.price,
-          quantity: 1
-        }];
+        return [
+          ...prev,
+          {
+            productId: extraProduct.id,
+            name: extraProduct.name,
+            price: extraProduct.price,
+            quantity: 1,
+          },
+        ];
       }
 
       if (existing) {
         const newQuantity = existing.quantity + change;
         if (newQuantity <= 0) {
-          return prev.filter(e => e.productId !== extraProduct.id);
+          return prev.filter((e) => e.productId !== extraProduct.id);
         }
 
-        return prev.map(e =>
-          e.productId === extraProduct.id
-            ? { ...e, quantity: newQuantity }
-            : e
+        return prev.map((e) =>
+          e.productId === extraProduct.id ? { ...e, quantity: newQuantity } : e,
         );
       }
 
@@ -122,12 +119,13 @@ export default function ProductCustomizationModal({
   };
 
   const getExtraQuantity = (productId: string): number => {
-    return addedExtras.find(e => e.productId === productId)?.quantity || 0;
+    return addedExtras.find((e) => e.productId === productId)?.quantity || 0;
   };
 
   const calculateCustomizationPrice = (): number => {
-    return addedExtras.reduce((total, extra) =>
-      total + (extra.price * extra.quantity), 0
+    return addedExtras.reduce(
+      (total, extra) => total + extra.price * extra.quantity,
+      0,
     );
   };
 
@@ -135,7 +133,7 @@ export default function ProductCustomizationModal({
     const customization: ProductCustomization = {
       removedIngredients,
       addedExtras,
-      customizationPrice: calculateCustomizationPrice()
+      customizationPrice: calculateCustomizationPrice(),
     };
 
     onConfirm(customization);
@@ -152,7 +150,9 @@ export default function ProductCustomizationModal({
       <Modal isOpen={isOpen} onClose={onClose} className="max-w-4xl">
         <div className="p-8 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando opciones de personalización...</p>
+          <p className="text-gray-600">
+            Cargando opciones de personalización...
+          </p>
         </div>
       </Modal>
     );
@@ -186,7 +186,10 @@ export default function ProductCustomizationModal({
                 Personalizar {product.name}
               </h2>
               <p className="text-gray-600">
-                Precio base: <span className="font-semibold">${product.price.toFixed(2)}</span>
+                Precio base:{' '}
+                <span className="font-semibold">
+                  ${product.price.toFixed(2)}
+                </span>
               </p>
             </div>
           </div>
@@ -213,7 +216,7 @@ export default function ProductCustomizationModal({
                 {ingredientProducts.map((ingredient) => {
                   const isRemoved = removedIngredients.includes(ingredient.id);
                   const ingredientInfo = product.ingredients?.find(
-                    ing => ing.productId === ingredient.id
+                    (ing) => ing.productId === ingredient.id,
                   );
 
                   return (
@@ -244,9 +247,13 @@ export default function ProductCustomizationModal({
                           )}
                         </div>
                         <div>
-                          <p className={`font-medium ${
-                            isRemoved ? 'text-red-700 line-through' : 'text-gray-900'
-                          }`}>
+                          <p
+                            className={`font-medium ${
+                              isRemoved
+                                ? 'text-red-700 line-through'
+                                : 'text-gray-900'
+                            }`}
+                          >
                             {ingredient.name}
                           </p>
                           {ingredientInfo && (
@@ -264,11 +271,13 @@ export default function ProductCustomizationModal({
                           onChange={() => handleIngredientToggle(ingredient.id)}
                           className="sr-only"
                         />
-                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                          isRemoved
-                            ? 'bg-red-500 border-red-500'
-                            : 'border-gray-300 hover:border-red-400'
-                        }`}>
+                        <div
+                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                            isRemoved
+                              ? 'bg-red-500 border-red-500'
+                              : 'border-gray-300 hover:border-red-400'
+                          }`}
+                        >
                           {isRemoved && <X className="w-3 h-3 text-white" />}
                         </div>
                       </label>
@@ -324,7 +333,9 @@ export default function ProductCustomizationModal({
                           )}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900">{extra.name}</p>
+                          <p className="font-medium text-gray-900">
+                            {extra.name}
+                          </p>
                           <p className="text-sm text-amber-600 font-semibold">
                             +${extra.price.toFixed(2)}
                           </p>
@@ -364,9 +375,7 @@ export default function ProductCustomizationModal({
             ) : (
               <div className="text-center py-8">
                 <Star className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500">
-                  No hay adicionales disponibles
-                </p>
+                <p className="text-gray-500">No hay adicionales disponibles</p>
               </div>
             )}
           </div>
@@ -382,7 +391,10 @@ export default function ProductCustomizationModal({
           {addedExtras.length > 0 && (
             <div className="space-y-1 mb-2">
               {addedExtras.map((extra, index) => (
-                <div key={index} className="flex justify-between items-center text-sm">
+                <div
+                  key={index}
+                  className="flex justify-between items-center text-sm"
+                >
                   <span className="text-gray-600">
                     {extra.name} x{extra.quantity}
                   </span>

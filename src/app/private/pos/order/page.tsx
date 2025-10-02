@@ -44,7 +44,10 @@ export default function OrderPage() {
 
   // Estados para confirmación de eliminación
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{index: number, name: string} | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<{
+    index: number;
+    name: string;
+  } | null>(null);
 
   const { handleSubmit, setValue, watch, reset } = useForm<OrderFormValues>({
     resolver: yupResolver(orderSchema),
@@ -176,6 +179,7 @@ export default function OrderPage() {
               unitPrice: product.price,
               total: product.price,
               notes: '',
+              customizations: null,
             },
           ]);
         }

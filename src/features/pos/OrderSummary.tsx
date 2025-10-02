@@ -5,7 +5,7 @@ import { Product } from '@/modelTypes/product';
 import { Button } from '@/components/shared/button/Button';
 import { Card } from '@/components/shared/card/card';
 import { Input } from '@/components/shared/input/input';
-import { MessageSquare, Minus, Package, Plus, X, Settings, Star } from 'lucide-react';
+import { MessageSquare, Minus, Package, Plus, X, Settings } from 'lucide-react';
 import Image from 'next/image';
 import { useMemo, useState } from 'react';
 
@@ -144,24 +144,33 @@ export default function OrderSummary({
 
                       <p className="text-lg font-bold text-cyan-700">
                         ${item.unitPrice.toFixed(2)}
-                        {item.customizations && item.customizations.customizationPrice > 0 && (
-                          <span className="text-xs text-amber-600 ml-1">
-                            (+${item.customizations.customizationPrice.toFixed(2)})
-                          </span>
-                        )}
+                        {item.customizations &&
+                          item.customizations.customizationPrice > 0 && (
+                            <span className="text-xs text-amber-600 ml-1">
+                              (+$
+                              {item.customizations.customizationPrice.toFixed(
+                                2,
+                              )}
+                              )
+                            </span>
+                          )}
                       </p>
 
                       {/* Mostrar personalizaciones resumidas */}
                       {item.customizations && !isExpanded && (
                         <div className="text-xs text-gray-600 mt-1">
-                          {item.customizations.removedIngredients.length > 0 && (
+                          {item.customizations.removedIngredients.length >
+                            0 && (
                             <p className="text-red-600">
-                              🚫 Sin: {item.customizations.removedIngredients.length} ingrediente(s)
+                              🚫 Sin:{' '}
+                              {item.customizations.removedIngredients.length}{' '}
+                              ingrediente(s)
                             </p>
                           )}
                           {item.customizations.addedExtras.length > 0 && (
                             <p className="text-amber-600">
-                              ⭐ +{item.customizations.addedExtras.length} extra(s)
+                              ⭐ +{item.customizations.addedExtras.length}{' '}
+                              extra(s)
                             </p>
                           )}
                         </div>
@@ -258,18 +267,29 @@ export default function OrderSummary({
                           </h4>
 
                           {/* Ingredientes removidos */}
-                          {item.customizations.removedIngredients.length > 0 && (
+                          {item.customizations.removedIngredients.length >
+                            0 && (
                             <div className="pl-4">
-                              <p className="text-xs font-medium text-red-600 mb-1">🚫 Ingredientes removidos:</p>
+                              <p className="text-xs font-medium text-red-600 mb-1">
+                                🚫 Ingredientes removidos:
+                              </p>
                               <ul className="text-xs text-red-600 space-y-0.5">
-                                {item.customizations.removedIngredients.map((ingredientId, idx) => {
-                                  const ingredient = products.find(p => p.id === ingredientId);
-                                  return (
-                                    <li key={idx} className="flex items-center gap-1">
-                                      <span>•</span> {ingredient?.name || ingredientId}
-                                    </li>
-                                  );
-                                })}
+                                {item.customizations.removedIngredients.map(
+                                  (ingredientId, idx) => {
+                                    const ingredient = products.find(
+                                      (p) => p.id === ingredientId,
+                                    );
+                                    return (
+                                      <li
+                                        key={idx}
+                                        className="flex items-center gap-1"
+                                      >
+                                        <span>•</span>{' '}
+                                        {ingredient?.name || ingredientId}
+                                      </li>
+                                    );
+                                  },
+                                )}
                               </ul>
                             </div>
                           )}
@@ -277,22 +297,40 @@ export default function OrderSummary({
                           {/* Adicionales agregados */}
                           {item.customizations.addedExtras.length > 0 && (
                             <div className="pl-4">
-                              <p className="text-xs font-medium text-amber-600 mb-1">⭐ Adicionales:</p>
+                              <p className="text-xs font-medium text-amber-600 mb-1">
+                                ⭐ Adicionales:
+                              </p>
                               <ul className="text-xs text-amber-600 space-y-0.5">
-                                {item.customizations.addedExtras.map((extra, idx) => (
-                                  <li key={idx} className="flex items-center justify-between">
-                                    <span className="flex items-center gap-1">
-                                      <span>•</span> {extra.name} x{extra.quantity}
-                                    </span>
-                                    <span>+${(extra.price * extra.quantity).toFixed(2)}</span>
-                                  </li>
-                                ))}
+                                {item.customizations.addedExtras.map(
+                                  (extra, idx) => (
+                                    <li
+                                      key={idx}
+                                      className="flex items-center justify-between"
+                                    >
+                                      <span className="flex items-center gap-1">
+                                        <span>•</span> {extra.name} x
+                                        {extra.quantity}
+                                      </span>
+                                      <span>
+                                        +$
+                                        {(extra.price * extra.quantity).toFixed(
+                                          2,
+                                        )}
+                                      </span>
+                                    </li>
+                                  ),
+                                )}
                               </ul>
                               {item.customizations.customizationPrice > 0 && (
                                 <div className="border-t border-amber-200 pt-1 mt-2">
                                   <p className="text-xs font-medium text-amber-700 flex justify-between">
                                     <span>Total personalizaciones:</span>
-                                    <span>+${item.customizations.customizationPrice.toFixed(2)}</span>
+                                    <span>
+                                      +$
+                                      {item.customizations.customizationPrice.toFixed(
+                                        2,
+                                      )}
+                                    </span>
                                   </p>
                                 </div>
                               )}
@@ -347,13 +385,17 @@ export default function OrderSummary({
         {/* Estadísticas de la orden */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-cyan-700">{items.length}</div>
+            <div className="text-2xl font-bold text-cyan-700">
+              {items.length}
+            </div>
             <div className="text-xs text-cyan-600 uppercase tracking-wide">
               {items.length === 1 ? 'Producto' : 'Productos'}
             </div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-teal-700">{totalGuests}</div>
+            <div className="text-2xl font-bold text-teal-700">
+              {totalGuests}
+            </div>
             <div className="text-xs text-teal-600 uppercase tracking-wide">
               {totalGuests === 1 ? 'Unidad' : 'Unidades'}
             </div>
@@ -361,14 +403,17 @@ export default function OrderSummary({
         </div>
 
         {/* Desglose de personalizaciones */}
-        {items.some(item => item.customizations) && (
+        {items.some((item) => item.customizations) && (
           <div className="mb-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
             <div className="flex items-center gap-2 mb-2">
               <Settings className="w-4 h-4 text-amber-600" />
-              <span className="text-sm font-medium text-amber-700">Personalizaciones incluidas</span>
+              <span className="text-sm font-medium text-amber-700">
+                Personalizaciones incluidas
+              </span>
             </div>
             <div className="text-xs text-amber-600">
-              {items.filter(item => item.customizations).length} producto(s) personalizado(s)
+              {items.filter((item) => item.customizations).length} producto(s)
+              personalizado(s)
             </div>
           </div>
         )}
@@ -377,13 +422,21 @@ export default function OrderSummary({
         <div className="bg-white rounded-lg p-4 shadow-sm border border-cyan-200">
           <div className="flex justify-between items-center">
             <div>
-              <div className="text-lg font-semibold text-cyan-800">TOTAL A PAGAR</div>
-              <div className="text-xs text-cyan-600">Sin cargos adicionales</div>
+              <div className="text-lg font-semibold text-cyan-800">
+                TOTAL A PAGAR
+              </div>
+              <div className="text-xs text-cyan-600">
+                Sin cargos adicionales
+              </div>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold text-cyan-800">${total.toFixed(2)}</div>
-              {subtotal !== total && (
-                <div className="text-xs text-gray-500">Subtotal: ${subtotal.toFixed(2)}</div>
+              <div className="text-3xl font-bold text-cyan-800">
+                ${total.toFixed(2)}
+              </div>
+              {subtotal !== total && subtotal !== undefined && (
+                <div className="text-xs text-gray-500">
+                  Subtotal: ${subtotal.toFixed(2)}
+                </div>
               )}
             </div>
           </div>

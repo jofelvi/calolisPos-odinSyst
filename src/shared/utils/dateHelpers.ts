@@ -156,7 +156,10 @@ export function getEndOfDay(date: any): Date {
 /**
  * Obtiene rangos de fechas predefinidos para filtros
  */
-export function getDateRange(filter: string): { startDate: Date; endDate: Date } {
+export function getDateRange(filter: string): {
+  startDate: Date;
+  endDate: Date;
+} {
   const now = new Date();
   const today = new Date(now);
 
@@ -218,8 +221,12 @@ export function getDateRange(filter: string): { startDate: Date; endDate: Date }
 /**
  * Filtra órdenes por rango de fechas
  */
-export function filterOrdersByDateRange(orders: any[], startDate: Date, endDate: Date) {
-  return orders.filter(order => {
+export function filterOrdersByDateRange(
+  orders: any[],
+  startDate: Date,
+  endDate: Date,
+) {
+  return orders.filter((order) => {
     const orderDate = convertFirebaseDate(order.createdAt);
     return orderDate >= startDate && orderDate <= endDate;
   });
