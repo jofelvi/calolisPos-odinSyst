@@ -1,7 +1,7 @@
 // app/pos/payment/[orderId]/page.tsx
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Order } from '@/modelTypes/order';
 import { PRIVATE_ROUTES } from '@/shared/constantsRoutes/routes';
@@ -127,6 +127,9 @@ export default function PaymentPage({ params }: PageProps) {
     index: number;
     name: string;
   } | null>(null);
+
+  // Ref para controlar si ya se mostró el toast de BCV
+  const bcvToastShownRef = useRef(false);
 
   const handleUpdateQuantity = async (
     itemIndex: number,
@@ -335,11 +338,15 @@ export default function PaymentPage({ params }: PageProps) {
       if (data.source === 'default') {
         console.warn('⚠️ Usando tasa por defecto, servicio BCV falló');
         setIsUsingDefaultRate(true);
-        toast.warning({
-          title: 'Tasa BCV',
-          description:
-            'Usando tasa por defecto. Haz clic para editar manualmente.',
-        });
+        // Solo mostrar toast si no se ha mostrado antes
+        if (!bcvToastShownRef.current) {
+          bcvToastShownRef.current = true;
+          toast.warning({
+            title: 'Tasa BCV',
+            description:
+              'Usando tasa por defecto. Haz clic para editar manualmente.',
+          });
+        }
       } else {
         console.log('✅ Tasa BCV actualizada:', data.rate);
         setIsUsingDefaultRate(false);
@@ -348,14 +355,24 @@ export default function PaymentPage({ params }: PageProps) {
       console.error('❌ Error cargando tasa BCV:', error);
       setBcvRate(36.5);
       setIsUsingDefaultRate(true);
-      toast.error({
-        title: 'Error de conexión',
-        description:
-          'No se pudo obtener la tasa BCV. Usando valor por defecto.',
-      });
+      // Solo mostrar toast si no se ha mostrado antes
+      if (!bcvToastShownRef.current) {
+        bcvToastShownRef.current = true;
+        toast.error({
+          title: 'Error de conexión',
+          description:
+            'No se pudo obtener la tasa BCV. Usando valor por defecto.',
+        });
+      }
     } finally {
       setLoadingRate(false);
     }
+  };
+
+  const handleRefreshBcvRate = () => {
+    // Resetear el ref para permitir mostrar toast en actualización manual
+    bcvToastShownRef.current = false;
+    void loadBcvRate();
   };
 
   const handleEditRateStart = () => {
@@ -389,8 +406,20 @@ export default function PaymentPage({ params }: PageProps) {
 
   // Cargar tasa BCV y pagos móviles verificados al montar el componente
   useEffect(() => {
-    void loadBcvRate();
-    void loadVerifiedPagoMoviles();
+    let mounted = true;
+
+    const loadData = async () => {
+      if (mounted) {
+        await loadBcvRate();
+        await loadVerifiedPagoMoviles();
+      }
+    };
+
+    void loadData();
+
+    return () => {
+      mounted = false;
+    };
   }, [orderId]);
 
   // Cargar pagos móviles verificados para esta orden
@@ -1256,7 +1285,7 @@ export default function PaymentPage({ params }: PageProps) {
                           </span>
                           <div className="flex items-center gap-1">
                             <button
-                              onClick={loadBcvRate}
+                              onClick={handleRefreshBcvRate}
                               disabled={loadingRate}
                               className="p-1 rounded hover:bg-gray-100 disabled:opacity-50"
                               title="Actualizar tasa BCV"

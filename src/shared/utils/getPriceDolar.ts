@@ -8,10 +8,18 @@ export const getPriceBcv = async (): Promise<string> => {
   try {
     browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'] as string[],
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-web-security',
+        '--disable-features=IsolateOrigins,site-per-process',
+      ] as string[],
     });
 
     const page: Page = await browser.newPage();
+
+    // Ignorar errores de certificado SSL
+    await page.setBypassCSP(true);
 
     await page.setUserAgent(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
@@ -25,19 +33,48 @@ export const getPriceBcv = async (): Promise<string> => {
       },
     );
 
-    await page.waitForSelector('#dolar .centrado strong', { timeout: 10000 });
+    console.log('✅ Página del BCV cargada');
 
-    const element: ElementHandle<Element> | null = await page.$(
+    // Intentar múltiples selectores
+    const selectors = [
       '#dolar .centrado strong',
-    );
+      '#dolar strong',
+      '.centrado strong',
+      '#dolar',
+    ];
+
+    let element: ElementHandle<Element> | null = null;
+    let usedSelector = '';
+
+    for (const selector of selectors) {
+      try {
+        await page.waitForSelector(selector, { timeout: 5000 });
+        element = await page.$(selector);
+        if (element) {
+          usedSelector = selector;
+          console.log(`✅ Elemento encontrado con selector: ${selector}`);
+          break;
+        }
+      } catch (error) {
+        console.log(`⚠️ Selector ${selector} no encontrado`);
+        continue;
+      }
+    }
+
     if (!element) {
-      throw new Error('Elemento de precio no encontrado');
+      // Intentar extraer todo el HTML para debugging
+      const bodyHTML = await page.evaluate(() => document.body.innerHTML);
+      console.error('❌ HTML de la página:', bodyHTML.substring(0, 500));
+      throw new Error('Elemento de precio no encontrado con ningún selector');
     }
 
     // Obtener el contenido de texto del elemento
     const rawText: string | null = await element.evaluate(
       (el: Element) => el.textContent,
     );
+
+    console.log(`📊 Texto extraído (${usedSelector}):`, rawText);
+
     if (!rawText) {
       throw new Error('El elemento de precio no contiene texto');
     }
@@ -52,6 +89,8 @@ export const getPriceBcv = async (): Promise<string> => {
     };
 
     const precioDolar: string = cleanPriceText(rawText);
+
+    console.log('💰 Precio limpio:', precioDolar);
 
     return precioDolar;
   } catch (error: unknown) {
