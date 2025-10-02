@@ -55,7 +55,7 @@ export const getPriceBcv = async (): Promise<string> => {
           console.log(`✅ Elemento encontrado con selector: ${selector}`);
           break;
         }
-      } catch (error) {
+      } catch (_error) {
         console.log(`⚠️ Selector ${selector} no encontrado`);
         continue;
       }
