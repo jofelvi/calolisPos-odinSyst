@@ -5,21 +5,24 @@ import {
   PaymentStatusEnum,
 } from '@/shared/types/enumShared';
 
-const productCustomizationSchema = yup.object().shape({
-  removedIngredients: yup.array().of(yup.string().required()).required(),
-  addedExtras: yup
-    .array()
-    .of(
-      yup.object().shape({
-        productId: yup.string().required(),
-        name: yup.string().required(),
-        price: yup.number().required(),
-        quantity: yup.number().required(),
-      }),
-    )
-    .required(),
-  customizationPrice: yup.number().required(),
-});
+const productCustomizationSchema = yup
+  .object()
+  .shape({
+    removedIngredients: yup.array().of(yup.string().required()).required(),
+    addedExtras: yup
+      .array()
+      .of(
+        yup.object().shape({
+          productId: yup.string().required(),
+          name: yup.string().required(),
+          price: yup.number().required(),
+          quantity: yup.number().required(),
+        }),
+      )
+      .required(),
+    customizationPrice: yup.number().required(),
+  })
+  .default(undefined);
 
 export const orderItemSchema = yup.object().shape({
   productId: yup.string().required().defined(),
@@ -28,7 +31,7 @@ export const orderItemSchema = yup.object().shape({
   unitPrice: yup.number().required().positive().defined(),
   total: yup.number().required().positive().defined(),
   notes: yup.string().nullable().defined(),
-  customizations: productCustomizationSchema.nullable().optional().defined(),
+  customizations: productCustomizationSchema.nullable().optional(),
 });
 
 export const orderSchema = yup.object().shape({

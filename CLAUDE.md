@@ -243,3 +243,122 @@ The project is actively migrating from a legacy structure to the current feature
 - New development should use the feature-based structure
 - Legacy components in `src/components/` are being gradually moved to appropriate features
 - Both structures coexist during the transition period
+
+---
+
+## 🚀 CONTINUACIÓN DE SESIONES
+
+### 📍 PUNTO DE PARTIDA (Última Actualización: 2025-10-02)
+
+**ARCHIVOS DE DOCUMENTACIÓN COMPLETA:**
+- `CLAUDE.md` - Este archivo (arquitectura y guías generales)
+- `SESSION_NOTES.md` - Detalles de la última sesión de trabajo
+- `DEPLOYMENT.md` - Guía completa de deployment a Vercel
+
+**Al inicio de cada nueva sesión, LEER EN ORDEN:**
+1. ✅ `SESSION_NOTES.md` - Para ver último trabajo realizado
+2. ✅ `DEPLOYMENT.md` - Para deployment y comandos
+3. ✅ Este archivo (`CLAUDE.md`) - Para arquitectura general
+
+---
+
+### 🎯 TRABAJO RECIENTE (Sesión 2025-10-02)
+
+#### ✅ Problemas Resueltos
+
+**1. Toast Duplicado de Tasa BCV**
+- **Archivo:** `src/app/private/pos/payment/[orderId]/page.tsx`
+- **Problema:** 2 toasts mostrándose al cargar la página
+- **Solución:** Implementado `useRef` (`bcvToastShownRef`) para controlar que solo se muestre una vez
+- **Commit:** `f000b8d`
+
+**2. Scraping BCV Mejorado**
+- **Archivo:** `src/shared/utils/getPriceDolar.ts`
+- **Mejoras:**
+  - Chrome instalado para Puppeteer: `C:\Users\jofel\.cache\puppeteer\chrome\win64-138.0.7204.49\`
+  - Múltiples selectores de fallback implementados
+  - Logging detallado agregado
+  - Flags de seguridad para SSL/CSP
+- **Commit:** `f000b8d`, `f4991d9`
+
+**3. Documentación Completa**
+- **Archivos creados:** `SESSION_NOTES.md`, `DEPLOYMENT.md`
+- **Commit:** `f0ba6f4`
+
+#### 🌐 Deployment Exitoso
+- **URL Producción:** https://odinsystem-otr612i2g-jonathan-zambranos-projects.vercel.app
+- **Usuario Vercel:** jonathan-zambranos-projects
+- **Estado:** ✅ Funcionando correctamente
+
+---
+
+### 🛠️ COMANDOS ESENCIALES PARA CONTINUACIÓN
+
+```bash
+# RUTA CORRECTA DEL PROYECTO (SIEMPRE USAR)
+cd /mnt/c/Users/jofel/RepositoriosPersonales/calolisPos-odinSyst
+
+# Inicio de sesión
+git log --oneline -10
+cat SESSION_NOTES.md
+
+# Desarrollo
+cmd.exe /c "npm run dev"
+cmd.exe /c "npm run build"
+
+# Deployment a Vercel
+cmd.exe /c "vercel --prod --yes"
+
+# Ver deployments
+cmd.exe /c "vercel list"
+```
+
+---
+
+### ⚠️ PROBLEMAS CONOCIDOS
+
+**Git Remote GitHub:**
+- **Estado:** No resuelto
+- **Error:** `ssh: Could not resolve hostname github-personal`
+- **Workaround:** Deploy directo con Vercel CLI
+- **Impacto:** Bajo (deployment funciona)
+
+**Scraping BCV:**
+- **Estado:** Mejorado pero puede fallar
+- **Fallback:** Retorna tasa por defecto (36.5)
+- **Logging:** Detallado para diagnóstico
+
+---
+
+### 📋 TAREAS PENDIENTES
+
+- [ ] Resolver problema de Git remote
+- [ ] Considerar API alternativa para tasa BCV
+- [ ] Optimizar console.log para producción
+- [ ] Verificar comportamiento de toast único en producción
+
+---
+
+### 🎓 LECCIONES APRENDIDAS RECIENTES
+
+1. **`useRef` es útil para controlar side effects** que no deben repetirse en React Strict Mode
+2. **Puppeteer requiere Chrome instalado:** `npx puppeteer browsers install chrome`
+3. **Múltiples selectores de fallback** hacen el scraping más robusto
+4. **Build en Windows (cmd.exe) más confiable** que WSL para dependencias nativas
+5. **Vercel CLI permite deploy sin GitHub** - útil para problemas de autenticación
+6. **ESLint requiere `_` prefix** para variables catch no utilizadas
+
+---
+
+### 📊 ÚLTIMA BUILD
+
+- **Tiempo:** ~71 segundos
+- **Advertencias ESLint:** ~100+ (permitidas)
+- **Errores:** 0
+- **Bundle size (payment page):** ~388 kB
+- **pnpm version:** 10.17.1
+
+---
+
+**Para detalles completos de la última sesión, ver `SESSION_NOTES.md`**
+**Para instrucciones de deployment, ver `DEPLOYMENT.md`**

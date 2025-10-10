@@ -49,21 +49,49 @@ export default function OrderPage() {
     name: string;
   } | null>(null);
 
-  const { handleSubmit, setValue, watch, reset } = useForm<OrderFormValues>({
-    resolver: yupResolver(orderSchema),
-    defaultValues: {
-      tableId: tableId || null,
-      customerId: null,
-      status: OrderStatusEnum.PENDING,
-      items: [],
-      subtotal: 0,
-      tax: 0,
-      total: 0,
-      paymentMethod: null,
-      paymentStatus: PaymentStatusEnum.PENDING,
-      notes: '',
-    },
-  });
+  const { handleSubmit, setValue, watch, reset, formState } =
+    useForm<OrderFormValues>({
+      resolver: yupResolver(orderSchema),
+      defaultValues: {
+        tableId: tableId || null,
+        customerId: null,
+        status: OrderStatusEnum.PENDING,
+        items: [],
+        subtotal: 0,
+        tax: 0,
+        total: 0,
+        paymentMethod: null,
+        paymentStatus: PaymentStatusEnum.PENDING,
+        notes: '',
+      },
+    });
+
+  // Log de errores de validación
+  useEffect(() => {
+    if (Object.keys(formState.errors).length > 0) {
+      console.error('❌ Errores de validación del formulario:');
+      console.error(
+        '📋 Errores completos:',
+        JSON.stringify(formState.errors, null, 2),
+      );
+
+      // Mostrar errores específicos por campo
+      Object.entries(formState.errors).forEach(([field, error]) => {
+        console.error(`  ⚠️ Campo "${field}":`, error);
+      });
+
+      // Mostrar los valores actuales del formulario
+      console.log('📊 Valores actuales del formulario:', {
+        tableId,
+        items: watch('items'),
+        subtotal: watch('subtotal'),
+        tax: watch('tax'),
+        total: watch('total'),
+        status: watch('status'),
+        paymentStatus: watch('paymentStatus'),
+      });
+    }
+  }, [formState.errors, tableId, watch]);
 
   const items = watch('items');
   const subtotal = watch('subtotal');
@@ -135,27 +163,41 @@ export default function OrderPage() {
 
   const handleAddProduct = useCallback(
     (product: Product, customization?: ProductCustomization) => {
+      console.log('🛒 Agregando producto:', {
+        productId: product.id,
+        productName: product.name,
+        hasCustomization: !!customization,
+        customization,
+      });
+
       const currentItems = watch('items');
+      console.log('📦 Items actuales:', currentItems.length);
 
       // Calcular el precio final con personalizaciones
       const customizationPrice = customization?.customizationPrice || 0;
       const finalPrice = product.price + customizationPrice;
 
+      console.log('💰 Precios:', {
+        basePrice: product.price,
+        customizationPrice,
+        finalPrice,
+      });
+
       // Si hay personalización, siempre crear un nuevo item (incluso si es el mismo producto)
       // porque las personalizaciones pueden ser diferentes
       if (customization) {
-        setValue('items', [
-          ...currentItems,
-          {
-            productId: product.id,
-            name: product.name,
-            quantity: 1,
-            unitPrice: finalPrice,
-            total: finalPrice,
-            notes: '',
-            customizations: customization,
-          },
-        ]);
+        console.log('✨ Producto con personalización, creando nuevo item');
+        const newItem = {
+          productId: product.id,
+          name: product.name,
+          quantity: 1,
+          unitPrice: finalPrice,
+          total: finalPrice,
+          notes: '',
+          customizations: customization,
+        };
+        console.log('📝 Nuevo item:', newItem);
+        setValue('items', [...currentItems, newItem]);
       } else {
         // Sin personalización, mantener la lógica original de agregar cantidad
         const existingItemIndex = currentItems.findIndex(
@@ -163,27 +205,35 @@ export default function OrderPage() {
         );
 
         if (existingItemIndex >= 0) {
+          console.log(
+            '🔄 Producto ya existe en posición',
+            existingItemIndex,
+            ', incrementando cantidad',
+          );
           const updatedItems = [...currentItems];
           updatedItems[existingItemIndex].quantity += 1;
           updatedItems[existingItemIndex].total =
             updatedItems[existingItemIndex].quantity *
             updatedItems[existingItemIndex].unitPrice;
+          console.log('📝 Item actualizado:', updatedItems[existingItemIndex]);
           setValue('items', updatedItems);
         } else {
-          setValue('items', [
-            ...currentItems,
-            {
-              productId: product.id,
-              name: product.name,
-              quantity: 1,
-              unitPrice: product.price,
-              total: product.price,
-              notes: '',
-              customizations: null,
-            },
-          ]);
+          console.log('✨ Producto nuevo, creando item');
+          const newItem = {
+            productId: product.id,
+            name: product.name,
+            quantity: 1,
+            unitPrice: product.price,
+            total: product.price,
+            notes: '',
+            customizations: null,
+          };
+          console.log('📝 Nuevo item:', newItem);
+          setValue('items', [...currentItems, newItem]);
         }
       }
+
+      console.log('✅ Producto agregado exitosamente');
     },
     [watch, setValue],
   );
@@ -248,9 +298,18 @@ export default function OrderPage() {
 
   const onSubmit = useCallback(
     async (data: OrderFormValues) => {
+      // Prevenir múltiples envíos
+      if (isSubmitting) {
+        console.log('⚠️ Ya hay un envío en proceso, ignorando...');
+        return;
+      }
+
+      console.log('📦 Iniciando guardado de orden:', data);
       setIsSubmitting(true);
+
       try {
         if (existingOrder) {
+          console.log('✏️ Actualizando orden existente:', existingOrder.id);
           const updateData = {
             ...data,
             customerId: _selectedCustomer?.id || data.customerId,
@@ -258,9 +317,18 @@ export default function OrderPage() {
             notes: data.notes || null,
           };
 
+          console.log('📝 Datos de actualización:', updateData);
           await orderService.update(existingOrder.id, updateData);
+
+          toast.success({
+            title: '✅ Orden actualizada',
+            description: 'Los cambios se guardaron correctamente',
+          });
+
+          // No resetear isSubmitting antes de navegar
           router.push(`/private/pos/payment/${existingOrder.id}`);
         } else {
+          console.log('✨ Creando nueva orden');
           const orderData: Omit<Order, 'id'> = {
             ...data,
             customerId: _selectedCustomer?.id || null,
@@ -270,6 +338,7 @@ export default function OrderPage() {
             notes: data.notes || null,
           };
 
+          console.log('📝 Datos de nueva orden:', orderData);
           const createdOrder = await orderService.create(orderData);
 
           if (createdOrder.tableId) {
@@ -280,16 +349,32 @@ export default function OrderPage() {
             });
           }
 
+          toast.success({
+            title: '✅ Orden creada',
+            description: 'La orden se creó correctamente',
+          });
+
+          // No resetear isSubmitting antes de navegar
           router.push(`/private/pos/payment/${createdOrder.id}`);
         }
       } catch (error) {
-        console.error('Error saving order:', error);
-        // TODO: Mostrar una notificación de error al usuario
-      } finally {
+        console.error('❌ Error saving order:', error);
+
+        // Mostrar el error específico si está disponible
+        const errorMessage =
+          error instanceof Error ? error.message : 'Error desconocido';
+
+        toast.error({
+          title: '❌ Error al guardar',
+          description: `No se pudo guardar la orden: ${errorMessage}`,
+          duration: 5000,
+        });
+
+        // Solo resetear isSubmitting si hay un error
         setIsSubmitting(false);
       }
     },
-    [existingOrder, router, _selectedCustomer],
+    [isSubmitting, existingOrder, router, _selectedCustomer, session, toast],
   );
 
   if (isLoadingOrder) {
@@ -342,7 +427,16 @@ export default function OrderPage() {
       </div>
 
       <form
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={(e) => {
+          console.log('📋 Form onSubmit event triggered');
+          console.log('📊 Estado actual:', {
+            itemsCount: items.length,
+            total,
+            isSubmitting,
+            isLoadingOrder,
+          });
+          handleSubmit(onSubmit)(e);
+        }}
         onKeyDown={(e) => {
           // Prevenir que cualquier tecla envíe el formulario accidentalmente
           // Solo permitir el envío mediante el botón explícito
@@ -392,6 +486,22 @@ export default function OrderPage() {
                       ✏️ Editando orden existente
                     </div>
                   )}
+
+                  {/* Mostrar errores de validación visualmente */}
+                  {Object.keys(formState.errors).length > 0 && (
+                    <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+                      <div className="font-semibold mb-1">
+                        ⚠️ Errores de validación:
+                      </div>
+                      {Object.entries(formState.errors).map(
+                        ([field, error]) => (
+                          <div key={field} className="text-left">
+                            • {field}: {error?.message || 'Error desconocido'}
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Botones principales */}
@@ -408,13 +518,24 @@ export default function OrderPage() {
 
                   <Button
                     type="submit"
-                    disabled={
-                      isSubmitting || items.length === 0 || isLoadingOrder
-                    }
-                    className="h-12 px-4 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 text-sm font-medium"
+                    disabled={items.length === 0 || isLoadingOrder}
+                    onClick={(e) => {
+                      console.log('🖱️ Click en botón de guardar/pagar');
+                      console.log('🔍 Verificación:', {
+                        disabled: items.length === 0 || isLoadingOrder,
+                        itemsLength: items.length,
+                        isLoadingOrder,
+                        isSubmitting,
+                        buttonType: e.currentTarget.type,
+                      });
+                    }}
+                    className="h-12 px-4 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-700 hover:to-teal-700 text-white shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 text-sm font-medium relative"
                   >
                     {isSubmitting ? (
-                      <span>Guardando...</span>
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Guardando...</span>
+                      </>
                     ) : existingOrder ? (
                       <>
                         <Save className="w-4 h-4" />

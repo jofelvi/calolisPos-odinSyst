@@ -109,22 +109,41 @@ export default function OrderSummary({
                 {/* Main item row */}
                 <div className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-4 flex-1">
-                    <div className="w-12 h-12 bg-gradient-to-r from-cyan-200 to-teal-200 rounded-xl overflow-hidden">
-                      {product?.imageUrl ? (
-                        <div className="relative w-full h-full">
-                          <Image
-                            src={product.imageUrl}
-                            alt={item.name}
-                            fill
-                            sizes="48px"
-                            className="object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package className="w-6 h-6 text-cyan-500" />
-                        </div>
-                      )}
+                    {/* Imagen del producto con botón de notas debajo */}
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="w-12 h-12 bg-gradient-to-r from-cyan-200 to-teal-200 rounded-xl overflow-hidden">
+                        {product?.imageUrl ? (
+                          <div className="relative w-full h-full">
+                            <Image
+                              src={product.imageUrl}
+                              alt={item.name}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-6 h-6 text-cyan-500" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Notes button debajo de la imagen */}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className={`w-8 h-6 p-0 transition-colors ${
+                          isExpanded
+                            ? 'bg-cyan-100 text-cyan-700'
+                            : 'text-cyan-600 hover:bg-cyan-100'
+                        } ${item.notes ? 'bg-amber-100 text-amber-700' : ''}`}
+                        onClick={() => toggleItemExpansion(index)}
+                        title="Agregar notas"
+                      >
+                        <MessageSquare size={14} />
+                      </Button>
                     </div>
 
                     <div className="flex-1">
@@ -135,14 +154,11 @@ export default function OrderSummary({
                         {item.customizations && (
                           <div className="flex items-center gap-1">
                             <Settings className="w-3 h-3 text-amber-600" />
-                            <span className="text-xs text-amber-600 font-medium">
-                              Personalizado
-                            </span>
                           </div>
-                        )}
+                        )}{' '}
                       </div>
 
-                      <p className="text-lg font-bold text-cyan-700">
+                      <p className="text-lg font-bold text-cyan-700 mr-1">
                         ${item.unitPrice.toFixed(2)}
                         {item.customizations &&
                           item.customizations.customizationPrice > 0 && (
@@ -222,22 +238,6 @@ export default function OrderSummary({
                         </Button>
                       </div>
                     </div>
-
-                    {/* Notes button */}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className={`w-8 h-8 p-0 transition-colors ${
-                        isExpanded
-                          ? 'bg-cyan-100 text-cyan-700'
-                          : 'text-cyan-600 hover:bg-cyan-100'
-                      } ${item.notes ? 'bg-amber-100 text-amber-700' : ''}`}
-                      onClick={() => toggleItemExpansion(index)}
-                      title="Agregar notas"
-                    >
-                      <MessageSquare size={16} />
-                    </Button>
 
                     {/* Remove button */}
                     <Button

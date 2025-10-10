@@ -95,6 +95,7 @@ export const mapProductToFormData = (
     presentationQuantity: product.presentationQuantity || 1,
     imageUrl: product.imageUrl,
     ingredients: product.ingredients || [],
+    nivel: product.nivel,
   };
 };
 
@@ -123,6 +124,7 @@ export const mapFormDataToProduct = (
     imageUrl: formData.imageUrl,
     ingredients:
       formData.type === ProductTypeEnum.MIXED ? formData.ingredients : null,
+    nivel: formData.nivel,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
