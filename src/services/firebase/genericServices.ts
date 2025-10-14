@@ -297,6 +297,31 @@ export const getPagoMovilByReference = async (
   }
 };
 
+// Helper function to check if a pago movil reference is already verified
+export const isReferenceAlreadyVerified = async (
+  referenceNumber: string,
+): Promise<{ isVerified: boolean; existingPayment: PagoMovil | null }> => {
+  try {
+    const q = query(
+      collection(db, 'pagoMoviles'),
+      where('referenceNumber', '==', referenceNumber),
+      where('status', '==', 'verified'),
+    );
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      return { isVerified: false, existingPayment: null };
+    }
+
+    const doc = snapshot.docs[0];
+    const existingPayment = { id: doc.id, ...doc.data() } as PagoMovil;
+
+    return { isVerified: true, existingPayment };
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Helper function to get active order for a specific table
 export const getActiveOrderByTable = async (
   tableId: string,

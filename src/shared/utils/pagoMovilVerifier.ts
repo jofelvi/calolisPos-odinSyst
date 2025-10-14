@@ -18,7 +18,7 @@ export class PagoMovilVerifier {
       password:
         process.env.BANK_PASSWORD ||
         process.env.NEXT_PUBLIC_BANK_PASSWORD ||
-        'Dylan*04',
+        'Dylan*06',
     };
   }
 

@@ -31,6 +31,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Normalizar monto con 2 decimales para comparación exacta (ej: 100 → 100.00)
+    const normalizedAmount = parseFloat(body.expectedAmount).toFixed(2);
+
     if (!body.phoneNumber || body.phoneNumber.length < 10) {
       return NextResponse.json(
         {
@@ -44,7 +47,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Configurar timeout de 90 segundos para toda la operación
-    const verificationPromise = pagoMovilVerifier.verifyPayment(body);
+    const verificationPromise = pagoMovilVerifier.verifyPayment({
+      ...body,
+      expectedAmount: normalizedAmount, // Usar monto normalizado
+    });
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(
         () =>

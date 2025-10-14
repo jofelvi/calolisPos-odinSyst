@@ -18,6 +18,7 @@ import {
   accountReceivableService,
   getCustomerReceivables,
   getPagoMovilByReference,
+  isReferenceAlreadyVerified,
   invoiceService,
   orderService,
   pagoMovilService,
@@ -215,10 +216,40 @@ export default function PaymentPage({ params }: PageProps) {
       header: 'PRODUCTO',
       cell: ({ row }) => (
         <div className="font-medium text-gray-900">
-          {row.original.name}
+          <div className="flex items-center gap-2">
+            <span>{row.original.name}</span>
+            {row.original.customizations && (
+              <span className="text-amber-600 text-xs">⚙️</span>
+            )}
+          </div>
+
+          {/* Personalizaciones */}
+          {row.original.customizations && (
+            <div className="mt-2 space-y-1">
+              {/* Ingredientes removidos */}
+              {row.original.customizations.removedIngredients.length > 0 && (
+                <div className="text-xs text-red-600">
+                  🚫 Sin: {row.original.customizations.removedIngredients.length} ingrediente(s)
+                </div>
+              )}
+              {/* Adicionales */}
+              {row.original.customizations.addedExtras.length > 0 && (
+                <div className="text-xs text-amber-600">
+                  ⭐ +{row.original.customizations.addedExtras.length} extra(s)
+                  {row.original.customizations.addedExtras.map((extra, idx) => (
+                    <div key={idx} className="ml-3">
+                      • {extra.name} x{extra.quantity} (+${(extra.price * extra.quantity).toFixed(2)})
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Notas */}
           {row.original.notes && (
-            <div className="mt-1 text-xs text-gray-500">
-              ({row.original.notes})
+            <div className="mt-1 text-xs text-gray-500 italic">
+              📝 {row.original.notes}
             </div>
           )}
         </div>
@@ -228,9 +259,16 @@ export default function PaymentPage({ params }: PageProps) {
       accessorKey: 'unitPrice',
       header: 'PRECIO',
       cell: ({ row }) => (
-        <span className="font-medium">
-          ${row.original.unitPrice.toFixed(2)}
-        </span>
+        <div>
+          <span className="font-medium">
+            ${row.original.unitPrice.toFixed(2)}
+          </span>
+          {row.original.customizations && row.original.customizations.customizationPrice > 0 && (
+            <div className="text-xs text-amber-600">
+              (+${row.original.customizations.customizationPrice.toFixed(2)})
+            </div>
+          )}
+        </div>
       ),
     },
     {
@@ -577,7 +615,7 @@ export default function PaymentPage({ params }: PageProps) {
   const calculateTotalPaid = (): number => {
     const cashBs = parseFloat(paymentAmounts[PaymentMethodEnum.CASH_BS]) || 0;
     const cashUsd = parseFloat(paymentAmounts[PaymentMethodEnum.CASH_USD]) || 0;
-    const card = parseFloat(paymentAmounts[PaymentMethodEnum.CARD]) || 0;
+    const cardBs = parseFloat(paymentAmounts[PaymentMethodEnum.CARD]) || 0;
     const transfer =
       parseFloat(paymentAmounts[PaymentMethodEnum.TRANSFER]) || 0;
     const pagoMovil =
@@ -585,8 +623,9 @@ export default function PaymentPage({ params }: PageProps) {
 
     // Convertir bolívares a USD
     const cashBsInUsd = bcvRate > 0 ? cashBs / bcvRate : 0;
+    const cardBsInUsd = bcvRate > 0 ? cardBs / bcvRate : 0;
 
-    return cashBsInUsd + cashUsd + card + transfer + pagoMovil;
+    return cashBsInUsd + cashUsd + cardBsInUsd + transfer + pagoMovil;
   };
 
   // Manejar selección de métodos de pago
@@ -661,9 +700,12 @@ export default function PaymentPage({ params }: PageProps) {
 
     if (!order) return;
 
+    // Normalizar monto en Bs con 2 decimales (ej: 100 → 100.00)
+    const amountBS = parseFloat(amount).toFixed(2);
+
     // Convertir monto de Bs a USD para la verificación
     const amountInUSD =
-      bcvRate > 0 ? (parseFloat(amount) / bcvRate).toFixed(2) : '0';
+      bcvRate > 0 ? (parseFloat(amountBS) / bcvRate).toFixed(2) : '0';
 
     // Mostrar toast de inicio INMEDIATAMENTE antes de cualquier acción
     toast.info({
@@ -675,44 +717,53 @@ export default function PaymentPage({ params }: PageProps) {
     _setIsVerifyingPayment(true);
 
     try {
-      // PRIMERO verificar si ya existe en la base de datos
+      // PRIMERO verificar si ya existe verificada en la base de datos (CRÍTICO para evitar duplicados)
       toast.info({
-        title: '🔍 Consultando base de datos',
-        description: 'Verificando si la referencia ya fue procesada...',
+        title: '🔍 Validando seguridad',
+        description: 'Verificando que la referencia no haya sido usada previamente...',
         duration: 3000,
       });
 
-      const existingPagoMovil = await getPagoMovilByReference(reference);
+      const { isVerified, existingPayment } = await isReferenceAlreadyVerified(reference);
 
-      if (existingPagoMovil) {
+      if (isVerified && existingPayment) {
         _setIsVerifyingPayment(false);
 
-        if (existingPagoMovil.status === 'verified') {
-          toast.error({
-            title: '❌ Referencia duplicada',
-            description: `Esta referencia ${reference} ya fue verificada y utilizada en otra orden`,
-            duration: 8000,
-          });
-          return;
-        }
+        // BLOQUEO CRÍTICO: Esta referencia ya fue verificada exitosamente
+        toast.error({
+          title: '🚫 Referencia Ya Verificada',
+          description: `La referencia ${reference} ya fue verificada el ${new Date(existingPayment.verificationDate!).toLocaleDateString('es-VE')} por Bs.${existingPayment.expectedAmountBS?.toFixed(2) || 'N/A'}. No se puede usar nuevamente para evitar pérdidas en caja.`,
+          duration: 10000,
+        });
 
-        if (existingPagoMovil.status === 'pending') {
-          toast.warning({
-            title: '⚠️ Verificación en proceso',
-            description:
-              'Esta referencia ya está siendo verificada en otro proceso',
-            duration: 6000,
-          });
-          return;
-        }
+        // Mostrar detalles del pago existente
+        toast.warning({
+          title: '📋 Detalles del Pago Existente',
+          description: `Orden: ${existingPayment.orderId.slice(-8)} | Tel: ${existingPayment.phoneNumber} | USD: $${existingPayment.expectedAmountUSD?.toFixed(2)}`,
+          duration: 8000,
+        });
+        return;
+      }
+
+      // Verificar si existe con cualquier estado (pending, error, etc)
+      const existingAnyStatus = await getPagoMovilByReference(reference);
+
+      if (existingAnyStatus && existingAnyStatus.status === 'pending') {
+        _setIsVerifyingPayment(false);
+        toast.warning({
+          title: '⏳ Verificación en Proceso',
+          description: 'Esta referencia ya está siendo verificada. Por favor espere...',
+          duration: 6000,
+        });
+        return;
       }
 
       // Cerrar modal solo después de verificar duplicados
       setShowPagoMovilModal(false);
       setPagoMovilData({ amount: '', reference: '', phone: '' });
 
-      // Ejecutar verificación en segundo plano
-      verifyPagoMovilInBackground(amountInUSD, reference, phone, amount);
+      // Ejecutar verificación en segundo plano (usar amountBS normalizado)
+      verifyPagoMovilInBackground(amountInUSD, reference, phone, amountBS);
     } catch (_error) {
       _setIsVerifyingPayment(false);
       toast.error({
@@ -1090,7 +1141,9 @@ export default function PaymentPage({ params }: PageProps) {
           const paymentData: Omit<Payment, 'id'> = {
             orderId: order.id,
             amount:
-              method === PaymentMethodEnum.CASH_BS ? amount / bcvRate : amount,
+              method === PaymentMethodEnum.CASH_BS || method === PaymentMethodEnum.CARD
+                ? amount / bcvRate
+                : amount,
             method: method,
             userId: user?.id || 'unknown-user',
             createdAt: new Date(),
@@ -1640,37 +1693,135 @@ export default function PaymentPage({ params }: PageProps) {
                     </div>
                   </div>
 
-                  {/* Lista de pagos móviles verificados */}
+                  {/* Lista detallada de todos los intentos de Pago Móvil */}
                   {verifiedPagoMoviles.length > 0 && (
-                    <div className="ml-4 space-y-1">
-                      {verifiedPagoMoviles.map((pm) => (
-                        <div
-                          key={pm.id}
-                          className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded-lg text-xs"
-                        >
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          <span className="font-medium">
-                            Ref: {pm.referenceNumber}
-                          </span>
-                          <span className="text-green-700">
-                            ${pm.expectedAmount.toFixed(2)}
-                          </span>
-                          <span className="text-gray-500">
-                            Tel: {pm.phoneNumber}
-                          </span>
-                          {pm.verificationDate && (
-                            <span className="text-gray-400 ml-auto">
-                              {new Date(pm.verificationDate).toLocaleTimeString(
-                                'es-VE',
-                                {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                },
-                              )}
-                            </span>
-                          )}
+                    <div className="space-y-2 mt-2">
+                      <div className="px-3 py-2 bg-cyan-50 border border-cyan-200 rounded-lg">
+                        <h4 className="text-xs font-semibold text-cyan-800 mb-2 flex items-center gap-2">
+                          <Smartphone className="h-3 w-3" />
+                          Historial de Pagos Móviles ({verifiedPagoMoviles.length})
+                        </h4>
+                        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                          {verifiedPagoMoviles.map((pm, index) => {
+                            const statusConfig = {
+                              verified: {
+                                bg: 'bg-green-50',
+                                border: 'border-green-200',
+                                icon: <CheckCircle className="h-4 w-4 text-green-600" />,
+                                textColor: 'text-green-700',
+                                label: '✓ Verificado',
+                                labelColor: 'text-green-600'
+                              },
+                              pending: {
+                                bg: 'bg-amber-50',
+                                border: 'border-amber-200',
+                                icon: <Clock className="h-4 w-4 text-amber-600" />,
+                                textColor: 'text-amber-700',
+                                label: '⏳ Verificando...',
+                                labelColor: 'text-amber-600'
+                              },
+                              error: {
+                                bg: 'bg-red-50',
+                                border: 'border-red-200',
+                                icon: <XCircle className="h-4 w-4 text-red-600" />,
+                                textColor: 'text-red-700',
+                                label: '✗ Error',
+                                labelColor: 'text-red-600'
+                              },
+                              not_found: {
+                                bg: 'bg-orange-50',
+                                border: 'border-orange-200',
+                                icon: <AlertCircle className="h-4 w-4 text-orange-600" />,
+                                textColor: 'text-orange-700',
+                                label: '⚠ No encontrado',
+                                labelColor: 'text-orange-600'
+                              },
+                              amount_mismatch: {
+                                bg: 'bg-yellow-50',
+                                border: 'border-yellow-200',
+                                icon: <AlertTriangle className="h-4 w-4 text-yellow-600" />,
+                                textColor: 'text-yellow-700',
+                                label: '⚠ Monto no coincide',
+                                labelColor: 'text-yellow-600'
+                              }
+                            };
+
+                            const config = statusConfig[pm.status as keyof typeof statusConfig] || statusConfig.pending;
+
+                            return (
+                              <div
+                                key={pm.id || index}
+                                className={`p-3 ${config.bg} border ${config.border} rounded-lg text-xs`}
+                              >
+                                <div className="flex items-start gap-2">
+                                  {config.icon}
+                                  <div className="flex-1 space-y-1">
+                                    {/* Primera línea: Estado y Referencia */}
+                                    <div className="flex items-center justify-between">
+                                      <span className={`font-bold ${config.labelColor}`}>
+                                        {config.label}
+                                      </span>
+                                      <span className="font-mono font-semibold text-gray-700">
+                                        Ref: {pm.referenceNumber}
+                                      </span>
+                                    </div>
+
+                                    {/* Segunda línea: Montos */}
+                                    <div className="flex items-center gap-3 text-xs">
+                                      <span className={`font-semibold ${config.textColor}`}>
+                                        Bs. {pm.expectedAmountBS?.toFixed(2) || 'N/A'}
+                                      </span>
+                                      <span className="text-gray-400">→</span>
+                                      <span className={`font-semibold ${config.textColor}`}>
+                                        ${pm.expectedAmountUSD?.toFixed(2) || pm.expectedAmount?.toFixed(2) || 'N/A'}
+                                      </span>
+                                      {pm.actualAmount && (
+                                        <>
+                                          <span className="text-gray-400">|</span>
+                                          <span className="text-gray-600">
+                                            Real: Bs. {pm.actualAmount}
+                                          </span>
+                                        </>
+                                      )}
+                                    </div>
+
+                                    {/* Tercera línea: Teléfono y Fecha */}
+                                    <div className="flex items-center justify-between text-gray-600">
+                                      <span>📱 {pm.phoneNumber}</span>
+                                      {pm.verificationDate && (
+                                        <span className="text-gray-500">
+                                          {new Date(pm.verificationDate).toLocaleString('es-VE', {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            day: '2-digit',
+                                            month: '2-digit'
+                                          })}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {/* Mensaje de error si existe */}
+                                    {pm.errorMessage && (
+                                      <div className="mt-1 pt-1 border-t border-gray-300">
+                                        <span className="text-xs text-gray-600 italic">
+                                          ⓘ {pm.errorMessage}
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* Tasa BCV usada */}
+                                    {pm.bcvRate && (
+                                      <div className="text-xs text-gray-500">
+                                        Tasa BCV: {pm.bcvRate.toFixed(2)}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                      ))}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1692,7 +1843,7 @@ export default function PaymentPage({ params }: PageProps) {
                   </button>
                   <Input
                     type="number"
-                    placeholder="Monto USD"
+                    placeholder="Monto Bs"
                     value={paymentAmounts[PaymentMethodEnum.CARD]}
                     onChange={(e) =>
                       handleAmountChange(PaymentMethodEnum.CARD, e.target.value)
@@ -1820,7 +1971,7 @@ export default function PaymentPage({ params }: PageProps) {
               </label>
               <Input
                 type="number"
-                placeholder="0"
+                placeholder="0.00"
                 value={pagoMovilData.amount}
                 onChange={(e) =>
                   setPagoMovilData((prev) => ({
@@ -1828,8 +1979,18 @@ export default function PaymentPage({ params }: PageProps) {
                     amount: e.target.value,
                   }))
                 }
+                onBlur={(e) => {
+                  // Formatear con 2 decimales cuando sale del input
+                  const value = parseFloat(e.target.value);
+                  if (!isNaN(value) && value > 0) {
+                    setPagoMovilData((prev) => ({
+                      ...prev,
+                      amount: value.toFixed(2),
+                    }));
+                  }
+                }}
                 className="w-full h-12 text-lg border-cyan-200 focus:border-cyan-500 focus:ring-cyan-500"
-                step="1"
+                step="0.01"
                 min="0"
               />
               <div className="text-xs text-gray-500 mt-1">
@@ -1840,6 +2001,9 @@ export default function PaymentPage({ params }: PageProps) {
                     )
                   : '0.00'}{' '}
                 USD
+              </div>
+              <div className="text-xs text-amber-600 mt-1">
+                ⓘ El monto se formateará con 2 decimales (ej: 100 → 100.00)
               </div>
             </div>
 
