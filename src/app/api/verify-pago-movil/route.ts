@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const result = await Promise.race([verificationPromise, timeoutPromise]);
     return NextResponse.json(result);
   } catch (error) {
-    console.error('❌ Error en verify-pago-movil API:', error);
+    // Error en verify-pago-movil API
     return NextResponse.json(
       {
         success: false,
